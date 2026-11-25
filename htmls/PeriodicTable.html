@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Elemental Database // Periodic System</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+TC:wght@500;700;900&display=swap">
+<style>
+:root{--bg:#0B0D10;--pn:rgba(20,23,27,.88);--tx:#EDEFF2;--mu:#9AA3AB;--ac:#35D6D0;--or:#FF7A45;--ln:rgba(237,239,242,.15);--hz:#F2C200;
+--hd:'Archivo Black','Arial Black',Impact,sans-serif;--bd:'Barlow','Noto Sans TC','PingFang TC','Microsoft JhengHei','Segoe UI',Arial,sans-serif;--mo:'JetBrains Mono','Noto Sans TC','PingFang TC','Microsoft JhengHei',ui-monospace,Consolas,monospace}
+[data-theme=light]{--bg:#E4E7EA;--pn:rgba(250,251,252,.92);--tx:#14171B;--mu:#4A535B;--ac:#007E77;--or:#C23F08;--ln:rgba(20,23,27,.2);--hz:#C99A00}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--tx);font:500 14px/1.4 var(--bd);display:flex;flex-direction:column;overflow:hidden;
+background-image:linear-gradient(var(--ln) 1px,transparent 1px),linear-gradient(90deg,var(--ln) 1px,transparent 1px);background-size:48px 48px;background-position:-1px -1px}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(127,127,127,.05) 6px 7px);z-index:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.mo{font-family:var(--mo)}
+.lb{font:600 10px var(--mo);letter-spacing:.18em;text-transform:uppercase;color:var(--mu)}
+header,.sub,footer,main{position:relative;z-index:1}
+header{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:8px 14px;background:var(--pn);border-bottom:1px solid var(--ln);padding-top:max(8px,env(safe-area-inset-top))}
+.brand{display:flex;flex-direction:column;margin-right:auto}
+h1{font:400 17px var(--hd);letter-spacing:.2em;text-transform:uppercase;line-height:1.1}
+.ty{overflow:hidden;white-space:nowrap;width:34ch;animation:ty 1.1s steps(34) .3s backwards}
+@keyframes ty{from{width:0}}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+input[type=search],select{background:rgba(127,127,127,.12);border:1px solid var(--ln);padding:6px 8px;min-height:32px;border-radius:0;font:500 12px var(--mo);letter-spacing:.06em;text-transform:uppercase}
+select option{background:#14171B;color:#EDEFF2}
+input[type=search]{width:190px}
+.b{background:transparent;border:1px solid var(--ln);padding:6px 10px;min-height:32px;cursor:pointer;font:600 10px var(--mo);letter-spacing:.16em;text-transform:uppercase;transition:background .12s,border-color .12s,color .12s}
+.b:hover{border-color:var(--ac)}
+.b[aria-pressed=true]{background:var(--ac);color:#06201f;border-color:var(--ac)}
+.sub{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:6px 14px;border-bottom:1px solid var(--ln);background:var(--pn)}
+.sl{display:flex;align-items:center;gap:8px;flex:1 1 320px}
+input[type=range]{flex:1;accent-color:var(--ac);min-width:120px}
+.lg{display:flex;flex-wrap:wrap;gap:4px 12px}
+.lg span{display:flex;align-items:center;gap:5px;font:600 9px var(--mo);letter-spacing:.12em;text-transform:uppercase;color:var(--mu)}
+.lg i{width:10px;height:10px;background:var(--c);display:block}
+main{flex:1;display:flex;min-height:0}
+.tbl{flex:1;overflow:auto;padding:12px 14px}
+.grid{display:grid;grid-template-columns:22px repeat(18,minmax(56px,1fr));gap:3px;min-width:1100px;max-width:1500px;margin:0 auto}
+.gh{font:600 9px var(--mo);color:var(--mu);text-align:center;letter-spacing:.1em;align-self:end;padding-bottom:2px}
+.pl{align-self:center;font:600 9px var(--mo);color:var(--mu)}
+.fm{border:1px dashed var(--ln);font:600 9px var(--mo);color:var(--mu);display:flex;align-items:center;justify-content:center;letter-spacing:.06em}
+.el{position:relative;container-type:inline-size;aspect-ratio:1/1.1;text-align:left;padding:4px 5px 3px;cursor:pointer;overflow:hidden;
+background:color-mix(in srgb,var(--cc) 15%,var(--pn));border:1px solid var(--ln);border-top:3px solid var(--cc);border-radius:0;
+display:flex;flex-direction:column;justify-content:flex-end;transition:background .1s,border-color .1s,opacity .15s,transform .1s;animation:in .45s both;animation-delay:calc(var(--i)*7ms + .35s)}
+@keyframes in{from{opacity:0;transform:translateY(5px)}}
+.bg{position:absolute;right:-3%;bottom:-16%;font:400 80cqw/1 var(--hd);color:var(--tx);opacity:.1;pointer-events:none;z-index:0;letter-spacing:-.04em;transition:opacity .12s}
+.bg.d2{font-size:62cqw}.bg.d3{font-size:47cqw;bottom:-6%}
+.el>*:not(.bg){position:relative;z-index:1}
+.sy{font:800 30cqw/1 var(--bd);letter-spacing:-.01em}
+.nm{font:600 max(7px,12.5cqw)/1.15 var(--bd);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:clip}
+.ms{font:400 max(6.5px,11cqw)/1.2 var(--mo);color:var(--mu)}
+.zz{position:absolute!important;top:2px;left:4px;font:600 max(7px,12cqw) var(--mo);color:var(--mu)}
+.st{position:absolute!important;top:2px;right:4px;font:600 max(7px,12cqw) var(--mo)}
+.tr{position:absolute!important;left:0;bottom:0;height:3px;background:var(--ac);z-index:2!important;transition:width .2s}
+.rd:after{content:"";position:absolute;right:0;top:0;border:7px solid transparent;border-top-color:var(--or);border-right-color:var(--or);z-index:1}
+.el:hover,.el:focus-visible{outline:2px solid var(--ac);outline-offset:-2px;background:color-mix(in srgb,var(--cc) 26%,var(--pn))}
+.el:hover .bg,.el.sel .bg{opacity:.2}
+.el.sel{outline:2px solid var(--ac);outline-offset:-2px;background:color-mix(in srgb,var(--ac) 18%,var(--pn))}
+.el.pick{outline:2px dashed var(--or);outline-offset:-2px}
+.el.dim{opacity:.16;filter:grayscale(1)}
+aside{width:390px;flex:none;background:var(--pn);border-left:1px solid var(--ln);overflow:auto;position:relative}
+.ph{padding:30px 20px;color:var(--mu)}
+.dos{padding:14px 18px 24px;animation:sl .2s ease-out}
+@keyframes sl{from{opacity:0;transform:translateX(14px)}}
+.hd{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--ln);padding-bottom:8px;margin-bottom:10px}
+.big{display:flex;align-items:flex-end;gap:12px;position:relative}
+.bs{font:400 84px/.9 var(--hd);color:var(--tx)}
+.bz{font:400 40px/1 var(--hd);color:var(--cc);opacity:.9;padding-bottom:6px}
+h2{font:700 22px var(--bd);letter-spacing:.14em;text-transform:uppercase;margin-top:6px}
+.tag{display:inline-block;border:1px solid var(--cc);color:var(--cc);padding:1px 7px;font:600 10px var(--mo);letter-spacing:.16em;text-transform:uppercase;margin-top:4px}
+.sec{margin:14px 0 6px;display:flex;align-items:center;gap:8px}
+.sec:after{content:"";flex:1;height:1px;background:var(--ln)}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.kv b{display:block;font:600 19px var(--bd)}
+.cfg{font:500 13px var(--mo);line-height:1.7;word-break:break-word}
+.hz{padding:7px 10px;font:700 11px var(--mo);letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--or);color:var(--or)}
+.hz.r{background:repeating-linear-gradient(-45deg,var(--hz) 0 8px,#111 8px 16px);color:#fff;border:1px solid var(--hz);text-shadow:0 0 3px #000,0 0 3px #000,0 0 6px #000}
+.hz.n{border-color:var(--ln);color:var(--mu)}
+.rel{display:flex;flex-wrap:wrap;gap:4px}
+.rel .b{padding:3px 7px;min-height:26px}
+.bar{height:26px;margin-top:4px;background:repeating-linear-gradient(90deg,var(--tx) 0 2px,transparent 2px 4px,var(--tx) 4px 5px,transparent 5px 8px,var(--tx) 8px 11px,transparent 11px 12px);opacity:.55;width:110px}
+.cmp{width:100%;border-collapse:collapse;margin-top:8px}
+.cmp td,.cmp th{padding:6px 4px;border-bottom:1px solid var(--ln);text-align:left;font-size:13px}
+.cmp th{font:600 10px var(--mo);letter-spacing:.14em;color:var(--mu);text-transform:uppercase}
+.cmp .w{color:var(--ac);font-weight:700}
+.x{display:none}
+footer{display:flex;flex-wrap:wrap;gap:4px 18px;padding:5px 14px;background:var(--pn);border-top:1px solid var(--ln);font:500 10px var(--mo);letter-spacing:.12em;text-transform:uppercase;color:var(--mu);padding-bottom:max(5px,env(safe-area-inset-bottom))}
+footer b{color:var(--ac);font-weight:600}footer em{font-style:normal}
+@media(max-width:900px){
+aside{position:fixed;left:0;right:0;bottom:0;width:auto;max-height:78vh;transform:translateY(105%);transition:transform .2s;z-index:20;border:1px solid var(--ac);border-bottom:0}
+aside.open{transform:none}
+.x{display:inline-block}
+input[type=search]{width:140px}
+}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+<div class="brand"><h1 id="h1">週期系統</h1><span class="lb ty" id="sbt">元素資料庫 // 週期系統</span></div>
+<div class="ctl" role="search">
+<input id="q" type="search" placeholder="Name / symbol / no." aria-label="Search elements">
+<select id="fc" aria-label="Filter by category"></select>
+<select id="fs"></select>
+<select id="fp" aria-label="Filter by period"></select>
+<select id="fg" aria-label="Filter by group"></select>
+<select id="tn"></select>
+<button class="b" id="cm" aria-pressed="false">Compare</button>
+<select id="ln" aria-label="Language"><option value="zh">繁體中文</option><option value="en">English</option></select><button class="b" id="th" aria-label="Toggle theme">主題</button>
+</div>
+</header>
+<div class="sub">
+<div class="ctl" id="pre" role="group" aria-label="Presets"></div>
+<label class="sl"><span class="lb" id="tl">溫度</span><input id="tp" type="range" min="0" max="6000" step="1" value="293" aria-label="Temperature in kelvin"><span class="mo" id="tv" style="min-width:128px;font-size:12px"></span></label>
+<div class="lg" id="lg"></div>
+</div>
+<main>
+<div class="tbl"><div class="grid" id="gr" role="grid" aria-label="Periodic table of elements"></div></div>
+<aside id="as" aria-live="polite"></aside>
+</main>
+<footer><span><em></em> <b>RI-PT/2026.118</b></span><span><em></em> <b id="fn">118/118</b></span><span><em></em> <b id="fsel">NONE</b></span><span><em></em> <b id="ff">NONE</b></span><span><em></em> <b id="fh">—</b></span></footer>
+<script>
+const RAW=`H,Hydrogen,1.008,14,20,8.99e-5,2.20,25,1312,1766,Cavendish
+He,Helium,4.0026,,4.2,1.79e-4,,31,2372,1895,Ramsay
+Li,Lithium,6.94,454,1615,0.534,0.98,145,520,1817,Arfwedson
+Be,Beryllium,9.0122,1560,2742,1.85,1.57,105,900,1798,Vauquelin
+B,Boron,10.81,2349,4200,2.34,2.04,85,801,1808,Gay-Lussac
+C,Carbon,12.011,3800,4300,2.27,2.55,70,1086,,Ancient
+N,Nitrogen,14.007,63,77,1.25e-3,3.04,65,1402,1772,Rutherford
+O,Oxygen,15.999,54,90,1.43e-3,3.44,60,1314,1774,Priestley
+F,Fluorine,18.998,53,85,1.70e-3,3.98,50,1681,1886,Moissan
+Ne,Neon,20.180,25,27,9e-4,,38,2081,1898,Ramsay
+Na,Sodium,22.990,371,1156,0.971,0.93,180,496,1807,Davy
+Mg,Magnesium,24.305,923,1363,1.74,1.31,150,738,1755,Black
+Al,Aluminium,26.982,933,2792,2.70,1.61,125,578,1825,Ørsted
+Si,Silicon,28.085,1687,3538,2.33,1.90,110,787,1824,Berzelius
+P,Phosphorus,30.974,317,550,1.82,2.19,100,1012,1669,Brand
+S,Sulfur,32.06,388,718,2.07,2.58,100,1000,,Ancient
+Cl,Chlorine,35.45,172,239,3.21e-3,3.16,100,1251,1774,Scheele
+Ar,Argon,39.95,84,87,1.78e-3,,71,1521,1894,Rayleigh & Ramsay
+K,Potassium,39.098,337,1032,0.862,0.82,220,419,1807,Davy
+Ca,Calcium,40.078,1115,1757,1.55,1.00,180,590,1808,Davy
+Sc,Scandium,44.956,1814,3109,2.99,1.36,160,633,1879,Nilson
+Ti,Titanium,47.867,1941,3560,4.51,1.54,140,659,1791,Gregor
+V,Vanadium,50.942,2183,3680,6.11,1.63,135,651,1801,del Río
+Cr,Chromium,51.996,2180,2944,7.15,1.66,140,653,1797,Vauquelin
+Mn,Manganese,54.938,1519,2334,7.21,1.55,140,717,1774,Gahn
+Fe,Iron,55.845,1811,3134,7.87,1.83,140,762,,Ancient
+Co,Cobalt,58.933,1768,3200,8.86,1.88,135,760,1735,Brandt
+Ni,Nickel,58.693,1728,3186,8.91,1.91,135,737,1751,Cronstedt
+Cu,Copper,63.546,1358,2835,8.96,1.90,135,745,,Ancient
+Zn,Zinc,65.38,693,1180,7.14,1.65,135,906,1746,Marggraf
+Ga,Gallium,69.723,303,2477,5.91,1.81,130,579,1875,de Boisbaudran
+Ge,Germanium,72.630,1211,3106,5.32,2.01,125,762,1886,Winkler
+As,Arsenic,74.922,1090,,5.73,2.18,115,947,,Ancient
+Se,Selenium,78.971,494,958,4.81,2.55,115,941,1817,Berzelius
+Br,Bromine,79.904,266,332,3.12,2.96,115,1140,1826,Balard
+Kr,Krypton,83.798,116,120,3.75e-3,3.00,88,1351,1898,Ramsay & Travers
+Rb,Rubidium,85.468,312,961,1.53,0.82,235,403,1861,Bunsen & Kirchhoff
+Sr,Strontium,87.62,1050,1655,2.64,0.95,200,550,1790,Crawford
+Y,Yttrium,88.906,1799,3609,4.47,1.22,180,600,1794,Gadolin
+Zr,Zirconium,91.224,2128,4682,6.51,1.33,155,640,1789,Klaproth
+Nb,Niobium,92.906,2750,5017,8.57,1.6,145,652,1801,Hatchett
+Mo,Molybdenum,95.95,2896,4912,10.28,2.16,145,684,1778,Scheele
+Tc,Technetium,98,2430,4538,11.5,1.9,135,702,1937,Perrier & Segrè
+Ru,Ruthenium,101.07,2607,4423,12.37,2.2,130,710,1844,Claus
+Rh,Rhodium,102.91,2237,3968,12.41,2.28,135,720,1803,Wollaston
+Pd,Palladium,106.42,1828,3236,12.02,2.20,140,804,1803,Wollaston
+Ag,Silver,107.87,1235,2435,10.49,1.93,160,731,,Ancient
+Cd,Cadmium,112.41,594,1040,8.65,1.69,155,868,1817,Stromeyer
+In,Indium,114.82,430,2345,7.31,1.78,155,558,1863,Reich & Richter
+Sn,Tin,118.71,505,2875,7.31,1.96,145,709,,Ancient
+Sb,Antimony,121.76,904,1860,6.70,2.05,145,834,,Ancient
+Te,Tellurium,127.60,723,1261,6.24,2.1,140,869,1782,von Reichenstein
+I,Iodine,126.90,387,457,4.93,2.66,140,1008,1811,Courtois
+Xe,Xenon,131.29,161,165,5.9e-3,2.6,108,1170,1898,Ramsay & Travers
+Cs,Caesium,132.91,302,944,1.93,0.79,260,376,1860,Bunsen & Kirchhoff
+Ba,Barium,137.33,1000,2170,3.51,0.89,215,503,1808,Davy
+La,Lanthanum,138.91,1193,3737,6.16,1.10,195,538,1839,Mosander
+Ce,Cerium,140.12,1068,3716,6.77,1.12,185,534,1803,Berzelius & Hisinger
+Pr,Praseodymium,140.91,1208,3793,6.77,1.13,185,527,1885,von Welsbach
+Nd,Neodymium,144.24,1297,3347,7.01,1.14,185,533,1885,von Welsbach
+Pm,Promethium,145,1315,3273,7.26,,185,540,1945,Marinsky et al.
+Sm,Samarium,150.36,1345,2067,7.52,1.17,185,545,1879,de Boisbaudran
+Eu,Europium,151.96,1099,1802,5.24,,185,547,1901,Demarçay
+Gd,Gadolinium,157.25,1585,3546,7.90,1.20,180,593,1880,de Marignac
+Tb,Terbium,158.93,1629,3503,8.23,,175,566,1843,Mosander
+Dy,Dysprosium,162.50,1680,2840,8.55,1.22,175,573,1886,de Boisbaudran
+Ho,Holmium,164.93,1734,2993,8.80,1.23,175,581,1878,Soret & Delafontaine
+Er,Erbium,167.26,1802,3141,9.07,1.24,175,589,1843,Mosander
+Tm,Thulium,168.93,1818,2223,9.32,1.25,175,597,1879,Cleve
+Yb,Ytterbium,173.05,1097,1469,6.90,,175,603,1878,de Marignac
+Lu,Lutetium,174.97,1925,3675,9.84,1.27,175,524,1907,Urbain
+Hf,Hafnium,178.49,2506,4876,13.31,1.3,155,659,1923,Coster & von Hevesy
+Ta,Tantalum,180.95,3290,5731,16.65,1.5,145,761,1802,Ekeberg
+W,Tungsten,183.84,3695,5828,19.25,2.36,135,770,1783,de Elhuyar
+Re,Rhenium,186.21,3459,5869,21.02,1.9,135,760,1925,Noddack et al.
+Os,Osmium,190.23,3306,5285,22.59,2.2,130,840,1803,Tennant
+Ir,Iridium,192.22,2719,4701,22.56,2.20,135,880,1803,Tennant
+Pt,Platinum,195.08,2041,4098,21.45,2.28,135,870,1735,de Ulloa
+Au,Gold,196.97,1337,3129,19.30,2.54,135,890,,Ancient
+Hg,Mercury,200.59,234,630,13.53,2.00,150,1007,,Ancient
+Tl,Thallium,204.38,577,1746,11.85,1.62,190,589,1861,Crookes
+Pb,Lead,207.2,601,2022,11.34,2.33,180,716,,Ancient
+Bi,Bismuth,208.98,544,1837,9.78,2.02,160,703,1753,Geoffroy
+Po,Polonium,209,527,1235,9.2,2.0,190,812,1898,P. & M. Curie
+At,Astatine,210,575,,,2.2,,900,1940,Corson et al.
+Rn,Radon,222,202,211,9.73e-3,2.2,120,1037,1900,Dorn
+Fr,Francium,223,300,950,,0.79,,393,1939,Perey
+Ra,Radium,226,973,2010,5.5,0.9,215,509,1898,P. & M. Curie
+Ac,Actinium,227,1323,3471,10.07,1.1,195,499,1899,Debierne
+Th,Thorium,232.04,2115,5061,11.72,1.3,180,587,1829,Berzelius
+Pa,Protactinium,231.04,1841,4300,15.37,1.5,180,568,1913,Fajans & Göhring
+U,Uranium,238.03,1405,4404,19.05,1.38,175,598,1789,Klaproth
+Np,Neptunium,237,917,4273,20.45,1.36,175,605,1940,McMillan & Abelson
+Pu,Plutonium,244,913,3501,19.82,1.28,175,585,1940,Seaborg et al.
+Am,Americium,243,1449,2880,13.67,1.13,175,578,1944,Seaborg et al.
+Cm,Curium,247,1613,3383,13.51,1.28,,581,1944,Seaborg et al.
+Bk,Berkelium,247,1259,2900,14.78,1.3,,601,1949,Thompson et al.
+Cf,Californium,251,1173,,15.1,1.3,,608,1950,Thompson et al.
+Es,Einsteinium,252,1133,,8.84,1.3,,619,1952,Ghiorso et al.
+Fm,Fermium,257,1800,,,1.3,,627,1952,Ghiorso et al.
+Md,Mendelevium,258,1100,,,1.3,,635,1955,Ghiorso et al.
+No,Nobelium,259,1100,,,1.3,,642,1958,Ghiorso et al.
+Lr,Lawrencium,266,1900,,,1.3,,,1961,Ghiorso et al.
+Rf,Rutherfordium,267,,,,,,,1964,JINR / LBNL
+Db,Dubnium,268,,,,,,,1968,JINR / LBNL
+Sg,Seaborgium,269,,,,,,,1974,LBNL / JINR
+Bh,Bohrium,270,,,,,,,1981,GSI
+Hs,Hassium,277,,,,,,,1984,GSI
+Mt,Meitnerium,278,,,,,,,1982,GSI
+Ds,Darmstadtium,281,,,,,,,1994,GSI
+Rg,Roentgenium,282,,,,,,,1994,GSI
+Cn,Copernicium,285,,,,,,,1996,GSI
+Nh,Nihonium,286,,,,,,,2004,RIKEN
+Fl,Flerovium,289,,,,,,,1998,JINR
+Mc,Moscovium,290,,,,,,,2003,JINR / LLNL
+Lv,Livermorium,293,,,,,,,2000,JINR / LLNL
+Ts,Tennessine,294,,,,,,,2010,JINR / ORNL / LLNL
+Og,Oganesson,294,,,,,,,2002,JINR / LLNL`;
+const E=RAW.split('\n').map((r,i)=>{const a=r.split(',');return{z:i+1,s:a[0],n:a[1],en:a[1],m:a[2],mp:+a[3]||null,bp:+a[4]||null,d:+a[5]||null,en:+a[6]||null,r:+a[7]||null,ie:+a[8]||null,y:a[9],di:a[10]}});
+const CATS={alk:['Alkali metal','#C0705A'],ae:['Alkaline earth','#C79A55'],tm:['Transition metal','#6B8FB3'],pt:['Post-transition metal','#8D9BA6'],mt:['Metalloid','#A7A95E'],nm:['Nonmetal','#6FB38A'],hl:['Halogen','#C98AA3'],ng:['Noble gas','#9C88CC'],la:['Lanthanide','#B8A57A'],ac:['Actinide','#A7807A']};
+const inl=(a,z)=>a.includes(z);
+function cat(z){if(inl([3,11,19,37,55,87],z))return'alk';if(inl([4,12,20,38,56,88],z))return'ae';if(inl([5,14,32,33,51,52],z))return'mt';if(inl([1,6,7,8,15,16,34],z))return'nm';if(inl([9,17,35,53,85,117],z))return'hl';if(inl([2,10,18,36,54,86,118],z))return'ng';if(z>=57&&z<=71)return'la';if(z>=89&&z<=103)return'ac';if(inl([13,31,49,50,81,82,83,84,113,114,115,116],z))return'pt';return'tm'}
+function pos(z){if(z==1)return[1,1];if(z==2)return[1,18];if(z<5)return[2,z-2];if(z<11)return[2,z+8];if(z<13)return[3,z-10];if(z<19)return[3,z];if(z<37)return[4,z-18];if(z<55)return[5,z-36];if(z<57)return[6,z-54];if(z<72)return[9,z-54];if(z<87)return[6,z-68];if(z<89)return[7,z-86];if(z<104)return[10,z-86];return[7,z-100]}
+const ORD=['1s','2s','2p','3s','3p','4s','3d','4p','5s','4d','5p','6s','4f','5d','6p','7s','5f','6d','7p'];
+const EX={24:{'4s':1,'3d':5},29:{'4s':1,'3d':10},41:{'5s':1,'4d':4},42:{'5s':1,'4d':5},44:{'5s':1,'4d':7},45:{'5s':1,'4d':8},46:{'5s':0,'4d':10},47:{'5s':1,'4d':10},57:{'4f':0,'5d':1},58:{'4f':1,'5d':1},64:{'4f':7,'5d':1},78:{'6s':1,'5d':9},79:{'6s':1,'5d':10},89:{'5f':0,'6d':1},90:{'5f':0,'6d':2},91:{'5f':2,'6d':1},92:{'5f':3,'6d':1},93:{'5f':4,'6d':1},96:{'5f':7,'6d':1}};
+function cfg(z){let rem=z,c={};ORD.forEach(k=>{const cap={s:2,p:6,d:10,f:14}[k[1]],t=Math.min(cap,rem);c[k]=t;rem-=t});if(EX[z])Object.assign(c,EX[z]);
+return ORD.filter(k=>c[k]>0).sort((a,b)=>a[0]-b[0]||'spdf'.indexOf(a[1])-'spdf'.indexOf(b[1])).map(k=>[k,c[k]])}
+const NOTE={1:'Lightest and most abundant element in the universe; fuels stars.',2:'Inert gas used as a cryogenic coolant and in MRI magnets.',3:'Key to rechargeable batteries; lithium salts are used in psychiatric medicine.',6:'Backbone of organic chemistry; occurs as graphite, diamond and graphene.',7:'Makes up about 78% of Earth\'s atmosphere; essential in amino acids.',8:'Required for respiration; about 21% of air by volume.',9:'Most electronegative element; used in fluoropharmaceuticals and toothpaste.',11:'Reacts vigorously with water; sodium ions regulate nerve signalling.',13:'Light, corrosion-resistant structural metal.',14:'Foundation of semiconductor electronics and glass.',15:'Essential to DNA, ATP and bone mineral.',17:'Used for water disinfection and polymer production.',20:'Major component of bone, teeth and shells.',22:'High strength-to-weight ratio; biocompatible implant metal.',26:'Principal metal of steel; central to haemoglobin.',29:'Excellent electrical conductor; has antimicrobial surfaces.',47:'Highest electrical conductivity of any metal.',53:'Essential for thyroid hormones; used as an antiseptic.',74:'Highest melting point of all metals.',79:'Chemically inert; used in electronics and dentistry.',80:'Only metal that is liquid at standard room conditions; toxic.',82:'Dense, soft, toxic metal once common in pipes and paint.',92:'Fissile isotope U-235 fuels nuclear reactors.',94:'Fissile material used in reactors and weapons.',43:'Lightest element with no stable isotopes; Tc-99m is a major medical imaging tracer.',27:'Used in alloys, batteries, and vitamin B12.',56:'Barium sulfate is used as a radiocontrast agent for X-ray imaging.',88:'Intensely radioactive; historically used in luminous paint.'};
+const RADIOACT=z=>z==43||z==61||z>=84, SYN=z=>z==43||z==61||z>=93, METAL=z=>inl(['alk','ae','tm','pt','la','ac'],cat(z));
+const TOX=[4,33,48,80,81,82,34];
+function hazard(z){if(RADIOACT(z))return['r','RADIOACTIVE // Ionizing radiation'];if(inl(['alk','ae'],cat(z))&&z!=4||inl([9,17,35,15],z))return['o','REACTIVE // Corrosive or water-reactive'];if(inl(TOX,z))return['o','TOXIC // Handle under controlled conditions'];return['n','None listed']}
+const $=s=>document.querySelector(s),gr=$('#gr'),as=$('#as');
+const fm=(v,u)=>v==null?'N/A':v+u;
+const dens=v=>v==null?'N/A':v<.01?+(v*1000).toPrecision(3)+' g/L':v+' g/cm³';
+const mass=e=>(e.z==43||e.z==61||(e.z>=84&&![90,91,92].includes(e.z)))?'['+e.m+']':e.m;
+function state(e,T){const m=e.mp,b=e.bp;if(!m&&b)return T>=b?'gas':'liquid';if(!m)return'?';if(T<m)return'solid';if(b&&T>=b)return'gas';return b?'liquid':'?'}
+const SL={solid:'S',liquid:'L',gas:'G','?':'?'};
+let sel=null,picks=[],cmpMode=false,preset='all',els={};
+const T0=()=>+$('#tp').value;
+// build controls
+let L='zh';try{const s=localStorage.getItem('ptl');if(s=='en'||s=='zh')L=s}catch(_){}
+const t=(z,e)=>L=='zh'?z:e;
+const SN=s=>L=='zh'?{solid:'固態',liquid:'液態',gas:'氣態','?':'未知'}[s]:s;
+const ZH='氫 氦 鋰 鈹 硼 碳 氮 氧 氟 氖 鈉 鎂 鋁 矽 磷 硫 氯 氬 鉀 鈣 鈧 鈦 釩 鉻 錳 鐵 鈷 鎳 銅 鋅 鎵 鍺 砷 硒 溴 氪 銣 鍶 釔 鋯 鈮 鉬 鎝 釕 銠 鈀 銀 鎘 銦 錫 銻 碲 碘 氙 銫 鋇 鑭 鈰 鐠 釹 鉕 釤 銪 釓 鋱 鏑 鈥 鉺 銩 鐿 鑥 鉿 鉭 鎢 錸 鋨 銥 鉑 金 汞 鉈 鉛 鉍 釙 砈 氡 鍅 鐳 錒 釷 鏷 鈾 錼 鈽 鋂 鋦 鉳 鉲 鑀 鐨 鍆 鍩 鐒 鑪 𨧀 𨭎 𨨏 𨭆 鿏 鐽 錀 鎶 鉨 鈇 鏌 鉝 鿬 鿫'.split(' ');
+const CZ={alk:'鹼金屬',ae:'鹼土金屬',tm:'過渡金屬',pt:'後過渡金屬',mt:'類金屬',nm:'非金屬',hl:'鹵素',ng:'惰性氣體',la:'鑭系元素',ac:'錒系元素'},CE={};Object.keys(CATS).forEach(k=>CE[k]=CATS[k][0]);
+const NZ={1:'宇宙中最輕、含量最豐富的元素，是恆星的燃料。',2:'惰性氣體，用作低溫冷卻劑及核磁共振造影磁體的冷卻。',3:'可充電電池的關鍵材料；鋰鹽亦用於精神科藥物。',6:'有機化學的骨架；可形成石墨、鑽石與石墨烯。',7:'約占地球大氣的 78%；胺基酸的必要成分。',8:'呼吸作用所需，約占空氣體積的 21%。',9:'電負度最高的元素；用於含氟藥物與牙膏。',11:'與水劇烈反應；鈉離子參與神經訊號傳導。',13:'輕質且耐腐蝕的結構金屬。',14:'半導體電子元件與玻璃的基礎材料。',15:'DNA、ATP 與骨骼礦物質的必要成分。',17:'用於飲水消毒與聚合物生產。',20:'骨骼、牙齒與貝殼的主要成分。',22:'強度重量比高，為具生物相容性的植入金屬。',26:'鋼的主要金屬；血紅素的核心元素。',29:'優良的導電體，表面具抗菌性。',27:'用於合金、電池，亦是維生素 B12 的成分。',43:'最輕的無穩定同位素元素；Tc-99m 是重要的醫學造影示蹤劑。',47:'所有金屬中導電率最高。',53:'甲狀腺激素所需；亦用作消毒劑。',56:'硫酸鋇用作 X 光造影的顯影劑。',74:'所有金屬中熔點最高。',79:'化學性質穩定，用於電子產品與牙科。',80:'標準室溫下唯一呈液態的金屬；有毒。',82:'緻密、柔軟且有毒的金屬，過去常用於水管與油漆。',88:'具強放射性；過去曾用於夜光塗料。',92:'可裂變同位素 U-235 為核反應爐燃料。',94:'可裂變材料，用於反應爐與核武。'};
+const DICT=[['Element dossier // standby','元素檔案 // 待機'],['Element dossier','元素檔案'],['No specimen selected','尚未選取樣本'],['Select an element, or move with the arrow keys and press Enter.','請點選元素，或以方向鍵移動後按 Enter。'],['Compare mode','比較模式'],['Select second element','請選取第二個元素'],['Picked: ','已選：'],['Choose one more specimen from the table.','請從週期表再選一個元素。'],['Close dossier','關閉檔案'],['Close','關閉'],['Physical data','物理數據'],['Atomic mass','原子量'],['Physical state (293 K)','物理狀態（293 K）'],['Melting point','熔點'],['Boiling point','沸點'],['Density','密度'],['Period / group','週期 / 族'],['Electronegativity','電負度'],['Atomic radius','原子半徑'],['1st ionization','第一游離能'],['Ionization energy','游離能'],['Discovered','發現'],['Configuration','電子組態'],['Shells: ','電子層：'],['Hazard status','危害狀態'],['Notes','備註'],['Isotopes','同位素'],['Trend: along period','趨勢：沿週期'],['Related','相關元素'],['Comparison','比較'],['Property','性質'],['Atomic number','原子序'],['Category','類別'],['State (selected T)','狀態（所選溫度）'],['Higher value highlighted','較高值以強調色標示'],['N/A — UNVERIFIED','無資料 — 未經驗證'],['N/A (f-block)','無（f 區）'],['N/A','無資料'],['UNVERIFIED','未經驗證'],['SOLID','固態'],['LIQUID','液態'],['GAS','氣態'],['Ancient','古代'],['No stable isotopes. Nominal mass no. ','無穩定同位素。質量數 '],[' (most stable / reference)','（最穩定／參考）'],['Nominal mass no. ','質量數 '],[' (most abundant / reference)','（最豐富／參考）'],['No trend data for this period','此週期無趨勢資料'],[' // period ',' // 週期 '],['<td>solid</td>','<td>固態</td>'],['<td>liquid</td>','<td>液態</td>'],['<td>gas</td>','<td>氣態</td>'],['<td>?</td>','<td>未知</td>'],['RADIOACTIVE // Ionizing radiation','放射性 // 游離輻射'],['REACTIVE // Corrosive or water-reactive','高反應性 // 腐蝕性或遇水反應'],['TOXIC // Handle under controlled conditions','有毒 // 須於受控條件下處理'],['None listed','無列管項目']].sort((a,b)=>b[0].length-a[0].length);
+const loc=s=>{DICT.forEach(([a,b])=>s=s.split(a).join(b));return s};
+const _d=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML');
+Object.defineProperty(as,'innerHTML',{configurable:true,set(v){_d.set.call(this,L=='zh'?loc(v):v)},get(){return _d.get.call(this)}});
+const PRE=[['all','全部','All'],['metals','金屬','Metals'],['nonmetals','非金屬','Nonmetals'],['noble','惰性氣體','Noble gases'],['radio','放射性','Radioactive'],['syn','人工合成','Synthetic']];
+function buildUI(){const v={};['fc','fs','fp','fg','tn'].forEach(i=>v[i]=$('#'+i).value||'');
+$('#fc').innerHTML=`<option value="">${t('類別：全部','Category: any')}</option>`+Object.entries(CATS).map(([k,c])=>`<option value="${k}">${c[0]}</option>`).join('');
+$('#fs').innerHTML=`<option value="">${t('狀態：全部','State: any')}</option>`+[['solid','固態','Solid'],['liquid','液態','Liquid'],['gas','氣態','Gas'],['?','未知','Unknown']].map(o=>`<option value="${o[0]}">${t(o[1],o[2])}</option>`).join('');
+$('#fp').innerHTML=`<option value="">${t('週期：全部','Period: any')}</option>`+[1,2,3,4,5,6,7].map(n=>`<option>${n}</option>`).join('');
+$('#fg').innerHTML=`<option value="">${t('族：全部','Group: any')}</option>`+Array.from({length:18},(_,i)=>`<option>${i+1}</option>`).join('');
+$('#tn').innerHTML=`<option value="">${t('趨勢：關閉','Trend: off')}</option>`+[['r','原子半徑','Atomic radius'],['en','電負度','Electronegativity'],['ie','游離能','Ionization energy'],['mp','熔點','Melting point']].map(o=>`<option value="${o[0]}">${t(o[1],o[2])}</option>`).join('');
+[['fc','類別','Category'],['fs','狀態','State'],['fp','週期','Period'],['fg','族','Group'],['tn','趨勢疊圖','Trend overlay']].forEach(o=>$('#'+o[0]).setAttribute('aria-label',t(o[1],o[2])));
+['fc','fs','fp','fg','tn'].forEach(i=>$('#'+i).value=v[i]);
+$('#lg').innerHTML=Object.values(CATS).map(c=>`<span style="--c:${c[1]}"><i></i>${c[0]}</span>`).join('');
+$('#pre').innerHTML=PRE.map(p=>`<button class="b" data-p="${p[0]}" aria-pressed="${p[0]==preset}">${t(p[1],p[2])}</button>`).join('')}
+function applyLang(){document.documentElement.lang=L=='zh'?'zh-Hant-TW':'en';document.title=t('元素資料庫 // 週期系統','Elemental Database // Periodic System');
+Object.keys(CATS).forEach(k=>CATS[k][0]=L=='zh'?CZ[k]:CE[k]);
+E.forEach(e=>{e.n=L=='zh'?ZH[e.z-1]:e.en;const b=els[e.z];b.querySelector('.nm').textContent=e.n;b.setAttribute('aria-label',`${e.n}, ${t('原子序','atomic number')} ${e.z}, ${CATS[e.k][0]}`)});
+$('#h1').textContent=t('週期系統','Periodic System');$('#sbt').textContent=t('元素資料庫 // 週期系統','Elemental database // periodic system');
+$('#q').placeholder=t('名稱 / 符號 / 序號','Name / symbol / no.');$('#q').setAttribute('aria-label',t('搜尋元素','Search elements'));
+$('#cm').textContent=t('比較','Compare');$('#th').textContent=t('主題','Theme');$('#th').setAttribute('aria-label',t('切換主題','Toggle theme'));$('#tl').textContent=t('溫度','Temp');$('#ln').value=L;
+document.querySelectorAll('footer em').forEach((m,i)=>m.textContent=L=='zh'?['資料庫','紀錄','已選','篩選','探測'][i]:['DB','Records','Selected','Filter','Probe'][i]);
+buildUI();refresh()}
+// grid
+for(let c=1;c<=18;c++)gr.insertAdjacentHTML('beforeend',`<div class="gh" style="grid-row:1;grid-column:${c+1}">${c}</div>`);
+for(let p=1;p<=7;p++)gr.insertAdjacentHTML('beforeend',`<div class="pl" style="grid-row:${p+1};grid-column:1">${p}</div>`);
+gr.insertAdjacentHTML('beforeend',`<div class="fm" style="grid-row:7;grid-column:4">57–71</div><div class="fm" style="grid-row:8;grid-column:4">89–103</div><div style="grid-row:9;grid-column:1;height:10px"></div>`);
+const map={};
+E.forEach(e=>{const[r,c]=pos(e.z),k=cat(e.z),b=document.createElement('button');e.r0=r;e.c0=c;e.k=k;
+b.className='el'+(RADIOACT(e.z)?' rd':'');b.dataset.z=e.z;b.tabIndex=e.z==1?0:-1;b.style.cssText=`grid-row:${r+1};grid-column:${c+1};--cc:${CATS[k][1]};--i:${e.z}`;
+b.setAttribute('aria-label',`${e.n}, atomic number ${e.z}, ${CATS[k][0]}`);
+b.innerHTML=`<i class="bg d${String(e.z).length}">${e.z}</i><span class="zz">${e.z}</span><span class="st"></span><span class="sy">${e.s}</span><span class="nm">${e.n}</span><span class="ms">${mass(e)}</span><s class="tr"></s>`;
+gr.appendChild(b);els[e.z]=b;map[r+','+c]=b});
+const MAXV={};['r','en','ie','mp'].forEach(p=>MAXV[p]=Math.max(...E.map(e=>e[p]||0)));
+function match(e){const q=$('#q').value.trim().toLowerCase(),fc=$('#fc').value,fs=$('#fs').value,fp=$('#fp').value,fg=$('#fg').value,z=e.z;
+if(q&&!(String(z)==q||e.s.toLowerCase()==q||(e.n+e.en).toLowerCase().includes(q)))return false;
+if(fc&&e.k!=fc)return false;if(fs&&state(e,T0())!=fs)return false;
+if(fp&&(z<57||z>71)&&(z<89||z>103)?+fp!=e.r0:fp&&!(+fp==(z<72?6:7)))return false;
+if(fg&&(e.r0>8||+fg!=e.c0))return false;
+return {all:1,metals:METAL(z),nonmetals:!METAL(z)&&e.k!='mt',noble:e.k=='ng',radio:RADIOACT(z),syn:SYN(z)}[preset]}
+function refresh(){const T=T0(),tn=$('#tn').value;let n=0,act=[];
+$('#tv').textContent=`${T} K / ${(T-273.15).toFixed(0)} °C`;
+E.forEach(e=>{const b=els[e.z],ok=match(e),s=state(e,T);if(ok)n++;b.classList.toggle('dim',!ok);
+const st=b.querySelector('.st');st.textContent=L=='zh'?SN(s)[0]:SL[s];st.style.color=s=='liquid'?'var(--ac)':s=='gas'?'var(--tx)':'var(--mu)';st.style.fontWeight=s=='gas'?800:600;
+b.querySelector('.tr').style.width=tn&&e[tn]?(e[tn]/MAXV[tn]*100)+'%':'0';
+b.classList.toggle('sel',sel==e.z);b.classList.toggle('pick',picks.includes(e.z))});
+['q','fc','fs','fp','fg','tn'].forEach(i=>{const v=$('#'+i).value;if(v)act.push(i=='tn'?'trend:'+v:v)});if(preset!='all')act.push(preset);
+$('#fn').textContent=n+'/118';$('#ff').textContent=act.length?act.join(' + '):t('無','NONE');
+$('#fsel').textContent=sel?`EL-${String(sel).padStart(3,'0')} // ${E[sel-1].s}`:t('無','NONE');render()}
+const sup=n=>String(n).replace(/\d/g,d=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[d]);
+function shells(z){const c=cfg(z),sh={};c.forEach(([k,v])=>sh[k[0]]=(sh[k[0]]||0)+v);const R=Object.keys(sh).length;let o=`<svg viewBox="0 0 200 200" width="170" height="170" role="img" aria-label="Electron shell diagram"><circle cx="100" cy="100" r="9" fill="var(--ac)"/>`;
+Object.entries(sh).forEach(([n,v])=>{const r=16+n*12.2;o+=`<circle cx="100" cy="100" r="${r}" fill="none" stroke="var(--ln)" stroke-width="1"/>`;for(let i=0;i<v;i++){const a=i/v*6.2832-1.5708;o+=`<circle cx="${100+r*Math.cos(a)}" cy="${100+r*Math.sin(a)}" r="2.4" fill="var(--tx)"/>`}});
+return o+'</svg><div class="lb" style="margin-top:4px">Shells: '+Object.values(sh).join(' · ')+'</div>'}
+function spark(e){const p=$('#tn').value||'en',names={r:'Atomic radius',en:'Electronegativity',ie:'Ionization energy',mp:'Melting point'};
+const row=E.filter(x=>x.r0==e.r0&&x.r0<=7&&x[p]!=null);if(row.length<2)return'<div class="lb">No trend data for this period</div>';
+const mx=Math.max(...row.map(x=>x[p])),w=200/row.length;
+return`<svg viewBox="0 0 200 54" width="100%" role="img" aria-label="${names[p]} across period ${e.r0}">`+row.map((x,i)=>{const h=x[p]/mx*38;return`<rect x="${i*w+1}" y="${40-h}" width="${w-2}" height="${h}" fill="${x.z==e.z?'var(--ac)':'var(--mu)'}" opacity="${x.z==e.z?1:.45}"/><text x="${i*w+w/2}" y="51" font-size="6" text-anchor="middle" fill="var(--mu)" font-family="monospace">${x.s}</text>`}).join('')+`</svg><div class="lb">${names[p]} // period ${e.r0}</div>`}
+function render(){if(cmpMode&&picks.length==2)return cmpView();if(cmpMode&&picks.length==1)return as.innerHTML=`<div class="ph"><button class="b x" data-close>Close</button><div class="lb">Compare mode</div><h2>Select second element</h2><p style="margin-top:8px">Picked: <b>${E[picks[0]-1].n}</b>. Choose one more specimen from the table.</p></div>`;
+if(!sel)return as.innerHTML=`<div class="ph"><div class="lb">Element dossier // standby</div><h2>No specimen selected</h2><p style="margin-top:8px">Select an element, or move with the arrow keys and press Enter.</p></div>`;dossier(E[sel-1])}
+function dossier(e){const z=e.z,k=e.k,T=293,s=state(e,T),hz=hazard(z),f=z>=57&&z<=71||z>=89&&z<=103,g=f?'N/A (f-block)':e.c0,pr=f?(z<72?6:7):e.r0;
+const sameG=f?[]:E.filter(x=>x.c0==e.c0&&x.r0<8&&x.z!=z),nb=[E[z-2],E[z]].filter(Boolean);
+const U='N/A — UNVERIFIED',snm=s=='?'?'UNVERIFIED':s.toUpperCase();
+const kv=(l,v)=>`<div><span class="lb">${l}</span><b>${v}</b></div>`;
+as.innerHTML=`<div class="dos" style="--cc:${CATS[k][1]}"><div class="hd"><div><span class="lb">Element dossier</span><div class="mo" style="font-size:10px;color:var(--mu);margin-top:2px">RI-EL-${String(z).padStart(3,'0')}-${(z*7919%9973).toString(16).toUpperCase().padStart(4,'0')}</div><div class="bar" aria-hidden="true"></div></div><button class="b x" data-close aria-label="Close dossier">Close</button></div>
+<div class="big"><div class="bs">${e.s}</div><div class="bz">${String(z).padStart(3,'0')}</div></div>
+<h2>${e.n}</h2>${L=='zh'?'<div class="lb">'+e.en+'</div>':''}<span class="tag">${CATS[k][0]}</span>
+<div class="sec lb">Physical data</div><div class="kv">${kv('Atomic mass',mass(e)+' u')}${kv('Physical state (293 K)',snm)}${kv('Melting point',e.mp?e.mp+' K / '+(e.mp-273.15).toFixed(0)+' °C':'N/A')}${kv('Boiling point',e.bp?e.bp+' K / '+(e.bp-273.15).toFixed(0)+' °C':'N/A')}${kv('Density',dens(e.d))}${kv('Period / group',pr+' / '+g)}${kv('Electronegativity',fm(e.en,' (Pauling)'))}${kv('Atomic radius',fm(e.r,' pm'))}${kv('1st ionization',fm(e.ie,' kJ/mol'))}${kv('Discovered',(e.y?e.y+' // '+e.di:'Ancient'))}</div>
+<div class="sec lb">Configuration</div><div class="cfg">${cfg(z).map(([k,v])=>k+sup(v)).join(' ')}</div><div style="margin-top:6px">${shells(z)}</div>
+<div class="sec lb">Hazard status</div><div class="hz ${hz[0]}">${hz[1]}</div>
+<div class="sec lb">Notes</div><p>${(L=='zh'?NZ[z]:NOTE[z])||(L=='zh'?U+'。屬於'+CATS[k][0]+'，位於第 '+pr+' 週期。':U+'. A '+CATS[k][0].toLowerCase()+' in period '+pr+'.')}</p>
+<div class="sec lb">Isotopes</div><p class="mo" style="font-size:12px">${RADIOACT(z)?'No stable isotopes. Nominal mass no. '+e.m.split('.')[0]+' (most stable / reference)':'Nominal mass no. '+Math.round(+e.m)+' (most abundant / reference)'}</p>
+<div class="sec lb">Trend: along period</div>${spark(e)}
+<div class="sec lb">Related</div><div class="rel">${nb.map(x=>`<button class="b" data-go="${x.z}">${x.s} ${x.z}</button>`).join('')}${sameG.map(x=>`<button class="b" data-go="${x.z}" title="Same group">${x.s}</button>`).join('')}</div></div>`;
+as.classList.toggle('open',true)}
+function cmpView(){const[a,b]=picks.map(z=>E[z-1]);const rows=[['Atomic number','z',''],['Atomic mass','m',' u'],['Melting point','mp',' K'],['Boiling point','bp',' K'],['Density','d',''],['Electronegativity','en',''],['Atomic radius','r',' pm'],['Ionization energy','ie',' kJ/mol']];
+const cell=(x,y,p,u)=>{const v=x[p];const t=p=='d'?dens(v):p=='m'?mass(x)+u:v==null?'N/A':v+u;const win=typeof v=='number'&&typeof y[p]=='number'&&p!='z'&&p!='m'&&v>y[p];return`<td class="${win?'w':''}">${t}</td>`};
+as.innerHTML=`<div class="dos"><div class="hd"><div><span class="lb">Comparison</span><div class="bar" aria-hidden="true"></div></div><button class="b x" data-close>Close</button></div><h2>${a.s} <span style="color:var(--mu)">vs</span> ${b.s}</h2>
+<table class="cmp"><tr><th>Property</th><th>${a.n}</th><th>${b.n}</th></tr>${rows.map(r=>`<tr><th>${r[0]}</th>${cell(a,b,r[1],r[2])}${cell(b,a,r[1],r[2])}</tr>`).join('')}
+<tr><th>Category</th><td>${CATS[a.k][0]}</td><td>${CATS[b.k][0]}</td></tr><tr><th>State (selected T)</th><td>${state(a,T0())}</td><td>${state(b,T0())}</td></tr></table><p class="lb" style="margin-top:10px">Higher value highlighted</p></div>`;as.classList.add('open')}
+function choose(z){if(cmpMode){picks=picks.includes(z)?picks.filter(x=>x!=z):[...picks,z].slice(-2);sel=z}else sel=z;refresh()}
+gr.addEventListener('click',e=>{const b=e.target.closest('.el');if(b)choose(+b.dataset.z)});
+gr.addEventListener('mouseover',e=>{const b=e.target.closest('.el');if(b){const x=E[b.dataset.z-1];$('#fh').textContent=`${x.s} // ${x.n} // ${mass(x)} u // ${SN(state(x,T0()))}`}});
+gr.addEventListener('focusin',e=>{const b=e.target.closest('.el');if(b){const x=E[b.dataset.z-1];$('#fh').textContent=`${x.s} // ${x.n}`}});
+gr.addEventListener('keydown',e=>{const d={ArrowRight:[0,1],ArrowLeft:[0,-1],ArrowDown:[1,0],ArrowUp:[-1,0]}[e.key];if(!d)return;e.preventDefault();const z=+e.target.dataset.z;if(!z)return;let r=E[z-1].r0,c=E[z-1].c0;
+for(let i=0;i<20;i++){r+=d[0];c+=d[1];if(r<1||r>10||c<1||c>18)return;if(map[r+','+c]){els[z].tabIndex=-1;map[r+','+c].tabIndex=0;map[r+','+c].focus();return}}});
+as.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;if(t.dataset.go)choose(+t.dataset.go);if(t.dataset.close!=null)as.classList.remove('open')});
+$('#pre').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(!b)return;preset=b.dataset.p;document.querySelectorAll('#pre .b').forEach(x=>x.setAttribute('aria-pressed',x==b));refresh()});
+['q','fc','fs','fp','fg','tn','tp'].forEach(i=>$('#'+i).addEventListener('input',refresh));
+$('#cm').addEventListener('click',e=>{cmpMode=!cmpMode;e.target.setAttribute('aria-pressed',cmpMode);picks=cmpMode&&sel?[sel]:[];if(!cmpMode)as.classList.remove('open');refresh()});
+$('#ln').addEventListener('change',e=>{L=e.target.value;try{localStorage.setItem('ptl',L)}catch(_){}applyLang()});
+$('#th').addEventListener('click',()=>{const h=document.documentElement;h.dataset.theme=h.dataset.theme=='dark'?'light':'dark'});
+document.addEventListener('keydown',e=>{if(e.key=='Escape')as.classList.remove('open')});
+applyLang();as.classList.remove('open');
+</script>
+</body>
+</html>

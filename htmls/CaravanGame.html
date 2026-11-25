@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ledger &amp; Lantern</title>
+<style>
+:root{--bg:#f4ecd8;--fg:#2b2118;--card:#fffaf0;--ac:#8a4b12;--mut:#7a6a58;--bd:#cdb98f;--good:#2f6b2f;--bad:#a22;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1712;--fg:#eadfc8;--card:#2a2219;--ac:#e0a050;--mut:#a39580;--bd:#4a3d2c;--good:#7fcf7f;--bad:#ff8a80}}
+:root[data-theme="dark"]{--bg:#1c1712;--fg:#eadfc8;--card:#2a2219;--ac:#e0a050;--mut:#a39580;--bd:#4a3d2c;--good:#7fcf7f;--bad:#ff8a80}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--fg);font:15px/1.5 'Noto Serif TC','Songti TC','PMingLiU',Georgia,'Times New Roman',serif;padding:12px}
+h1,h2,h3{margin:.2em 0;font-variant:small-caps;letter-spacing:.03em}h2{font-size:1.1em;color:var(--ac)}
+.bar{display:flex;flex-wrap:wrap;gap:6px 16px;padding:8px 12px;background:var(--card);border:1px solid var(--bd);border-radius:8px;margin-bottom:10px}
+.grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:10px}@media(max-width:820px){.grid{grid-template-columns:1fr}}
+.box{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:10px;margin-bottom:10px;overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px}th,td{padding:4px 6px;text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap}th:first-child,td:first-child{text-align:left}
+button{font:inherit;background:var(--ac);color:var(--card);border:0;border-radius:6px;padding:4px 10px;cursor:pointer}button:disabled{opacity:.35;cursor:default}button.alt{background:transparent;color:var(--fg);border:1px solid var(--bd)}
+.up{color:var(--good)}.dn{color:var(--bad)}.mut{color:var(--mut);font-size:13px}.spark{letter-spacing:-1px;color:var(--ac)}
+.route{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd)}
+.hand{display:flex;flex-wrap:wrap;gap:14px;margin:14px 0;padding-top:12px}.box:has(.hand){overflow:visible}
+.card{--rx:0deg;--ry:0deg;--s:1;--mx:50%;--my:50%;--tc:var(--bd);position:relative;width:150px;height:236px;padding:8px;display:flex;flex-direction:column;background:linear-gradient(160deg,var(--card),color-mix(in srgb,var(--card) 78%,var(--tc)));border:3px solid var(--tc);border-radius:12px;color:var(--fg);font:inherit;font-size:12.5px;text-align:center;cursor:pointer;overflow:hidden;transform:perspective(700px) rotateX(var(--rx)) rotateY(var(--ry)) scale(var(--s));transform-style:preserve-3d;will-change:transform;transition:transform .15s ease-out,box-shadow .2s;box-shadow:0 4px 8px rgba(0,0,0,.28),0 10px 18px rgba(0,0,0,.18)}
+.card:hover{--s:1.1;z-index:5;box-shadow:0 14px 22px rgba(0,0,0,.4),0 30px 38px rgba(0,0,0,.25)}
+.card::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .2s;background:radial-gradient(circle at var(--mx) var(--my),rgba(255,255,255,.38),transparent 55%)}.card:hover::after{opacity:1}
+.card .nm{font-weight:bold;font-size:14px;font-variant:small-caps;padding:2px 20px;min-height:24px;display:flex;align-items:center;justify-content:center}
+.card .dv{border:0;height:2px;width:100%;margin:5px 0;background:linear-gradient(90deg,transparent,var(--tc),transparent)}
+.card .art{flex:0 0 74px;display:flex;align-items:center;justify-content:center;font-size:42px;border:1px solid var(--tc);border-radius:8px;margin-bottom:6px;background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--tc) 38%,transparent),color-mix(in srgb,var(--tc) 8%,transparent))}
+.card .tx{flex:1;display:flex;align-items:center;justify-content:center;line-height:1.3;padding-bottom:8px}
+.card .c{position:absolute;top:6px;left:6px;z-index:1;background:var(--tc);color:#fff;border-radius:50%;width:22px;height:22px;line-height:22px;font-weight:bold;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.card .k{position:absolute;bottom:3px;right:7px;font-size:10px;color:var(--mut)}
+@media (prefers-reduced-motion:reduce){.card{transition:none}}
+.card.off{opacity:.5;filter:grayscale(.6)}
+.Attack{--tc:#b33}.Defense{--tc:#37a}.Economy{--tc:#b90}.Utility{--tc:#383}
+.intent{font-size:1.1em;padding:6px 10px;border:1px dashed var(--ac);border-radius:8px;display:inline-block;margin:6px 0}
+.big{font-size:2.2em}.log{max-height:110px;overflow:auto;font-size:13px;color:var(--mut)}.msg{color:var(--ac);font-style:italic;margin:4px 0}
+.kd{color:#d1332b;font-weight:bold}.kb{color:#2b72d1;font-weight:bold}.kg{color:#c28a00;font-weight:bold}.kh{color:#2f9e44;font-weight:bold}.kw{color:#8e44ad;font-weight:bold}.kx{color:#b9770e;font-weight:bold}.kc{color:#8a5a2b;font-weight:bold}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .kd{color:#ff7b72}:root:not([data-theme="light"]) .kb{color:#6cb0ff}:root:not([data-theme="light"]) .kg{color:#f5c842}:root:not([data-theme="light"]) .kh{color:#6fdc8c}:root:not([data-theme="light"]) .kw{color:#c79bff}:root:not([data-theme="light"]) .kx{color:#f0a548}:root:not([data-theme="light"]) .kc{color:#d2a679}}
+.ch{vertical-align:middle}tr[data-tip]{cursor:help}tr[data-tip]:hover td{background:color-mix(in srgb,var(--ac) 10%,transparent)}
+#tip{position:fixed;z-index:50;pointer-events:none;display:none;min-width:190px;max-width:260px;padding:10px 12px;background:linear-gradient(180deg,#2c2218,#1a130c);color:#f1e3c4;border:2px solid #c9a25a;border-radius:6px;box-shadow:0 0 0 2px #1a130c,0 8px 20px rgba(0,0,0,.5),inset 0 0 12px rgba(201,162,90,.18);font-size:13px;line-height:1.4}
+#tip .tn{font-weight:bold;font-size:15px;color:#f5d58a;text-align:center;letter-spacing:.04em}
+#tip hr{border:0;height:1px;margin:6px 0;background:linear-gradient(90deg,transparent,#c9a25a,transparent)}
+#tip .tw{display:flex;justify-content:space-between;gap:16px}
+#tip .ty{margin:7px 0;display:flex;flex-wrap:wrap;gap:4px}#tip .ty span{padding:1px 9px;border-radius:10px;font-size:12px;border:1px solid currentColor}
+#tip .tl{color:#8d8577;font-style:italic;font-size:12px;line-height:1.6;text-align:center;margin-top:8px}
+#cgrid{position:relative;margin:6px 0;background-color:color-mix(in srgb,var(--bd) 55%,var(--card));background-image:linear-gradient(var(--bd) 1px,transparent 1px),linear-gradient(90deg,var(--bd) 1px,transparent 1px);background-size:var(--gs) var(--gs);border:2px solid var(--ac);border-radius:4px;touch-action:none}
+.gi{position:absolute;border-radius:5px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(0,0,0,.45);touch-action:none;cursor:grab;user-select:none;color:#fff;background:linear-gradient(160deg,color-mix(in srgb,var(--gc) 80%,#fff),var(--gc));box-shadow:0 2px 4px rgba(0,0,0,.4)}.gi.sel{outline:3px solid var(--ac);outline-offset:1px}.gi.drag{z-index:9;opacity:.92;box-shadow:0 10px 16px rgba(0,0,0,.5)}
+.gi .q{position:absolute;right:2px;bottom:1px;font:bold 11px/1 sans-serif;background:rgba(0,0,0,.7);padding:1px 4px;border-radius:7px}
+#ghl{position:absolute;pointer-events:none;border:3px solid;border-radius:5px;display:none;z-index:8}#ghl.hv{background:rgba(60,190,80,.35);border-color:var(--good)}#ghl.hs{background:rgba(230,170,20,.35);border-color:#c98a00}#ghl.hb{background:rgba(220,60,50,.38);border-color:var(--bad)}
+.Skill{--tc:#2a7fb0}.Power{--tc:#8e44ad}.Cargo{--tc:#a0662a}.Curse{--tc:#555}
+.card{height:256px}.card .art{flex:0 0 52px;font-size:30px}.card .tp{font-size:10px;text-align:center;margin-bottom:3px}.card .tx{font-size:12px;overflow:hidden}
+.enrow{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}.en{flex:1;min-width:150px;max-width:240px;background:var(--card);border:2px solid var(--bd);border-radius:10px;padding:8px;text-align:center;cursor:pointer}.en.tgt{border-color:var(--ac);box-shadow:0 0 0 2px var(--ac)}.en.dead{opacity:.35;cursor:default}
+.hpb{position:relative;height:16px;background:var(--bd);border-radius:8px;overflow:hidden;margin:4px 0}.hpb i{position:absolute;inset:0 auto 0 0;background:var(--bad)}.hpb span{position:relative;font-size:12px;line-height:16px;color:#fff;text-shadow:0 1px 2px #000}
+.stt{display:inline-block;margin:0 3px;font-size:13px;cursor:help}.modchip{display:inline-block;border:1px solid var(--ac);border-radius:12px;padding:2px 10px;margin:0 6px 4px 0;font-size:13px}
+*{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+:root{--gold:#a87400;--yel:#c99a00}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--gold:#f5c842;--yel:#ffd84a}}:root[data-theme="dark"]{--gold:#f5c842;--yel:#ffd84a}
+html,body{height:100%}body{height:100vh;height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+#app{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;padding-right:2px}
+#app>.grid{flex:1;min-height:0;overflow:hidden}#app>.grid>div{min-height:0;overflow-y:auto;overflow-x:hidden;padding-right:4px}
+@media(max-width:820px){#app>.grid{overflow-y:auto}#app>.grid>div{overflow:visible}}
+.msg{height:1.5em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td{font-variant-numeric:tabular-nums}.rt{display:grid;grid-template-columns:4.5em 8.5em 7.5em auto;gap:0 8px}.rt span{white-space:nowrap}.gold{color:var(--gold);font-weight:bold}.dg{font-weight:bold}.dg.lo{color:var(--good)}.dg.md{color:var(--yel)}.dg.hi{color:var(--bad)}
+.ft{position:fixed;z-index:60;pointer-events:none;font-weight:bold;font-size:18px;text-shadow:0 1px 3px rgba(0,0,0,.45);transform:translate(-50%,-10px);animation:ftu 1.1s ease-out forwards;white-space:nowrap}.ft.up{color:var(--good)}.ft.dn,.ft.bad{color:var(--bad)}@keyframes ftu{to{transform:translate(-50%,-64px);opacity:0}}
+.tabs{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}.tab{background:var(--card);color:var(--fg);border:1px solid var(--bd)}.tab.on{background:var(--ac);color:var(--card)}.box.pf,.tabs.pf{animation:pf .25s ease-out}@keyframes pf{from{opacity:0;transform:translateY(8px)}}
+.rt{grid-template-columns:4.5em 8.5em 9em auto}.rt .full{grid-column:1/-1;white-space:normal}
+#tr{position:fixed;inset:0;z-index:70;pointer-events:none;animation:trf var(--d,450ms) ease-out forwards}@keyframes trf{from{opacity:1}to{opacity:0}}
+#tr.parch,#tr.travel{background:radial-gradient(ellipse at center,rgba(244,236,216,.2),rgba(190,160,100,.95) 100%)}#tr.glow{background:radial-gradient(circle at 50% 62%,rgba(255,200,90,.6),rgba(30,18,8,.92) 78%)}#tr.smoke{background:radial-gradient(circle at 50% 50%,rgba(60,40,40,.35),rgba(10,6,6,.95) 85%)}#tr.gold{background:radial-gradient(circle at 50% 50%,rgba(255,215,120,.8),rgba(120,80,20,.55) 75%)}#tr.dark{background:#080505}
+#tr .cv{position:absolute;bottom:20%;left:-12%;font-size:46px;animation:cvm var(--d,500ms) linear forwards}@keyframes cvm{to{left:110%}}
+#intro{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:80;pointer-events:none;text-align:center;max-width:min(420px,88vw);padding:18px 24px;background:linear-gradient(180deg,#2c2218,#1a130c);color:#f1e3c4;border:2px solid #c9a25a;border-radius:10px;box-shadow:0 0 0 3px #1a130c,0 14px 40px rgba(0,0,0,.6);animation:introf 2.6s ease-out forwards}#intro h2{color:#f5d58a;margin:4px 0}#intro .ic{font-size:54px}#intro .mut{color:#a39078}@keyframes introf{0%{opacity:0;transform:translate(-50%,-44%)}12%{opacity:1;transform:translate(-50%,-50%)}85%{opacity:1}100%{opacity:0}}
+#dev{display:none;position:fixed;left:8px;bottom:8px;z-index:90;background:#1a130c;color:#f1e3c4;border:1px solid #c9a25a;border-radius:8px;padding:8px;font-size:12px;max-width:94vw}#dev select,#dev button{font-size:12px;padding:1px 4px}
+.tier{font-size:11px;border:1px solid currentColor;border-radius:9px;padding:0 6px;margin-left:4px;white-space:nowrap}.tier.Rare{color:#2a8fb0}.tier.Legendary{color:#c98a00;background:rgba(220,170,0,.14);font-weight:bold}.tier.na{color:var(--mut)}
+#deckm{position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center}#deckm .dm{background:var(--bg);border:2px solid var(--ac);border-radius:12px;padding:12px;max-width:94vw;max-height:88vh;overflow:auto}
+.gi .q b{font-weight:bold}.gi .q b.full{color:#7fe08a}.gi .q small{font-size:9px;color:#9a9a9a;font-weight:normal;margin-left:1px}
+tr.spec td{background:rgba(212,160,0,.10);box-shadow:inset 0 2px 0 var(--gold),inset 0 -2px 0 var(--gold)}tr.spec td:first-child{box-shadow:inset 2px 0 0 var(--gold),inset 0 2px 0 var(--gold),inset 0 -2px 0 var(--gold)}tr.spec td:last-child{box-shadow:inset -2px 0 0 var(--gold),inset 0 2px 0 var(--gold),inset 0 -2px 0 var(--gold)}
+#tip .spec-l{color:#f5c842;text-align:center;font-weight:bold;font-size:12px;margin-top:2px}
+.qm{display:inline-block;width:16px;height:16px;line-height:14px;text-align:center;border:1px solid var(--ac);border-radius:50%;font-size:11px;font-weight:bold;cursor:help;color:var(--ac);margin-left:4px}
+#help{position:fixed;z-index:95;display:none;max-width:370px;padding:10px 12px;background:linear-gradient(180deg,#2c2218,#1a130c);color:#f1e3c4;border:2px solid #c9a25a;border-radius:6px;box-shadow:0 0 0 2px #1a130c,0 8px 20px rgba(0,0,0,.5);font-size:12px;line-height:1.4}#help b{color:#f5d58a;display:block;text-align:center;margin-bottom:6px}#help .hr{margin:5px 0;display:flex;gap:8px;align-items:baseline}#help .hr .tier{flex:0 0 auto;margin:0}
+.dgt{border:1px solid currentColor;border-radius:4px;padding:0 6px;margin-right:3px}
+.tab{display:inline-flex;align-items:center;gap:6px;padding:4px 12px}.tab svg{width:30px;height:30px;flex:0 0 auto}
+</style></head><body><button id="lang" class="alt" style="position:fixed;top:calc(env(safe-area-inset-top,0px) + 6px);right:8px;z-index:20;background:var(--card)"></button><div id="app"></div>
+<script>
+/* ===== DATA (edit freely) ===== */
+const COM={grain:{n:'Grain',e:'🌾',b:10,w:2,v:2,perish:1},salt:{n:'Salt',e:'🧂',b:18,w:2,v:1},iron:{n:'Iron',e:'⛓️',b:30,w:5,v:1},wool:{n:'Wool',e:'🐑',b:22,w:1,v:3},spice:{n:'Spice',e:'🌶️',b:70,w:1,v:1,val:1},medicine:{n:'Medicine',e:'🧪',b:50,w:1,v:1},fur:{n:'Furs',e:'🦊',b:45,w:2,v:2},wine:{n:'Wine',e:'🍷',b:35,w:3,v:2,frag:1},tools:{n:'Tools',e:'🔨',b:28,w:3,v:1},reagent:{n:'Reagents',e:'🔮',b:90,w:1,v:1,frag:1,val:1}};
+const CITIES={
+ harrow:{n:'Harrowgate',e:'🌾',d:'Farming town. Cheap grain & wool, hungry for iron and luxuries.',m:{grain:.6,wool:.7,salt:1.1,iron:1.35,spice:1.4,reagent:1.3,tools:1.2,wine:1.0,fur:1.1,medicine:1.1}},
+ salt:{n:'Saltmere',e:'⚓',d:'Port city. Salt and spice flow in; grain and iron are scarce.',m:{salt:.6,spice:.8,wine:.85,grain:1.3,iron:1.25,tools:1.3,fur:1.3,wool:1.1,medicine:.95,reagent:1.0}},
+ thorn:{n:'Thornwick',e:'⛏️',d:'Mining & trapping outpost. Iron, tools and furs are cheap; everything else dear.',m:{iron:.7,fur:.6,tools:.8,grain:1.4,salt:1.35,medicine:1.45,wool:1.3,wine:1.4,spice:1.1,reagent:.8}}};
+const DIST={'harrow|salt':3,'harrow|thorn':3,'salt|thorn':2};
+const EN={
+ wolf:{n:'Dire Wolf',e:'🐺',hp:22,hum:0,ai:[{k:'atk',d:6},{k:'buff'},{k:'atk',d:9}]},
+ goblin:{n:'Goblin Raider',e:'👺',hp:24,hum:1,ai:[{k:'steal',d:4,w:'food'},{k:'atk',d:7},{k:'steal',d:4,w:'gold'}]},
+ bandit:{n:'Bandit Ambusher',e:'🗡️',hp:30,hum:1,ai:[{k:'raid',d:6},{k:'atk',d:8},{k:'raid',d:8}]},
+ warlord:{n:'Pass Warlord',e:'👹',hp:60,hum:1,boss:1,ai:[{k:'raid',d:8},{k:'atk',d:10},{k:'buff'},{k:'raid',d:10}]},
+ rival:{n:'Corvin Vale, Rival Merchant',e:'🎩',hp:70,hum:1,boss:1,ai:[{k:'steal',d:6,w:'gold'},{k:'atk',d:9},{k:'raid',d:9},{k:'buff'}]}};
+const CARDS={
+ strike:{n:'Cudgel Strike',c:1,t:'Attack',x:'Deal 6 damage.',f:()=>dmg(6)},
+ heavy:{n:'Iron-Shod Swing',c:2,t:'Attack',x:'Deal 14 damage.',f:()=>dmg(14)},
+ guard:{n:'Guard the Wagons',c:1,t:'Defense',x:'Block 6. If Block holds this round, raiders cannot take cargo.',f:()=>{blk(6);C().guarded=1}},
+ palisade:{n:'Wagon Palisade',c:2,t:'Defense',x:'Block 12. Exhaust.',ex:1,f:()=>blk(12)},
+ appraise:{n:'Quick Appraisal',c:1,t:'Economy',x:'Draw 2. If you win: +8 gold.',f:()=>{draw(2);C().bonus+=8}},
+ haggle:{n:'Haggle',c:0,t:'Economy',x:'Draw 1. If you win: +4 gold.',f:()=>{draw(1);C().bonus+=4}},
+ bribe:{n:'Bribe',c:1,t:'Economy',x:'Pay 15 gold. Humans flee; beasts skip their next action. Exhaust.',ex:1,ok:()=>S.gold>=15,f:()=>{S.gold-=15;if(EN[C().id].hum&&!EN[C().id].boss){C().eh=0;C().fled=1;log('The foe pockets the coin and flees.')}else{C().skip=1;log('Thrown scraps distract the beast.')}}},
+ throw:{n:'Throw Cargo',c:1,t:'Utility',x:'Sacrifice your cheapest cargo unit: 12 damage, 4 Block. Exhaust.',ex:1,ok:()=>cheapest(),f:()=>{const k=cheapest();removeUnit(k);log('You hurl a unit of '+COM[k].n+'!');dmg(12);blk(4)}},
+ captain:{n:'Guard Captain',c:2,t:'Defense',x:'Ally (2 dmg at end of turn). +1 dmg each time you play a Defense card. Exhaust.',ex:1,f:()=>{C().cap=C().cap||2;log('A guard captain joins the line.')}},
+ lantern:{n:'Lantern Flash',c:1,t:'Utility',x:'Enemy attacks −4 this turn. Draw 1.',f:()=>{C().weak=4;draw(1)}},
+ salve:{n:'Herbal Salve',c:1,t:'Utility',x:'Heal 6 HP. Exhaust.',ex:1,f:()=>{S.hp=Math.min(S.maxHp,S.hp+6)}}};
+const START=['strike','strike','strike','strike','guard','guard','guard','appraise','bribe','throw'];
+const POOL=['heavy','palisade','haggle','captain','lantern','salve','strike','guard','appraise'];
+
+/* ===== STATE ===== */
+const KEY='ledger_lantern_v1';let S={screen:'title'},SAVED=null;
+const $=s=>document.querySelector(s),R=(a,b)=>a+Math.random()*(b-a),RI=(a,b)=>Math.floor(R(a,b+1)),pick=a=>a[RI(0,a.length-1)];
+const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=RI(0,i);[a[i],a[j]]=[a[j],a[i]]}return a};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+try{SAVED=JSON.parse(localStorage.getItem(KEY));if(!SAVED||SAVED.screen=='title'||SAVED.screen=='over')SAVED=null}catch(e){}
+const C=()=>S.cb,log=t=>{C().log.push(t);if(C().log.length>40)C().log.shift()};
+const mark=(c,k)=>(S.prices[c][k]);
+const shockMult=(c,k)=>S.shocks.filter(x=>x.city==c&&x.com==k&&S.day>=x.start&&S.day<x.start+x.len).reduce((a,x)=>a*x.mult,1);
+const tgt=(c,k)=>COM[k].b*(CITIES[c].m[k]||1)*shockMult(c,k);
+const rep=c=>(S.rep&&S.rep[c])||0,repUp=(c,n)=>{S.rep=S.rep||{};S.rep[c]=Math.max(-5,Math.min(10,rep(c)+n))},gcost=()=>Math.max(25,45-3*Math.max(0,rep(S.city)));
+const bp=(c,k)=>Math.ceil(S.prices[c][k]*1.08*(1-.01*rep(c))*(S.fl&&S.fl.disc&&COM[k].b>=100?S.fl.disc:1)),sp=(c,k)=>Math.floor(S.prices[c][k]*.92*.95*(1+.01*rep(c)));
+const wt=()=>Object.entries(S.cargo).reduce((a,[k,n])=>a+n*COM[k].w,0),vol=()=>S.items.reduce((a,i)=>{const r=gRect(i);return a+r.w*r.h},0);
+const CAPW=60,CAPV=80;
+
+function newGame(){
+ const prices={},hist={};
+ for(const c in CITIES){prices[c]={};hist[c]={};for(const k in COM){prices[c][k]=COM[k].b*(CITIES[c].m[k]||1)*R(.92,1.08);hist[c][k]=[Math.round(prices[c][k])]}}
+ S={screen:'city',city:'harrow',day:1,gold:120,hp:50,maxHp:50,food:8,guards:1,cargo:{},basis:{},items:[],nid:1,deck:[...START],prices,hist,shocks:[],rumors:[],msg:'You arrive in Ashenreach with 120 gold and a creaking wagon. Reach 500 gold by day 30 to retire rich.',cb:null,reward:null,over:null};
+ genRumor();genRumor();save();render();
+}
+function genRumor(){
+ const c=pick(Object.keys(CITIES)),k=pick(Object.keys(COM)),up=Math.random()<.5,start=S.day+RI(2,4);
+ if(Math.random()<.8)S.shocks.push({city:c,com:k,mult:up?1.7:.55,start,len:8});
+ S.rumors.push({t:`Travellers whisper that ${COM[k].n.toLowerCase()} will ${up?'surge':'crash'} in ${CITIES[c].n}.`,exp:start+8});
+ S.rumors=S.rumors.filter(r=>r.exp>S.day).slice(-4);
+}
+function tick(days){
+ for(let d=0;d<days;d++){S.day++;for(const c in CITIES)for(const k in COM){let p=S.prices[c][k];p+=(tgt(c,k)-p)*.25+p*R(-.04,.04);S.prices[c][k]=Math.max(2,p);const h=S.hist[c][k];h.push(Math.round(p));if(h.length>8)h.shift()}}
+}
+function removeUnit(k){const n=S.cargo[k];S.basis[k]=Math.round(S.basis[k]*(n-1)/n);const st=S.items.filter(i=>i.type==k).sort((a,b)=>a.q-b.q||b.id-a.id)[0];st.q--;if(!st.q)S.items=S.items.filter(i=>i!==st);sync()}
+const cheapest=()=>Object.keys(S.cargo).sort((a,b)=>COM[a].b-COM[b].b)[0];
+function loseFragile(){const k=Object.keys(S.cargo).find(k=>COM[k].frag);if(k){removeUnit(k);return COM[k].n+' shattered. '}return''}
+
+/* ===== TRAVEL ===== */
+function routes(){const r=[];for(const to in CITIES){if(to==S.city)continue;const d=DIST[[S.city,to].sort().join('|')],t=(S.city=='thorn'||to=='thorn')?'forest':'mountain';
+ r.push({to,n:'King’s Road',days:d+1,dg:.3,toll:10,t:'road'},{to,n:t=='forest'?'Wolfwood Track':'Ridge Pass',days:d,dg:t=='forest'?.6:.45,toll:0,t})}return r}
+function go(i){
+ const r=routes()[i];if(S.gold<r.toll){S.msg='You cannot afford the toll.';return render()}
+ S.gold-=r.toll;let days=r.days,m=[];
+ if(r.t=='forest'&&Math.random()<.3){days++;m.push('Mud slows the wagons (+1 day).')}
+ if(Math.random()<(r.t=='mountain'?.3:.2)){const l=loseFragile();m.push('A storm lashes the caravan. '+l)}
+ S.food-=days;if(S.food<0){S.hp+=S.food*3;S.food=0;m.push('Hunger: the caravan goes without food and loses HP.')}
+ tick(days);
+ if(S.cargo.grain){let l=0;for(let i=0;i<S.cargo.grain*days;i++)if(Math.random()<.05)l++;l=Math.min(l,S.cargo.grain);for(let i=0;i<l;i++)removeUnit('grain');if(l)m.push(l+' grain spoiled.')}
+ S.msg=m.join(' ');
+ if(S.hp<=0)return over(false,'Starved on the road.');
+ if(S.day>=10&&!S.b1){S.b1=1;return startCombat('warlord',r)}
+ if(S.day>=20&&!S.b2){S.b2=1;return startCombat('rival',r)}
+ if(Math.random()<.25)return startEvent(r);
+ if(Math.random()<r.dg){const t={forest:[['wolf',.5],['goblin',.3],['bandit',.2]],mountain:[['bandit',.5],['goblin',.3],['wolf',.2]],road:[['bandit',.4],['goblin',.3],['wolf',.3]]}[r.t];let x=Math.random(),id=t[2][0];for(const[a,p]of t){if(x<p){id=a;break}x-=p}startCombat(id,r)}else arrive(r);
+}
+function arrive(r){S.city=r.to;S.screen='city';genRumor();S.msg=(S.msg||'')+' Arrived in '+CITIES[r.to].n+' on day '+S.day+'.';if(S.day>30)return over(S.gold>=500,'The season ended on day 30.');save();render()}
+function worth(){return S.gold+Object.entries(S.cargo).reduce((a,[k,n])=>a+n*sp(S.city,k),0)}
+function over(win,why){S.screen='over';S.over={win:win||worth()>=500&&why.startsWith('Retired'),why,score:worth()};save();render()}
+
+/* ===== COMBAT ===== */
+function startCombat(id,route){
+ const e=EN[id];S.cb={id,eh:e.hp,em:e.hp,str:0,i:0,draw:shuf([...S.deck]),hand:[],disc:[],exh:[],en:3,blk:S.guards*3,guarded:0,cap:0,bonus:0,weak:0,skip:0,fled:0,log:['A '+e.n+' bars the way!'],route};
+ S.screen='combat';startTurn(true);save();render();
+}
+function draw(n){const c=C();for(let i=0;i<n;i++){if(!c.draw.length){if(!c.disc.length)break;c.draw=shuf(c.disc);c.disc=[]}c.hand.push(c.draw.pop())}}
+function startTurn(first){const c=C();if(!first)c.blk=0;c.guarded=0;c.en=3;draw(5)}
+function dmg(n){C().eh-=n;log('You deal '+n+' damage.')}
+function blk(n){C().blk+=n;log('+'+n+' Block.')}
+function play(i){
+ const c=C(),id=c.hand[i];if(!id)return;const d=CARDS[id];if(c.en<d.c||(d.ok&&!d.ok()))return;
+ c.en-=d.c;c.hand.splice(i,1);d.f();if(d.t=='Defense'&&c.cap&&id!='captain')c.cap++;
+ (d.ex?c.exh:c.disc).push(id);
+ if(c.eh<=0)return win();render();
+}
+function hit(d,k){
+ const c=C(),a=Math.min(c.blk,d);c.blk-=a;const h=d-a;S.hp-=h;log('The foe hits for '+d+(a?' ('+a+' blocked)':'')+'.');
+ if(h>=8&&S.guards>0&&Math.random()<.5){S.guards--;log('A guard is wounded and flees the caravan!')}
+ if(h>0&&Math.random()<.25){const l=loseFragile();if(l)log(l)}
+ if(k=='raid'){if(c.guarded&&h==0)log('Guarded wagons hold! Cargo is safe.');else{const t=Object.keys(S.cargo).sort((a,b)=>COM[b].b-COM[a].b)[0];if(t){removeUnit(t);log('Raiders seize a unit of '+COM[t].n+'!')}else log('Raiders find nothing to take.')}}
+ if(k=='steal'&&h>0)return true;return false;
+}
+function endTurn(){
+ const c=C(),e=EN[c.id];
+ if(c.cap){c.eh-=c.cap;log('Your captain strikes for '+c.cap+'.');if(c.eh<=0)return win()}
+ c.disc.push(...c.hand);c.hand=[];
+ const a=e.ai[c.i%e.ai.length];
+ if(c.skip){c.skip=0;log('The foe hesitates.')}
+ else if(a.k=='buff'){c.str+=2;log('The foe grows fiercer.')}
+ else{const d=Math.max(0,a.d+c.str-c.weak);const st=hit(d,a.k);if(st){if(a.w=='food'){S.food=Math.max(0,S.food-2);log('Supplies stolen: −2 food.')}else{const g=Math.min(S.gold,12);S.gold-=g;log('Purse snatched: −'+g+' gold.')}}}
+ c.weak=0;c.i++;
+ if(S.hp<=0)return over(false,'Your caravan was lost to a '+e.n+'.');
+ startTurn();save();render();
+}
+function win(){
+ const c=C();S.gold+=c.bonus+RI(8,18)+(EN[c.id].boss?50:0);if(EN[c.id].hum&&!c.fled)repUp(c.route.to,1);const pool=shuf([...POOL]).slice(0,3);
+ S.reward={cards:pool,route:c.route,fled:c.fled};S.screen='reward';S.cb=null;save();render();
+}
+function claim(i){
+ const rw=S.reward,n=rw.cards.length;
+ if(i<n)S.deck.push(rw.cards[i]);else if(i==n)S.gold+=30;else if(i==n+1)S.food+=4;else if(i==n+2){const k=pick(CHEAP());if(gridAdd(k,2))S.basis[k]=(S.basis[k]||0)+Math.round(COM[k].b*1.2)}
+ const r=rw.route;S.reward=null;S.msg='Victory! ';arrive(r);
+}
+
+/* ===== EVENTS ===== */
+const addCargo=(k,n)=>{if(gridAdd(k,n)){S.basis[k]=(S.basis[k]||0)+Math.round(COM[k].b*n);return 1}};
+const EVENTS={
+ peddler:{t:'🧙 Roadside Peddler',x:'A wiry peddler waves you down, hawking wares from a rattling cart.',o:[
+  {t:'Healing draught (20g, +15 HP)',ok:()=>S.gold>=20,f:()=>{S.gold-=20;S.hp=Math.min(S.maxHp,S.hp+15);return'The draught tastes of mint and regret, but you feel better.'}},
+  {t:'Spare rations (15g, +4 food)',ok:()=>S.gold>=15,f:()=>{S.gold-=15;S.food+=4;return'You stock up on hard bread.'}},
+  {t:'Wave him off',f:()=>'You roll on.'}]},
+ warden:{t:'🪙 Road Warden',x:'A warden bars the road and demands a “road levy”.',o:[
+  {t:'Pay 25g (+1 reputation at destination)',ok:()=>S.gold>=25,f:()=>{S.gold-=25;repUp(S.ev.r.to,1);return'He stamps your papers and tips his cap.'}},
+  {t:'Argue (60% free passage, otherwise a 40g fine and −1 reputation)',f:()=>{if(Math.random()<.6)return'Your silver tongue carries the day.';const g=Math.min(S.gold,40);S.gold-=g;repUp(S.ev.r.to,-1);return'He fines you '+g+'g.'}}]},
+ wagon:{t:'🛒 Abandoned Wagon',x:'A wagon lies on its side, its owners nowhere in sight.',o:[
+  {t:'Search it (60% cargo, 40% trap for 8 damage)',f:()=>{if(Math.random()<.6){const k=pick(CHEAP());if(!addCargo(k,2))return'You find '+COM[k].n+' but have no room to carry it.';return'You find 2 units of '+COM[k].n+'!'}S.hp-=8;return'A snare trap bites your leg (−8 HP).'}},
+  {t:'Leave it',f:()=>'You pass by warily.'}]},
+ family:{t:'🕯️ Stranded Travellers',x:'A family huddles by a broken axle, hungry and cold.',o:[
+  {t:'Share 2 food (+15 gold reward, +1 reputation)',ok:()=>S.food>=2,f:()=>{S.food-=2;S.gold+=15;repUp(S.ev.r.to,1);return'They press coins into your hand and spread word of your kindness.'}},
+  {t:'Ignore them (−1 reputation)',f:()=>{repUp(S.ev.r.to,-1);return'You drive on, the silence heavy behind you.'}}]}};
+function startEvent(r){S.ev={id:pick(Object.keys(EVENTS)),r};S.screen='event';save();render()}
+function choose(i){const o=EVENTS[S.ev.id].o[i];if(!o||(o.ok&&!o.ok()))return;const r=S.ev.r;S.msg=o.f();S.ev=null;if(S.hp<=0)return over(false,'You died on the road.');arrive(r)}
+/* ===== ACTIONS ===== */
+function act(a,k,n){
+ k=k===undefined?undefined:isNaN(k)?k:+k;
+ if(a=='noop')return;if(a=='gal'){GAL=!GAL;return render()}if(a=='gf'){GF=k;return render()}
+ if(a=='new')return newGame();
+ if(a=='cont'){S=SAVED;migrate();return render()}
+ if(a=='card')return play(k);if(a=='end')return endTurn();if(a=='pick')return claim(k);
+ if(a=='go')return go(k);if(a=='ev')return choose(k);if(a=='garr')return gArrange();if(a=='grot')return gRotate();
+ if(a=='retire')return over(S.gold>=500,'Retired on day '+S.day+'.');
+ if(a=='buy'){let bought=0;for(let i=0;i<n;i++){const p=bp(S.city,k);if(!stockOk(k)){floatTxt(tr('Unavailable'),'bad');break}if(S.gold<p){floatTxt(tr('Not enough money'),'bad');break}if(!gridAdd(k,1)){const m=S.msg;S.msg='';floatTxt(tr(m),'bad');break}S.gold-=p;stockUse(k);S.basis[k]=(S.basis[k]||0)+p;S.prices[S.city][k]*=1.03;S.msg='';bought++}if(bought)floatTxt('+'+bought,'up')}
+ if(a=='sell'){let sold=0;for(let i=0;i<n;i++){if(!S.cargo[k])break;const p=sp(S.city,k);S.gold+=p;removeUnit(k);sold++;S.prices[S.city][k]*=.97;S.msg='';S.sc=(S.sc||0)+1;if(S.sc%4==0)repUp(S.city,1)}if(sold)floatTxt('-'+sold,'dn')}
+ if(a=='food'&&S.gold>=6*n){S.gold-=6*n;S.food+=n}
+ if(a=='hire'){if(S.gold>=gcost()&&S.guards<3){S.gold-=gcost();S.guards++}else S.msg='Cannot hire ('+gcost()+'g, max 3 guards).'}
+ if(a=='rest'){if(S.gold>=12){S.gold-=12;S.hp=Math.min(S.maxHp,S.hp+15);S.food--;tick(1);S.msg='You rest at the inn for a day.'}else S.msg='The innkeeper wants 12 gold.'}
+ save();render();
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b&&!b.disabled)act(b.dataset.a,b.dataset.k,e.shiftKey?5:1)});
+document.addEventListener('keydown',e=>{
+ const d=parseInt(e.key);if(GAL){if(e.key=='Escape'){GAL=false;render()}return}
+ if(S.screen=='combat'){if(d>=1&&d<=9)play(d-1);else if(e.key=='e'||e.key=='E'||e.key=='Enter')endTurn()}
+ else if(S.screen=='event'&&d>=1)choose(d-1);
+ else if(S.screen=='reward'&&d>=1&&d<=7){const n=S.reward.cards.length;if(d-1<=n+2)claim(d-1)}
+});
+
+/* ===== I18N: central string table (English text is the key; zh-TW is the default) ===== */
+let LANG='zh';try{LANG=localStorage.getItem('ll_lang')||'zh'}catch(e){}
+const ZH={
+'Buy':'買入','Sell':'賣出','Goods':'商品','Trend':'走勢','Held':'持有','Market':'市場','Routes':'路線','Travel':'出發','Services':'服務','Rumors':'傳聞','Skip':'略過','Close':'關閉','You:':'你：',
+'New Run':'開始新旅程','Continue Saved Run':'繼續存檔','Caravan Inventory':'商隊庫存','Empty wagons.':'馬車是空的。','Total cargo value here:':'貨物在此的總價值：',
+'A trading roguelike deckbuilder. Buy low, sell high, and keep your wagons alive.':'一款交易型 Roguelike 牌組構築遊戲。低買高賣，守住你的馬車。',
+'Spoils of the road':'沿途戰利品','End Turn (E)':'結束回合 (E)','+30 gold':'+30 金幣','+4 food':'+4 食物','2 units of random cargo':'隨機貨物 2 單位',
+'Starved on the road.':'你餓死在路上。','You died on the road.':'你死在了路上。','Final worth (gold + cargo at current prices):':'最終身價（金幣＋貨物按當前價格）：','— goal of 500g met!':'— 已達成 500 金目標！','— goal was 500g.':'— 目標是 500 金。',
+'Nothing but weather talk.':'只聊些天氣閒話。','Rumors are usually—not always—true.':'傳聞通常屬實，但並非每次。','Retire now (goal 500g)':'立即退休（目標 500 金）',
+'Inn: +15 HP, 1 day (12g)':'旅店：回復 15 點生命，耗時 1 天（12 金）',
+'All':'全部','Attack':'攻擊','Defense':'防禦','Economy':'經濟','Utility':'功能','Starter card':'起始卡牌','Reward card':'獎勵卡牌',
+'Farming town. Cheap grain & wool, hungry for iron and luxuries.':'農業小鎮。穀物與羊毛便宜，對鐵器與奢侈品需求旺盛。',
+'Port city. Salt and spice flow in; grain and iron are scarce.':'港口城市。鹽與香料源源不絕，穀物與鐵器稀缺。',
+'Mining & trapping outpost. Iron, tools and furs are cheap; everything else dear.':'礦業與狩獵前哨。鐵、工具與毛皮便宜，其餘物資價格高昂。',
+'road':'道路','forest':'森林','mountain':'山地',
+'Cudgel Strike':'棍棒猛擊','Iron-Shod Swing':'鐵頭重擊','Guard the Wagons':'守護車隊','Wagon Palisade':'車陣柵欄','Quick Appraisal':'快速鑑價','Haggle':'討價還價','Bribe':'賄賂','Throw Cargo':'拋擲貨物','Guard Captain':'護衛隊長','Lantern Flash':'提燈閃光','Herbal Salve':'草藥膏',
+'Deal 6 damage.':'造成 6 點傷害。','Deal 14 damage.':'造成 14 點傷害。',
+'Block 6. If Block holds this round, raiders cannot take cargo.':'獲得格擋 6。若本回合格擋未被擊破，劫匪無法奪取貨物。',
+'Block 12. Exhaust.':'獲得格擋 12。消耗。','Draw 2. If you win: +8 gold.':'抽 2 張牌。若獲勝：+8 金幣。','Draw 1. If you win: +4 gold.':'抽 1 張牌。若獲勝：+4 金幣。',
+'Pay 15 gold. Humans flee; beasts skip their next action. Exhaust.':'支付 15 金幣。人類敵人逃跑；野獸跳過下次行動。消耗。',
+'Sacrifice your cheapest cargo unit: 12 damage, 4 Block. Exhaust.':'犧牲你最便宜的一單位貨物：造成 12 點傷害，獲得格擋 4。消耗。',
+'Ally (2 dmg at end of turn). +1 dmg each time you play a Defense card. Exhaust.':'盟友（回合結束時造成 2 點傷害）。每打出一張防禦牌，額外 +1 點傷害。消耗。',
+'Heal 6 HP. Exhaust.':'回復 6 點生命。消耗。',
+'A wiry peddler waves you down, hawking wares from a rattling cart.':'一名精瘦的小販攔下你，從嘎吱作響的推車上兜售貨物。',
+'A wagon lies on its side, its owners nowhere in sight.':'一輛馬車側翻在路旁，主人不見蹤影。','A family huddles by a broken axle, hungry and cold.':'一家人縮在斷軸的車旁，又冷又餓。',
+'Healing draught (20g, +15 HP)':'治療藥水（20 金，回復 15 點生命）','Spare rations (15g, +4 food)':'備用口糧（15 金，+4 食物）','Wave him off':'揮手打發他',
+'Pay 25g (+1 reputation at destination)':'支付 25 金（目的地聲望 +1）','Search it (60% cargo, 40% trap for 8 damage)':'搜索馬車（60% 得貨物，40% 中陷阱受 8 點傷害）','Leave it':'不理會',
+'Share 2 food (+15 gold reward, +1 reputation)':'分享 2 份食物（獲得 15 金幣謝禮，聲望 +1）',
+'The draught tastes of mint and regret, but you feel better.':'藥水帶著薄荷與悔恨的味道，但你感覺好多了。','You stock up on hard bread.':'你補充了一些硬麵包。','You roll on.':'你繼續趕路。',
+'He stamps your papers and tips his cap.':'他在你的文件上蓋章，並向你脫帽致意。','Your silver tongue carries the day.':'你的三寸不爛之舌奏效了。','You pass by warily.':'你小心翼翼地走過。',
+'They press coins into your hand and spread word of your kindness.':'他們把硬幣塞進你手中，並四處傳頌你的善行。','You drive on, the silence heavy behind you.':'你駕車離去，身後的沉默沉甸甸的。',
+'A guard is wounded and flees the caravan!':'一名護衛負傷逃離了商隊！','Guarded wagons hold!':'車隊守住了！','Cargo is safe.':'貨物安然無恙。','Raiders find nothing to take.':'劫匪找不到可拿的東西。',
+'The foe hesitates.':'敵人猶豫了。','The foe grows fiercer.':'敵人變得更凶猛了。','The foe pockets the coin and flees.':'敵人收下錢，逃走了。','Thrown scraps distract the beast.':'扔出的殘渣分散了野獸的注意。','A guard captain joins the line.':'一名護衛隊長加入了陣線。',
+'Victory!':'勝利！','You cannot afford the toll.':'你付不起過路費。','Mud slows the wagons (+1 day).':'泥濘拖慢了馬車（+1 天）。','A storm lashes the caravan.':'暴風雨襲擊了商隊。',
+'Hunger: the caravan goes without food and loses HP.':'飢餓：商隊斷糧，生命值下降。','Not enough gold.':'金幣不足。','No room on the wagons.':'馬車上沒有空位了。','You rest at the inn for a day.':'你在旅店休息了一天。','The innkeeper wants 12 gold.':'旅店老闆要收 12 金幣。',
+'Reach 500 gold by day 30 to retire rich.':'在第 30 天前攢到 500 金幣，即可風光退休。','The season ended on day 30.':'旅行季在第 30 天結束了。'};
+const ZR=[
+[/^([^\sA-Za-z0-9]+) Day (\d+)\/30$/,'$1 第 $2／30 天'],[/^Act (\d)$/,'第 $1 幕'],[/^([^\sA-Za-z0-9]+) (\d+)g$/,'$1 $2 金'],[/^(\d+)g$/,'$1 金'],
+[/^([^\sA-Za-z0-9]+) (\d+) food$/,'$1 $2 食物'],[/^([^\sA-Za-z0-9]+) (\d+) guards$/,'$1 $2 名護衛'],[/^([^\sA-Za-z0-9]+) (\d+\/\d+) wt$/,'$1 載重 $2'],[/^([^\sA-Za-z0-9]+) (\d+\/\d+) vol$/,'$1 體積 $2'],
+[/^Vertical slice/,'垂直切片版：3 座城市、6 條路線、10 種商品、11 張卡牌、5 種敵人（含 2 名頭目）、4 種事件與聲望系統。按住 Shift 點擊買入／賣出可一次操作 5 個。戰鬥中：按 1–9 打出卡牌，按 E 結束回合。'],
+[/^Retired on day (\d+)\.$/,'你在第 $1 天退休了。'],[/^Your caravan was lost to an? (.+)\.$/,'你的商隊慘遭$1毒手。'],
+[/^Choose one \(keys 1.(\d+)\)/,'請選擇一項（按鍵 1–$1），或直接略過——商隊會繼續上路。'],
+[/^(\d+) cards in the game\. Press Esc to close\.$/,'遊戲中共有 $1 張卡牌。按 Esc 關閉。'],[/^in your deck: (\d+)$/,'牌組中：$1 張'],
+[/^Food ×(\d+) \((\d+)g\)$/,'食物 ×$1（$2 金）'],[/^Hire guard \((\d+)g\)$/,'僱用護衛（$1 金）'],[/^Cannot hire \((\d+)g, max 3 guards\)\.$/,'無法僱用（$1 金，最多 3 名護衛）。'],
+[/^Buy = price/,'買價 = 市價 +8%。賣價 = 市價 −8%，再扣 5% 稅。每次交易會使當地價格變動 3%。穀物會腐壞；葡萄酒與試劑在風暴與戰鬥中容易破碎。'],
+[/^Reputation (-?\d+) \(buy .(\d+)% \/ sell \+(\d+)%, cheaper guards\)$/,'聲望 $1（買價 −$2%／賣價 +$3%，護衛更便宜）'],
+[/^via (.+)$/,'經由 $1'],[/^(\d+) days$/,'$1 天'],[/^toll (\d+)g$/,'過路費 $1 金'],[/^danger (High|Low)$/,(m,d)=>'危險度：'+(d=='High'?'高':'低')],
+[/^\(avg (\d+)\)$/,'（均價 $1）'],[/^— worth ~(\d+)g here$/,'— 此地約值 $1 金'],[/^Deck: (\d+) cards$/,'牌組：$1 張'],
+[/^Weight (\d+), volume (\d+)\.\s*(.*)$/,(m,w,v,f)=>`重量 ${w}，體積 ${v}。${f}`],
+[/^(.+) — (\d+)\/(\d+) HP(?: \(\+(\d+) str\))?$/,(m,n,a,b,s)=>`${n} — 生命 ${a}/${b}${s?`（力量 +${s}）`:''}`],
+[/^([^\sA-Za-z0-9]+) Attack for (\d+)$/,'$1 攻擊，造成 $2 點傷害'],[/^([^\sA-Za-z0-9]+) Rages: \+2 damage permanently$/,'$1 狂暴：永久 +2 點傷害'],
+[/^([^\sA-Za-z0-9]+) Raid: (\d+) damage and seizes your best cargo/,'$1 劫掠：造成 $2 點傷害並奪走你最貴重的一單位貨物（守護車隊且格擋未破可阻止）'],
+[/^([^\sA-Za-z0-9]+) Pickpocket for (\d+); steals (2 food|12 gold)/,(m,e,d,w)=>`${e} 扒竊：造成 ${d} 點傷害；若格擋被擊破，偷走 ${w=='2 food'?'2 份食物':'12 金幣'}`],
+[/^([^\sA-Za-z0-9]+) Distracted/,'$1 分心 — 將跳過行動'],
+[/^([^\sA-Za-z0-9]+) Block (\d+)$/,'$1 格擋 $2'],[/^([^\sA-Za-z0-9]+) Energy (\d+\/\d+)$/,'$1 能量 $2'],[/^([^\sA-Za-z0-9]+) Captain (\d+) dmg$/,'$1 隊長 $2 點傷害'],
+[/^(Draw|Discard|Exhaust) (\d+)$/,(m,a,n)=>({Draw:'抽牌堆',Discard:'棄牌堆',Exhaust:'消耗堆'}[a])+' '+n],
+[/^Enemy attacks .4 this turn\. Draw 1\.$/,'敵人本回合攻擊 −4。抽 1 張牌。'],
+[/^A warden bars the road/,'一名關卡官攔住道路，要求繳納「道路稅」。'],[/^Argue \(60% free passage/,'據理力爭（60% 免費通行，否則罰款 40 金並失去 1 點聲望）'],[/^Ignore them \(.1 reputation\)$/,'不理會他們（聲望 −1）'],
+[/^He fines you (\d+)g\.$/,'他罰了你 $1 金。'],[/^You find 2 units of (.+)!$/,'你找到了 2 單位$1！'],[/^A snare trap bites your leg \(.8 HP\)\.$/,'一個捕獸夾夾住你的腿（−8 生命）。'],
+[/^A(?:n)? (.+) bars the way!$/,'$1擋住了去路！'],[/^You deal (\d+) damage\.$/,'你造成了 $1 點傷害。'],[/^\+(\d+) Block\.$/,'獲得 $1 點格擋。'],
+[/^The foe hits for (\d+)(?: \((\d+) blocked\))?\.$/,(m,d,b)=>`敵人攻擊造成 ${d} 點傷害${b?`（已格擋 ${b}）`:''}。`],
+[/^Raiders seize a unit of (.+)!$/,'劫匪奪走了一單位$1！'],[/^Your captain strikes for (\d+)\.$/,'你的隊長攻擊造成 $1 點傷害。'],
+[/^Supplies stolen: .2 food\.$/,'補給被偷：−2 份食物。'],[/^Purse snatched: .(\d+) gold\.$/,'錢袋被扒：−$1 金幣。'],[/^You hurl a unit of (.+)!$/,'你把一單位$1扔了出去！'],
+[/^(.+) shattered\.$/,'$1碎裂了。'],[/^(\d+) grain spoiled\.$/,'$1 單位穀物腐壞了。'],[/^Arrived in (.+) on day (\d+)\.$/,'第 $2 天抵達$1。'],
+[/^You arrive in (.+) with 120 gold and a creaking wagon\.$/,'你帶著 120 金幣和一輛吱嘎作響的馬車抵達$1。'],
+[/^([^\sA-Za-z0-9]+) Travellers whisper that (.+) will (surge|crash) in (.+)\.$/,(m,e,c,d,city)=>`${e} 旅人們傳言，${city}的${c}價格即將${d=='surge'?'飆漲':'暴跌'}。`]];
+const TERMS={'Corvin Vale, Rival Merchant':'宿敵商人科爾文·維爾','Dire Wolf':'恐狼','Goblin Raider':'哥布林劫掠者','Bandit Ambusher':'山賊伏兵','Pass Warlord':'隘口軍閥',
+'Harrowgate':'哈洛關','Saltmere':'鹽湖鎮','Thornwick':'荊棘鎮','King’s Road':'國王大道','Wolfwood Track':'狼木小徑','Ridge Pass':'山脊隘道',
+'Grain':'穀物','Salt':'鹽','Iron':'鐵','Wool':'羊毛','Spice':'香料','Medicine':'藥品','Furs':'毛皮','Wine':'葡萄酒','Tools':'工具','Reagents':'魔法試劑',
+'grain':'穀物','salt':'鹽','iron':'鐵','wool':'羊毛','spice':'香料','medicine':'藥品','furs':'毛皮','wine':'葡萄酒','tools':'工具','reagents':'魔法試劑',
+'Roadside Peddler':'路邊小販','Road Warden':'道路關卡官','Abandoned Wagon':'廢棄馬車','Stranded Travellers':'受困的旅人','Card Gallery':'卡牌圖鑑','Ledger & Lantern':'帳本與提燈',
+'A Merchant Prince':'商賈王侯','The Ledger Closes':'帳本闔上','perishable':'易腐','fragile':'易碎','valuable':'貴重'};
+const TK=Object.keys(TERMS).sort((a,b)=>b.length-a.length);
+function terms(s){for(const k of TK)if(s.includes(k))s=s.split(k).join(TERMS[k]);return s}
+function tr1(s){if(ZH[s]!=null)return ZH[s];for(const[r,t]of ZR)if(r.test(s))return s.replace(r,t);return null}
+function trCore(c){
+ let r=tr1(c);if(r!=null)return terms(r);
+ const n=c.match(/^(\d+\. )([\s\S]*)$/);if(n)return n[1]+trCore(n[2]);
+ if(c.includes('·')){const lead=c[0]=='·',p=c.split(/\s*·\s*/).filter(Boolean);return(lead?'· ':'')+p.map(trCore).join(' · ')}
+ const ss=c.split(/(?<=[.!?])\s+|(?<=[。！？])/);if(ss.length>1)return ss.map(q=>q.trim()?trCore(q.trim()):'').join('');
+ return terms(c)}
+function tr(s){if(LANG=='en'||!s)return s;const m=s.match(/^(\s*)([\s\S]*?)(\s*)$/);return m[2]?m[1]+trCore(m[2])+m[3]:s}
+function i18n(root){if(LANG=='en')return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),L=[];let n;while(n=w.nextNode())L.push(n);L.forEach(n=>{const v=tr(n.nodeValue);if(v!==n.nodeValue)n.nodeValue=v});root.querySelectorAll('[title]').forEach(e=>e.title=tr(e.title))}
+const HL={en:[['kd','\\+?\\d+ (?:damage|dmg)'],['kb','(?:\\d+ )?Block(?: \\d+)?'],['kg','[+-]?\\d+ gold|gold'],['kh','Heal \\d+ HP|heal\\w*'],['kw','Draw \\d+'],['kx','Exhaust'],['kc','cargo']],
+ zh:[['kd','\\+?\\d+ 點傷害'],['kb','格擋(?: ?\\d+)?'],['kg','\\+?\\d+ 金幣|金幣'],['kh','回復 \\d+ 點生命|回復'],['kw','抽 \\d+ 張牌'],['kx','消耗'],['kc','貨物']]};
+function hl(s){const R=HL[LANG],re=new RegExp(R.map(r=>'('+r[1]+')').join('|'),'gi');return s.replace(re,(m,...g)=>`<span class="${R[g.findIndex(x=>x!==undefined)][0]}">${m}</span>`)}
+const LB=$('#lang');
+function setLang(l){LANG=l;try{localStorage.setItem('ll_lang',l)}catch(e){}document.documentElement.lang=l=='zh'?'zh-Hant-TW':'en';document.title=tr('Ledger & Lantern');LB.textContent=l=='zh'?'🌐 English':'🌐 繁體中文';render()}
+LB.onclick=()=>setLang(LANG=='zh'?'en':'zh');
+/* ===== COMMODITY TOOLTIP (RPG info window) ===== */
+const LORE={grain:'Gold waves bow to the wind, / and bread becomes a kingdom.',salt:'Sweat of the sea, / it keeps the meat and the peace.',iron:'Cold in the hand, warm in the forge; / every kingdom stands on it.',wool:'Soft as a sleeping lamb, / it clothes the cold world.',spice:'A pinch of far-off sun; / worth more than the road it crossed.',medicine:'Bitter on the tongue, / sweet in the hour of need.',fur:'Taken from the winter wood, / worn against the winter wind.',wine:'Bottled summers, / each cork a small promise.',tools:'Honest hands need honest steel; / the village rises by the hammer.',reagent:'It glows faintly in the dark, / as if it remembers a spell.'};
+Object.assign(ZH,{'Weight':'重量','Volume':'體積','Heavy':'沉重','Bulky':'笨重','Common':'普通','Fragile':'易碎','Perishable':'易腐','Valuable':'貴重',
+[LORE.grain]:'金色的麥浪向風低頭 / 一塊麵包便是一座王國',[LORE.salt]:'大海的汗水 / 保住了肉，也保住了和平',[LORE.iron]:'握在手裡是冷的，鍛爐裡卻是熱的 / 每個王國都立足於它',[LORE.wool]:'柔如沉睡的羔羊 / 為寒冷的世界披上衣裳',[LORE.spice]:'一撮遙遠的陽光 / 比它走過的路更貴重',
+[LORE.medicine]:'入口苦澀 / 急難時刻卻甘甜如蜜',[LORE.fur]:'取自冬日森林 / 披向凜凜寒風',[LORE.wine]:'瓶中封存的夏日 / 每個軟木塞都是一個小小的承諾',[LORE.tools]:'誠實的雙手需要誠實的鋼 / 村莊因鐵錘而興起',[LORE.reagent]:'它在黑暗中微微發光 / 彷彿記得某道咒語'});
+const TC={Fragile:'#7fd3e6',Perishable:'#9acd5a',Valuable:'#f5c842',Heavy:'#c4a484',Bulky:'#d09ae0',Common:'#b0a590'};
+const tip=document.body.appendChild(Object.assign(document.createElement('div'),{id:'tip'}));
+function tipHTML(k){const m=COM[k],ty=[m.frag&&'Fragile',m.perish&&'Perishable',m.val&&'Valuable',m.w>=5&&'Heavy',m.v>=3&&'Bulky'].filter(Boolean);if(!ty.length)ty.push('Common');
+ return `<div class="tn">${m.e} ${tr(m.n)}</div><hr><div class="tw"><span>${tr('Weight')}: ${m.w}</span><span>${tr('Volume')}: ${m.v}</span></div><div class="ty">${ty.map(t=>`<span style="color:${TC[t]}">${tr(t)}</span>`).join('')}</div><div class="tl">${tr(LORE[k]).replace(/ \/ /g,'<br>')}</div>`}
+document.addEventListener('mousemove',e=>{
+ const r=e.target.closest&&e.target.closest('[data-tip]');if(!r){tip.style.display='none';return}
+ const key=r.dataset.tip+LANG;if(tip.dataset.k!=key){tip.innerHTML=tipHTML(r.dataset.tip);tip.dataset.k=key}
+ tip.style.display='block';const w=tip.offsetWidth,h=tip.offsetHeight;let x=e.clientX+16,y=e.clientY+16;if(x+w>innerWidth-8)x=e.clientX-w-16;if(y+h>innerHeight-8)y=innerHeight-h-8;tip.style.left=Math.max(8,x)+'px';tip.style.top=Math.max(8,y)+'px'});
+document.addEventListener('mouseout',e=>{if(!e.relatedTarget)tip.style.display='none'});
+/* ===== CARGO GRID (attaché-case inventory, drives S.cargo) ===== */
+const CFG={cols:10,rows:8};
+const FP={grain:[2,2,4,'#a8842c'],salt:[2,2,5,'#6b7f8f'],iron:[2,1,10,'#5d6b7a'],wool:[3,2,3,'#8a7f9a'],spice:[1,1,10,'#b8481f'],medicine:[1,2,6,'#2f8f8c'],fur:[2,2,4,'#8a5a3a'],wine:[2,3,1,'#7a2a3a'],tools:[3,2,2,'#7a5a3a'],reagent:[1,2,5,'#6a3ab0']};
+const gRect=(it,rot=it.rot,x=it.x,y=it.y)=>{const[w,h]=FP[it.type];return rot?{x,y,w:h,h:w}:{x,y,w,h}};
+const gHit=(a,b)=>a.x<b.x+b.w&&b.x<a.x+a.w&&a.y<b.y+b.h&&b.y<a.y+a.h,gIn=r=>r.x>=0&&r.y>=0&&r.x+r.w<=CFG.cols&&r.y+r.h<=CFG.rows;
+const gBlock=(items,r,ign=[])=>items.filter(o=>!ign.includes(o.id)&&gHit(gRect(o),r)),gCan=(items,r,ign)=>gIn(r)&&!gBlock(items,r,ign).length;
+function gFit(items,k){const[w,h]=FP[k];for(let y=0;y<CFG.rows;y++)for(let x=0;x<CFG.cols;x++)for(const rot of w==h?[0]:[0,1]){const r=rot?{x,y,w:h,h:w}:{x,y,w,h};if(gCan(items,r,[]))return{x,y,rot}}return null}
+function sync(){const c={};S.items.forEach(i=>c[i.type]=(c[i.type]||0)+i.q);S.cargo=c;for(const k in S.basis)if(!c[k])delete S.basis[k]}
+function gridAdd(k,q){
+ const st=FP[k][2];if(wt()+q*COM[k].w>CAPW){S.msg='Too heavy.';return 0}
+ const items=S.items.map(i=>({...i}));let left=q;
+ for(const i of items)if(i.type==k&&left>0&&i.q<st){const t=Math.min(left,st-i.q);i.q+=t;left-=t}
+ while(left>0){const p=gFit(items,k);if(!p)break;const t=Math.min(left,st);items.push({id:S.nid++,type:k,q:t,x:p.x,y:p.y,rot:p.rot});left-=t}
+ if(left>0){S.msg=st>1&&items.some(i=>i.type==k)?'No compatible stack space.':'Not enough grid space.';return 0}
+ S.items=items;sync();return 1}
+function migrate(){if(S.items)return;const c=S.cargo||{};S.items=[];S.nid=1;S.cargo={};for(const k in c)gridAdd(k,c[k])}
+function gPlan(it,rot,tx,ty){
+ const r=gRect(it,rot,tx,ty);if(!gIn(r))return{k:'bad',r,why:'Out of bounds'};
+ const bl=gBlock(S.items,r,[it.id]);if(!bl.length)return{k:'move',r};
+ if(bl.length==1){const o=bl[0];if(o.type==it.type&&FP[it.type][2]>1&&o.q<FP[it.type][2])return{k:'merge',r,o};
+  for(const orot of [o.rot,+!o.rot]){const r2=gRect(o,orot,it.x,it.y);if(gCan(S.items,r2,[it.id,o.id])&&!gHit(r2,r))return{k:'swap',r,o,orot}}}
+ return{k:'bad',r,why:'Space occupied'}}
+function gDrop(it,p,rot){
+ const items=S.items.map(i=>({...i})),me=items.find(i=>i.id==it.id);S.msg='';
+ if(p.k=='move'){me.x=p.r.x;me.y=p.r.y;me.rot=rot}
+ else if(p.k=='swap'){const o=items.find(i=>i.id==p.o.id);o.x=it.x;o.y=it.y;o.rot=p.orot;me.x=p.r.x;me.y=p.r.y;me.rot=rot;S.msg='Swapped items.'}
+ else{const o=items.find(i=>i.id==p.o.id),t=Math.min(me.q,FP[it.type][2]-o.q);o.q+=t;me.q-=t;S.msg='Merged stacks.';S.gs=o.id;if(!me.q){S.items=items.filter(i=>i.id!=me.id);return}}
+ S.items=items}
+let GD=null,GCS=40;
+function drawGrid(){
+ const el=$('#cgrid');if(!el)return;GCS=Math.max(24,Math.min(44,Math.floor((el.parentElement.clientWidth-24)/CFG.cols)));
+ el.style.cssText=`width:${CFG.cols*GCS}px;height:${CFG.rows*GCS}px;--gs:${GCS}px`;
+ el.innerHTML='<div id="ghl"></div>'+S.items.map(i=>{const r=gRect(i),c=COM[i.type];return `<div class="gi${S.gs==i.id?' sel':''}" data-id="${i.id}" style="left:${r.x*GCS}px;top:${r.y*GCS}px;width:${r.w*GCS}px;height:${r.h*GCS}px;--gc:${FP[i.type][3]}" title="${c.n} ×${i.q}"><span style="font-size:${Math.min(r.w,r.h)*GCS*.5}px">${c.e}</span>${FP[i.type][2]>1?`<span class="q"><b class="${i.q>=FP[i.type][2]?'full':''}">${i.q}</b><small>/${FP[i.type][2]}</small></span>`:''}</div>`}).join('')}
+document.addEventListener('pointerdown',e=>{
+ const el=e.target.closest&&e.target.closest('.gi');if(!el||GD)return;e.preventDefault();
+ const it=S.items.find(i=>i.id==+el.dataset.id),b=el.getBoundingClientRect();S.gs=it.id;document.querySelectorAll('.gi.sel').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');
+ GD={it,el,rot:it.rot,x0:e.clientX,y0:e.clientY,gx:e.clientX-b.left,gy:e.clientY-b.top,on:0,last:e};
+ addEventListener('pointermove',gMove,{passive:false});addEventListener('pointerup',gEnd);addEventListener('pointercancel',gCancel)});
+function gMove(e){
+ const d=GD;if(e){e.preventDefault();d.last=e;if(!d.on&&Math.hypot(e.clientX-d.x0,e.clientY-d.y0)>5){d.on=1;d.el.classList.add('drag')}}
+ if(!d.on)return;const g=$('#cgrid').getBoundingClientRect(),L=d.last.clientX-g.left-d.gx,T=d.last.clientY-g.top-d.gy;d.el.style.left=L+'px';d.el.style.top=T+'px';
+ d.p=gPlan(d.it,d.rot,Math.round(L/GCS),Math.round(T/GCS));const r=d.p.r,h=$('#ghl');h.style.cssText=`display:block;left:${r.x*GCS}px;top:${r.y*GCS}px;width:${r.w*GCS}px;height:${r.h*GCS}px`;h.className=d.p.k=='bad'?'hb':d.p.k=='move'?'hv':'hs'}
+function gOff(){removeEventListener('pointermove',gMove);removeEventListener('pointerup',gEnd);removeEventListener('pointercancel',gCancel)}
+function gEnd(){gOff();const d=GD;GD=null;if(!d.on)return;if(d.p.k=='bad')S.msg=d.p.why+' — item returned.';else gDrop(d.it,d.p,d.rot);save();render()}
+function gCancel(){gOff();GD=null;render()}
+function gRotate(){
+ if(GD&&GD.on){GD.rot=+!GD.rot;const r=gRect(GD.it,GD.rot);GD.el.style.width=r.w*GCS+'px';GD.el.style.height=r.h*GCS+'px';return gMove()}
+ const it=S.items.find(i=>i.id==S.gs);if(!it||FP[it.type][0]==FP[it.type][1])return;
+ if(!gCan(S.items,gRect(it,+!it.rot),[it.id])){S.msg='Cannot rotate: blocked or out of bounds.';return render()}
+ it.rot=+!it.rot;S.msg='';save();render()}
+function gLfr(items){const g=Array.from({length:CFG.rows},()=>Array(CFG.cols).fill(0));items.forEach(i=>{const r=gRect(i);for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++)g[y][x]=1});let b=0;
+ for(let y=0;y<CFG.rows;y++)for(let x=0;x<CFG.cols;x++)for(let h=1;y+h<=CFG.rows;h++)for(let w=1;x+w<=CFG.cols;w++){let ok=1;for(let j=y;j<y+h&&ok;j++)for(let i=x;i<x+w;i++)if(g[j][i]){ok=0;break}if(!ok)break;b=Math.max(b,w*h)}return b}
+function gArrange(){
+ const ar=i=>{const r=gRect(i);return r.w*r.h},o=[...S.items].sort((a,b)=>ar(b)-ar(a)||b.id-a.id),placed=[];
+ for(const it of o){const p=gFit(placed,it.type);if(!p){S.msg='Auto-arrange could not fit everything; layout unchanged.';return render()}placed.push({...it,x:p.x,y:p.y,rot:p.rot})}
+ if(gLfr(placed)<=gLfr(S.items)){S.msg='Layout already efficient; nothing changed.';return render()}
+ S.items=placed;S.msg='Re-packed the cargo hold.';save();render()}
+addEventListener('keydown',e=>{if(S.screen!='city'||GAL)return;if((e.key=='r'||e.key=='R')&&GD&&GD.on)gRotate();else if(e.key=='Escape'&&GD)gCancel()});
+Object.assign(ZH,{'Drag to move':'拖曳以移動','R rotates while dragging':'拖曳時按 R 旋轉','Drop on a stack to merge, or on another item to swap':'放在同類堆疊上可合併，放在其他貨物上則互換','Rotate (R)':'旋轉 (R)','Auto-Arrange':'自動整理','Too heavy.':'太重了。','Not enough grid space.':'格位不足。','No compatible stack space.':'沒有可合併的堆疊空間。','Cannot rotate: blocked or out of bounds.':'無法旋轉：被擋住或超出範圍。','Swapped items.':'已互換貨物。','Merged stacks.':'已合併堆疊。','Re-packed the cargo hold.':'已重新整理貨艦。','Layout already efficient; nothing changed.':'排列已很有效率，未作更動。','Auto-arrange could not fit everything; layout unchanged.':'自動整理無法容納所有貨物，維持原排列。'});
+ZR.push([/^(Out of bounds|Space occupied) — item returned\.$/,(m,w)=>(w=='Out of bounds'?'超出範圍':'位置已被佔用')+' — 貨物已放回。'],[/^([^\sA-Za-z0-9]+) (\d+\/\d+) cells$/,'$1 格位 $2'],[/^You find (.+) but have no room to carry it\.$/,'你發現了$1，但沒有空間可以攜帶。']);
+/* ===== COMBAT 2.0: composable effects, statuses, multi-enemy encounters, modifiers ===== */
+const L=a=>a[LANG=='zh'?1:0],Zh=()=>LANG=='zh';
+const STAT={
+ poison:{ic:'☠️',n:['Poison','中毒'],d:['Lose HP equal to stacks at turn start, then −1.','回合開始時失去等同層數的生命，之後 −1。']},
+ burn:{ic:'🔥',n:['Burn','灼燒'],d:['Take damage equal to stacks at turn end (ignores Block), then halve.','回合結束時受到等同層數的傷害（無視格擋），之後減半。']},
+ bleed:{ic:'🩸',n:['Bleed','流血'],d:['Lose HP equal to stacks whenever it acts or plays a card; −1 per turn.','每次行動或打牌時失去等同層數的生命；每回合 −1。']},
+ weak:{ic:'💧',n:['Weak','虛弱'],d:['Deals 25% less damage. Lasts stacks turns.','造成的傷害 −25%，持續層數回合。']},
+ frail:{ic:'🥀',n:['Frail','脆弱'],d:['Gains 25% less Block. Lasts stacks turns.','獲得的格擋 −25%，持續層數回合。']},
+ vuln:{ic:'🎯',n:['Vulnerable','易傷'],d:['Takes 50% more damage. Lasts stacks turns.','受到的傷害 +50%，持續層數回合。']},
+ slow:{ic:'🐌',n:['Slow','遲緩'],d:['Enemies act only on even turns; you start with 1 less energy. Lasts stacks turns.','敵人只在偶數回合行動；你的能量 −1。持續層數回合。']},
+ confuse:{ic:'💫',n:['Confusion','混亂'],d:['Its attacks hit another enemy instead. Lasts stacks turns.','它的攻擊會打到其他敵人。持續層數回合。']},
+ marked:{ic:'📍',n:['Marked','標記'],d:['Next attack deals +4 per stack, then the mark is removed.','下一次攻擊額外 +4 傷害（每層），然後移除標記。']},
+ greed:{ic:'🪙',n:['Greed','貪婪'],d:['You gain 1 gold per stack whenever it is hit; −1 per turn.','每次它受傷，你獲得每層 1 金幣；每回合 −1。']},
+ fear:{ic:'😨',n:['Fear','恐懼'],d:['Deals 2 less damage per stack. Humans flee at 3 stacks.','每層使傷害 −2。人類敵人在 3 層時逃跑。']},
+ entangle:{ic:'🕸️',n:['Entangled','纏縛'],d:['Skips its next action(s).','跳過接下來的行動。']},
+ thorns:{ic:'🌵',n:['Thorns','荊棘'],d:['Reflects stacks damage to attackers; lasts until end of round.','對攻擊者反彈層數傷害；持續到本輪結束。']},
+ str:{ic:'💪',n:['Strength','力量'],d:['+1 damage per stack.','每層 +1 傷害。']}};
+const PERL={guards:['guard','名護衛'],cargo:['cargo unit','單位貨物'],hand:['card in hand','張手牌'],gold10:['10 gold','10 金幣'],sacval:['10g of sacrificed value','10 金的犧牲貨物價值']};
+const POW={cut:['Whenever you play a card, gain 1 gold.','每打出一張牌，獲得 1 金幣。'],blast:['Whenever you sacrifice cargo, deal 6 damage to ALL enemies.','每當你犧牲貨物，對所有敵人造成 6 點傷害。'],brace:['At end of turn, gain Block 4 per unspent energy.','回合結束時，每點未使用的能量獲得格擋 4。']};
+const MODS={rain:{ic:'🌧️',n:['Rain','下雨'],d:['Burn deals half damage.','灼燒傷害減半。']},night:{ic:'🌙',n:['Night Ambush','夜襲'],d:['Draw 2 fewer cards on turn 1.','第一回合少抽 2 張牌。']},hostile:{ic:'⚠️',n:['Hostile Territory','敵對領地'],d:['Bribes cost 50% more.','賄賂費用增加 50%。']},mud:{ic:'🟫',n:['Muddy Road','泥濘道路'],d:['Fleeing costs 1 extra cargo; Slow is stronger.','逃跑多損失 1 單位貨物；遲緩更強。']}};
+const CLN={gold:['gold','金幣'],cargo:['cargo units','單位貨物'],guards:['guards','名護衛'],blk:['Block','格擋'],hand:['cards in hand','張手牌'],turn:['turn','回合']},CL={marked:['target is Marked','目標被標記'],hpHalf:['HP ≤ 50%','生命 ≤ 50%']};
+const cl=c=>{const m=c.match(/^(\w+)>=(\d+)$/);return m?`${L(CLN[m[1]])} ≥ ${m[2]}`:L(CL[c])};
+function d1(f,en){const z=Zh(),j=a=>a.map(q=>d1(q,en)).join(z?'，':', '),pr=f.per?(z?`（每${PERL[f.per[0]][1]} +${f.per[1]}）`:` (+${f.per[1]} per ${PERL[f.per[0]][0]})`):'';
+ const tg=f.t=='all'?(z?'所有敵人':'ALL enemies'):f.t=='rand'?(z?'隨機敵人':'a random enemy'):f.t=='self'?(en?(z?'自身':'itself'):(z?'你自己':'yourself')):f.t=='allies'?(z?'所有同伴':'all allies'):en?(z?'你':'you'):(z?'目標':'target');
+ switch(f.k){
+ case'dmg':return z?`${f.t=='all'?'對所有敵人':f.t=='rand'?'對隨機敵人':''}造成 ${f.v} 點傷害${pr}`:`Deal ${f.v} damage${f.t=='all'?' to ALL enemies':f.t=='rand'?' to a random enemy':''}${pr}`;
+ case'blk':return z?`獲得格擋 ${f.v}${pr}`:`Block ${f.v}${pr}`;
+ case'st':return z?`對${tg}施加 ${f.v} 層${L(STAT[f.s].n)}`:`Apply ${f.v} ${L(STAT[f.s].n)} to ${tg}`;
+ case'draw':return z?`抽 ${f.v} 張牌`:`Draw ${f.v}`;
+ case'en':return z?`獲得 ${f.v} 點能量`:`Gain ${f.v} energy`;
+ case'gold':return f.v<0?(z?`失去 ${-f.v} 金幣`:`Lose ${-f.v} gold`):(z?`獲得 ${f.v} 金幣`:`Gain ${f.v} gold`);
+ case'bonus':return z?`若獲勝：+${f.v} 金幣`:`If you win: +${f.v} gold`;
+ case'heal':return z?`回復 ${f.v} 點生命`:`Heal ${f.v} HP`;
+ case'sac':return(z?'犧牲最便宜的一單位貨物：':'Sacrifice your cheapest cargo: ')+j(f.then);
+ case'if':return(z?`若${cl(f.c)}：`:`If ${cl(f.c)}: `)+j(f.then);
+ case'rng':return z?`50% 機率：${j(f.then)}；否則：${j(f.else)}`:`50%: ${j(f.then)}; otherwise: ${j(f.else)}`;
+ case'later':return z?`${f.n} 回合後：${j(f.then)}`:`In ${f.n} turn(s): ${j(f.then)}`;
+ case'flee':return z?'逃離戰鬥：丟下 1 單位貨物，聲望 −1':'Flee combat: abandon 1 cargo unit, −1 reputation';
+ case'guard':return z?`僱用 ${f.v} 名護衛`:`Hire ${f.v} guard`;
+ case'guarded':return z?'若格擋未破，劫匪搶不走貨物':'If Block holds, raiders cannot take cargo';
+ case'bribe':return z?'人類敵人逃跑；其他敵人被纏縛':'Humans flee; others are entangled';
+ case'cap':return z?'盟友：回合結束時造成 2 點傷害；每打出一張防禦牌 +1':'Ally: 2 damage at end of turn; +1 per Defense card played';
+ case'pow':return L(POW[f.p]);
+ case'raid':return z?'奪走你最貴重的一單位貨物（守護且格擋未破可阻止）':'Seize your best cargo unit (stopped by guarding with Block intact)';
+ case'steal':return z?`若格擋被擊破，偷走 ${f.v} ${f.w=='gold'?'金幣':'食物'}`:`If Block breaks, steal ${f.v} ${f.w}`;
+ }return''}
+function genDesc(d){const z=Zh(),s=[];if(d.pay)s.push(z?`支付 ${d.pay} 金幣`:`Pay ${d.pay} gold`);if(d.food)s.push(z?`消耗 ${d.food} 份食物`:`Spend ${d.food} food`);d.fx.forEach(f=>s.push(d1(f)));if(d.ex)s.push(z?'消耗':'Exhaust');return(s.join(z?'。':'. ')+(z?'。':'.')).replace(/。{2,}/g,'。').replace(/\.{2,}/g,'.')}
+const descCard=id=>{const d=CARDS[id];return d.fx&&d.fx.length?genDesc(d):Array.isArray(d.x)?L(d.x):tr(d.x)},cname=d=>Array.isArray(d.n)?L(d.n):tr(d.n);
+const RC={Common:'var(--mut)',Uncommon:'#2a8fb0',Rare:'#c98a00'},tpLine=d=>`${tr(d.t)} · <span style="color:${RC[d.r||'Common']}">${tr(d.r||'Common')}</span>`;
+/* --- cards: ordered effect lists --- */
+const K=(id,n,a,t,r,c,g,fx,o)=>CARDS[id]=Object.assign({n,a,t,r,c,g,fx},o);
+Object.entries({strike:[{k:'dmg',v:6}],heavy:[{k:'dmg',v:14}],guard:[{k:'blk',v:6},{k:'guarded'}],palisade:[{k:'blk',v:12}],appraise:[{k:'draw',v:2},{k:'bonus',v:8}],haggle:[{k:'draw',v:1},{k:'bonus',v:4}],bribe:[{k:'bribe'}],throw:[{k:'sac',then:[{k:'dmg',v:12},{k:'blk',v:4}]}],captain:[{k:'cap'}],lantern:[{k:'st',s:'weak',v:1,t:'all'},{k:'draw',v:1}],salve:[{k:'heal',v:6}]}).forEach(([k,f])=>CARDS[k].fx=f);
+CARDS.bribe.pay=15;CARDS.bribe.g=['Bribe'];CARDS.captain.g=['Guard'];CARDS.guard.g=['Guard','Cargo'];
+K('barricade',['Wagon Barricade','車輛路障'],'🪵','Skill','Uncommon',2,['Guard','Cargo'],[{k:'blk',v:11},{k:'st',s:'thorns',v:3,t:'self'},{k:'guarded'}]);
+K('rally',['Rally the Guards','集結護衛'],'📯','Skill','Common',1,['Guard'],[{k:'blk',v:3,per:['guards',3]}]);
+K('command',['Command Attack','指揮攻擊'],'🗡️','Attack','Common',1,['Guard'],[{k:'dmg',v:3,per:['guards',4]}]);
+K('lock',['Lock the Crates','鎖緊貨箱'],'🔒','Skill','Uncommon',1,['Cargo','Guard'],[{k:'blk',v:4},{k:'guarded'},{k:'draw',v:1}]);
+K('counter',['Counterstrike','反擊'],'🤺','Attack','Uncommon',1,['Guard'],[{k:'dmg',v:5},{k:'if',c:'blk>=8',then:[{k:'dmg',v:8}]}]);
+K('brace',['Hold the Line','堅守防線'],'🧱','Power','Rare',1,['Guard'],[{k:'pow',p:'brace'}]);
+K('contract',['Signed Contract','簽訂契約'],'📝','Skill','Uncommon',1,['Contract','Trade'],[{k:'gold',v:22},{k:'later',n:2,then:[{k:'gold',v:-14}]}]);
+K('forward',['Forward Contract','遠期契約'],'📜','Skill','Rare',0,['Contract'],[{k:'en',v:2},{k:'later',n:1,then:[{k:'st',s:'weak',v:2,t:'self'}]}],{ex:1});
+K('hush',['Hush Money','封口費'],'🤫','Skill','Uncommon',1,['Bribe'],[{k:'st',s:'entangle',v:1,t:'all'}],{pay:25});
+K('retreat',['Diplomatic Retreat','外交撤退'],'🏳️','Skill','Rare',2,['Escape'],[{k:'flee'}],{ex:1});
+K('gilded',['Gilded Blow','鍍金重擊'],'💰','Attack','Uncommon',1,['Trade'],[{k:'dmg',v:4,per:['gold10',1],cap:16}]);
+K('tongue',['Silver Tongue','三寸不爛之舌'],'🗣️','Skill','Common',1,['Merchant'],[{k:'st',s:'fear',v:2},{k:'gold',v:4}]);
+K('cut',['Merchant’s Cut','商人佣金'],'🪙','Power','Rare',1,['Trade'],[{k:'pow',p:'cut'}]);
+K('burnall',['Burn the Goods','焚燒貨物'],'🔥','Cargo','Uncommon',1,['Cargo','Fire'],[{k:'sac',then:[{k:'dmg',v:6,t:'all',per:['sacval',1]},{k:'st',s:'burn',v:3,t:'all'}]}]);
+K('dump',['Dump the Load','傾倒貨物'],'🗑️','Cargo','Uncommon',0,['Cargo'],[{k:'sac',then:[{k:'en',v:2},{k:'draw',v:1}]}],{ex:1});
+K('dice',['Loaded Dice','灌鉛骰子'],'🎲','Skill','Uncommon',1,['Gamble'],[{k:'rng',p:.5,then:[{k:'gold',v:25},{k:'draw',v:2}],else:[{k:'gold',v:-10},{k:'st',s:'frail',v:2,t:'self'}]}]);
+K('master',['Master Appraisal','精明鑑價'],'🧐','Skill','Uncommon',1,['Merchant','Cargo'],[{k:'draw',v:1},{k:'if',c:'cargo>=4',then:[{k:'draw',v:2}]}]);
+K('jettison',['Jettison Cargo','拋棄貨物'],'🛶','Cargo','Common',1,['Cargo'],[{k:'sac',then:[{k:'blk',v:12}]}]);
+K('keg',['Powder Keg','火藥桶'],'🛢️','Cargo','Rare',2,['Cargo','Fire'],[{k:'sac',then:[{k:'dmg',v:16,t:'all',per:['sacval',1]}]}],{ex:1});
+K('fence',['Fence the Loot','銷贓'],'🧤','Power','Rare',1,['Cargo'],[{k:'pow',p:'blast'}]);
+K('snare',['Hunting Trap','獵捕陷阱'],'🪤','Skill','Common',1,['Beast','Trap'],[{k:'st',s:'entangle',v:1},{k:'st',s:'marked',v:1}]);
+K('dart',['Poison Dart','毒鏢'],'🎯','Attack','Common',1,['Poison'],[{k:'dmg',v:3},{k:'st',s:'poison',v:4}]);
+K('precision',['Precision Shot','精準射擊'],'🏹','Attack','Uncommon',1,['Beast'],[{k:'if',c:'marked',then:[{k:'dmg',v:6}]},{k:'dmg',v:7}]);
+K('bait',['Beast Bait','野獸誘餌'],'🥩','Cargo','Common',1,['Beast','Cargo'],[{k:'sac',then:[{k:'st',s:'marked',v:2},{k:'st',s:'vuln',v:2}]}]);
+K('hamstring',['Hamstring','斷筋'],'🔪','Attack','Uncommon',1,['Bleed'],[{k:'dmg',v:5},{k:'st',s:'bleed',v:3},{k:'st',s:'slow',v:2}]);
+K('venom',['Venom Cloud','毒霧'],'☁️','Skill','Uncommon',2,['Poison'],[{k:'st',s:'poison',v:4,t:'all'}],{ex:1});
+K('mud',['Churn the Mud','翻攪泥濘'],'🟫','Skill','Uncommon',1,['Weather'],[{k:'st',s:'slow',v:2,t:'all'}]);
+K('storm',['Call the Storm','召喚風暴'],'⛈️','Skill','Rare',2,['Weather'],[{k:'dmg',v:6,t:'all'},{k:'st',s:'weak',v:1,t:'all'},{k:'st',s:'vuln',v:1,t:'all'}],{ex:1});
+K('rations',['Survival Rations','生存口糧'],'🍖','Skill','Common',1,['Supplies'],[{k:'heal',v:8},{k:'draw',v:1}],{food:1,ex:1});
+K('horn',['Warning Horn','警戒號角'],'🎺','Skill','Uncommon',1,['Escape'],[{k:'st',s:'fear',v:2,t:'all'}]);
+K('torch',['Improvised Torch','臨時火把'],'🪔','Attack','Common',1,['Fire'],[{k:'dmg',v:4},{k:'st',s:'burn',v:4}]);
+K('mercenary',['Hire Mercenary','僱用傭兵'],'🛡️','Skill','Uncommon',1,['Guard','Merchant'],[{k:'guard',v:1}],{pay:35,ex:1});
+POOL.push('barricade','rally','command','lock','counter','brace','contract','forward','hush','retreat','gilded','tongue','cut','burnall','dump','dice','master','jettison','keg','fence','snare','dart','precision','bait','hamstring','venom','mud','storm','rations','horn','torch','mercenary');
+Object.assign(ZH,{Skill:'技能',Power:'能力',Curse:'詛咒',Cargo:'貨物',Uncommon:'罕見',Rare:'稀有','You escape, abandoning cargo on the road.':'你逃脫了，但把貨物丟在了路上。'});
+/* --- enemies: moves are effect lists too --- */
+const M=(ic,n,fx,when)=>({ic,n,fx,when}),ATK=['Attacker','攻擊者'];
+const ENX={
+ wolf:{n:['Dire Wolf','恐狼'],e:'🐺',hp:22,role:ATK,mv:[M('⚔️',['Bite','撕咬'],[{k:'dmg',v:6}]),M('📣',['Howl','嚎叫'],[{k:'st',s:'str',v:2,t:'self'}]),M('⚔️',['Lunge','撲咬'],[{k:'dmg',v:9},{k:'st',s:'bleed',v:2}])]},
+ goblin:{n:['Goblin Raider','哥布林劫掠者'],e:'👺',hp:24,hum:1,role:['Disruptor','干擾者'],mv:[M('🫳',['Snatch Rations','搶奪口糧'],[{k:'dmg',v:4},{k:'steal',w:'food',v:2}]),M('⚔️',['Stab','刺擊'],[{k:'dmg',v:7}]),M('🫳',['Cut Purse','割錢袋'],[{k:'dmg',v:4},{k:'steal',w:'gold',v:12}])]},
+ bandit:{n:['Bandit Ambusher','山賊伏兵'],e:'🗡️',hp:30,hum:1,role:ATK,mv:[M('🧺',['Raid Wagon','劫掠馬車'],[{k:'dmg',v:6},{k:'raid'}]),M('⚔️',['Slash','劈砍'],[{k:'dmg',v:8}]),M('🧺',['Seize Crate','奪取貨箱'],[{k:'dmg',v:8},{k:'raid'}])]},
+ warlord:{n:['Pass Warlord','隘口軍閥'],e:'👹',hp:60,hum:1,boss:1,role:['Boss','頭目'],mv:[M('🧺',['Plunder','洗劫'],[{k:'dmg',v:8},{k:'raid'}]),M('⚔️',['Cleave','橫掃'],[{k:'dmg',v:10}]),M('📣',['War Cry','戰吼'],[{k:'st',s:'str',v:2,t:'allies'}]),M('💢',['Rampage','暴走'],[{k:'dmg',v:14},{k:'st',s:'bleed',v:2}],'hpHalf')]},
+ rival:{n:['Corvin Vale, Rival Merchant','宿敵商人科爾文·維爾'],e:'🎩',hp:70,hum:1,boss:1,role:['Boss','頭目'],mv:[M('🫳',['Undercut','惡意削價'],[{k:'dmg',v:6},{k:'steal',w:'gold',v:12}]),M('⚔️',['Hired Blades','雇傭刀手'],[{k:'dmg',v:9}]),M('🧺',['Seize Stock','扣押存貨'],[{k:'dmg',v:9},{k:'raid'}]),M('🏦',['Hostile Takeover','惡意併購'],[{k:'dmg',v:5},{k:'steal',w:'gold',v:25}],'gold>=60')]},
+ toll:{n:['Toll Collector','收費官'],e:'🧾',hp:26,hum:1,role:['Disruptor','干擾者'],mv:[M('🛡️',['Paper Shield','文書屏障'],[{k:'blk',v:8,t:'allies'}]),M('⚔️',['Lash','鞭笞'],[{k:'dmg',v:6}]),M('📑',['Fine Print','附加條款'],[{k:'dmg',v:4},{k:'st',s:'frail',v:1}]),M('🪙',['Extort','勒索'],[{k:'dmg',v:3},{k:'steal',w:'gold',v:18}],'gold>=30')]},
+ thug:{n:['Bandit Thug','山賊打手'],e:'🥷',hp:16,hum:1,role:ATK,mv:[M('⚔️',['Cutlass','彎刀'],[{k:'dmg',v:6}]),M('🧺',['Grab Crate','搶貨箱'],[{k:'dmg',v:4},{k:'raid'}],'cargo>=1'),M('⚔️',['Cheap Shot','偷襲'],[{k:'dmg',v:8}])]},
+ alpha:{n:['Alpha Wolf','狼王'],e:'🐺',hp:30,role:['Support','支援者'],mv:[M('📣',['Rally Howl','集結嚎叫'],[{k:'st',s:'str',v:2,t:'allies'}]),M('⚔️',['Lunge','撲殺'],[{k:'dmg',v:8},{k:'st',s:'bleed',v:2}]),M('⚔️',['Bite','撕咬'],[{k:'dmg',v:6}])]},
+ packwolf:{n:['Pack Wolf','狼群成員'],e:'🐕',hp:14,role:ATK,mv:[M('⚔️',['Snap','猛咬'],[{k:'dmg',v:5}]),M('⚔️',['Nip','啃咬'],[{k:'dmg',v:3},{k:'st',s:'bleed',v:1}])]},
+ shield:{n:['Shield-Bearer','持盾兵'],e:'🛡️',hp:28,hum:1,role:['Defender','防禦者'],mv:[M('🛡️',['Raise Shields','舉盾'],[{k:'blk',v:8,t:'allies'}]),M('⚔️',['Bash','盾擊'],[{k:'dmg',v:7},{k:'st',s:'frail',v:1}])]},
+ herb:{n:['Hedge Herbalist','籬笆草藥師'],e:'🌿',hp:18,hum:1,role:['Healer','治療者'],mv:[M('💚',['Mend','療傷'],[{k:'heal',v:8}]),M('☠️',['Poison Dart','毒鏢'],[{k:'dmg',v:3},{k:'st',s:'poison',v:3}]),M('💧',['Hex','咒縛'],[{k:'st',s:'weak',v:2}])]}};
+for(const k in ENX){const[a,b]=ENX[k].n;if(!(a in TERMS)){TERMS[a]=b;TK.push(a)}}TK.sort((a,b)=>b.length-a.length);
+const GROUPS={toll:{n:['Toll Ambush','關卡伏擊'],es:['toll','thug','thug']},pack:{n:['Wolf Pack Hunt','狼群獵殺'],es:['alpha','packwolf','packwolf']},wall:{n:['Shield Wall Raid','盾牆劫掠'],es:['shield','herb','thug']},goblin:{n:['Goblin Raid','哥布林劫掠'],es:['goblin','goblin']},warlord:{n:['Boss: Pass Warlord','頭目：隘口軍閥'],es:['warlord','thug']},rival:{n:['Boss: Rival Merchant','頭目：宿敵商人'],es:['rival','thug']}};
+/* --- engine --- */
+const cargoN=()=>Object.values(S.cargo).reduce((a,b)=>a+b,0),cargoVal=()=>Object.entries(S.cargo).reduce((a,[k,n])=>a+n*COM[k].b,0);
+const N=e=>ENX[e.id].n,alive=()=>C().es.filter(e=>e.hp>0),lg=(e,z)=>{const c=C();c.log.push({e,z});if(c.log.length>40)c.log.shift()};
+function cur(){const c=C();let e=c.es[c.tg];if(!e||e.hp<=0)e=c.es.find(x=>x.hp>0);return e}
+const V={gold:()=>S.gold,cargo:cargoN,guards:()=>S.guards,blk:()=>C().blk,hand:()=>C().hand.length,turn:()=>C().turn,marked:t=>t?t.st.marked||0:0,hpHalf:t=>t&&t.hp<=t.max/2?1:0};
+const PERV={guards:()=>S.guards,cargo:cargoN,hand:()=>C().hand.length,gold10:()=>Math.floor(S.gold/10),sacval:x=>x.sv||0};
+function cond(c,t){const m=c.match(/^(\w+)>=(\d+)$/);return m?V[m[1]](t)>=+m[2]:!!V[c](t)}
+function xDraw(n){const c=C();for(let i=0;i<n;i++){if(!c.draw.length){if(!c.disc.length)break;c.draw=shuf(c.disc);c.disc=[]}c.hand.push(c.draw.pop())}}
+function xSt(o,s,v){const c=C(),st=o=='p'?c.ps:o.st;if(s=='slow'&&c.mod=='mud'&&o!='p')v++;st[s]=(st[s]||0)+v;
+ if(o!='p'&&s=='fear'&&st.fear>=3&&ENX[o.id].hum&&!ENX[o.id].boss&&o.hp>0){o.hp=0;o.fled=1;lg(N(o)[0]+' flees in terror!',N(o)[1]+'嚇得逃走了！')}}
+function xHit(src,t,a,pierce){
+ const c=C(),ss=src=='p'?c.ps:src.st,ts=t=='p'?c.ps:t.st;a+=ss.str||0;if(ss.weak)a*=.75;a-=2*(ss.fear||0);if(ts.vuln)a*=1.5;
+ if(src=='p'&&ts.marked){a+=4*ts.marked;delete ts.marked}
+ a=Math.max(0,Math.floor(a));const b=pierce?0:Math.min(t=='p'?c.blk:t.blk,a);if(t=='p')c.blk-=b;else t.blk-=b;const h=a-b;
+ if(t=='p'){S.hp-=h;if(h&&ts.thorns&&src!='p')src.hp-=ts.thorns}else{t.hp-=h;if(ts.greed&&src=='p'&&a>0)S.gold+=ts.greed}
+ return{a,h}}
+const xBurn=n=>C().mod=='rain'?Math.ceil(n/2):n;
+function xFx(f,src,x){
+ const c=C(),pl=src=='p',per=()=>f.per?f.per[1]*PERV[f.per[0]](x):0,tg=()=>f.t=='all'?alive():f.t=='rand'?(alive().length?[pick(alive())]:[]):x.t0&&x.t0.hp>0?[x.t0]:[];
+ switch(f.k){
+ case'dmg':{const v=Math.min(f.v+per(),f.cap||999);
+  if(pl)for(const e of tg()){const r=xHit('p',e,v,0);lg(`${N(e)[0]} takes ${r.a}.`,`${N(e)[1]}受到 ${r.a} 點傷害。`)}
+  else{const t=x.conf||'p',r=xHit(src,t,v,0);if(t=='p'){x.broke=r.h>0;lg(`You take ${r.h}${r.a>r.h?` (${r.a-r.h} blocked)`:''}.`,`你受到 ${r.h} 點傷害${r.a>r.h?`（格擋 ${r.a-r.h}）`:''}。`);if(r.h>=8&&S.guards>0&&Math.random()<.5){S.guards--;lg('A guard is wounded and flees!','一名護衛負傷逃走了！')}}else lg('A confused foe strikes its ally!','困惑的敵人攻擊了同伴！')}
+  break}
+ case'blk':{const v=Math.min(f.v+per(),f.cap||999);if(pl)c.blk+=c.ps.frail?Math.floor(v*.75):v;else(f.t=='allies'?alive():[src]).forEach(e=>e.blk+=v);break}
+ case'st':{const ts=pl?(f.t=='self'?['p']:tg()):(f.t=='self'?[src]:f.t=='allies'?alive():['p']);ts.forEach(o=>xSt(o,f.s,f.v));break}
+ case'draw':xDraw(f.v);break;case'en':c.en+=f.v;break;case'gold':S.gold=Math.max(0,S.gold+f.v);break;case'bonus':c.bonus+=f.v;break;
+ case'heal':if(pl)S.hp=Math.min(S.maxHp,S.hp+f.v);else{const e=alive().sort((a,b)=>a.hp/a.max-b.hp/b.max)[0];e.hp=Math.min(e.max,e.hp+f.v);lg('A foe is healed.','敵人被治療了。')}break;
+ case'sac':{const k=cheapest();if(!k)break;x.sv=Math.floor(COM[k].b/10);removeUnit(k);lg('You sacrifice '+COM[k].n+'.','你犧牲了'+terms(COM[k].n)+'。');if(c.pw.blast)alive().forEach(e=>xHit('p',e,6*c.pw.blast,1));xRun(f.then,src,x);break}
+ case'if':if(cond(f.c,x.t0))xRun(f.then,src,x);else if(f.else)xRun(f.else,src,x);break;
+ case'rng':xRun(Math.random()<(f.p||.5)?f.then:f.else,src,x);break;
+ case'later':c.delay.push({n:f.n,fx:f.then});break;
+ case'guarded':c.guarded=1;break;case'guard':S.guards=Math.min(5,S.guards+f.v);break;case'pow':c.pw[f.p]=(c.pw[f.p]||0)+1;break;case'cap':c.cap=c.cap||2;break;case'flee':c.fleeing=1;break;case'add':for(let i=0;i<(f.n||1);i++)c.hand.push(f.id);break;case'curse':c.disc.push(f.id);lg('A curse clogs your deck.','一張詛咒卡塞進了你的牌堆。');break;case'retr':for(let i=0;i<f.v&&c.disc.length;i++)c.hand.push(c.disc.pop());break;case'free':c.free=(c.free||0)+f.v;break;case'summon':if(alive().length<4){const e=mkE(f.id);c.es.push(e);pickMove(e);lg('A beast answers the call!','一頭野獸應聲而來！')}break;
+ case'bribe':{const e=x.t0;if(!e||e.hp<=0)break;const E=ENX[e.id];if(E.hum&&!E.boss){e.hp=0;e.fled=1;lg(N(e)[0]+' pockets the coin and flees.',N(e)[1]+'收下錢逃走了。')}else xSt(e,'entangle',1);break}
+ case'raid':{if(c.guarded&&!x.broke){lg('Guarded wagons hold!','車隊守住了！');break}const t=Object.keys(S.cargo).sort((a,b)=>COM[b].b-COM[a].b)[0];if(t){removeUnit(t);lg('Raiders seize '+COM[t].n+'!','劫匪奪走了'+terms(COM[t].n)+'！')}else lg('Nothing to seize.','沒有東西可搶。');break}
+ case'steal':{if(!x.broke)break;if(f.w=='gold'){const g=Math.min(S.gold,f.v);S.gold-=g;lg('Stolen: '+g+' gold.','被偷走 '+g+' 金幣。')}else{S.food=Math.max(0,S.food-f.v);lg('Stolen: '+f.v+' food.','被偷走 '+f.v+' 份食物。')}break}
+ }}
+function xRun(fx,src,x){for(const f of fx)xFx(f,src,x)}
+function xCheck(){let n=0;for(const e of C().es){if(e.hp<=0&&!e.dead){e.dead=1;if(!e.fled)lg(N(e)[0]+' is slain.',N(e)[1]+'被擊倒了。')}if(e.hp>0)n++}return n==0}
+function pickMove(e){const E=ENX[e.id],n=E.mv.length;let i=E.mv.findIndex((m,j)=>m.when&&e.last!=j&&cond(m.when,e));
+ if(i<0){for(let k=0;k<n;k++){const j=(e.i+k)%n;if(!E.mv[j].when){i=j;e.i=j+1;break}}}e.cur=i;e.last=i}
+function startCombat(id,route){
+ const g=route&&route.biome&&ENC[id]&&Math.random()<.7?pick(BIO[route.biome]):ENC[id]?(Math.random()<.1?'ruins':pick(ENC[id])):id,G=GROUPS[g]||GROUPS.goblin,boss=G.es.some(q=>ENX[q].boss);
+ const es=G.es.map(q=>({id:q,hp:ENX[q].hp,max:ENX[q].hp,blk:0,st:{},i:0,last:-1,cur:0})),mod=G.mod||(!boss&&Math.random()<.45?pick(Object.keys(MODS)):null);
+ S.cb={es,waves:(G.waves||[]).map(w=>w.slice()),played:0,free:0,tg:0,draw:shuf([...S.deck]),hand:[],disc:[],exh:[],en:3,blk:S.guards*3,ps:{},pw:{},delay:[],guarded:0,bonus:0,cap:0,turn:1,mod,grp:G.n,route,log:[]};
+ es.forEach(pickMove);if(mod=='mutiny'){S.cb.blk=0;S.cb.mut=1}lg('Encounter: '+G.n[0]+'!','遭遇：'+G.n[1]+'！');S.screen='combat';xStartTurn(true);save();render()}
+function xStartTurn(first){
+ const c=C(),p=c.ps;if(!first)c.blk=0;c.guarded=0;c.en=3-(p.slow?1:0);
+ if(p.poison){S.hp-=p.poison;p.poison--}
+ c.delay.forEach(d=>d.n--);const due=c.delay.filter(d=>d.n<=0);c.delay=c.delay.filter(d=>d.n>0);due.forEach(d=>xRun(d.fx,'p',{}));
+ xDraw(first&&c.mod=='night'?3:5);
+ if(S.hp<=0)over(false,'You collapsed on the road.')}
+const xPay=d=>d.pay?Math.ceil(d.pay*(C().mod=='hostile'&&(d.g||[]).includes('Bribe')?1.5:1)):0;
+function xCan(d){const c=C();return c.en>=d.c&&S.gold>=xPay(d)&&(!d.food||S.food>=d.food)&&(!d.fx.some(f=>f.k=='sac')||cheapest())}
+function play(i){
+ const c=C(),id=c.hand[i];if(!id)return;const d=CARDS[id];if(!xCan(d))return;
+ c.en-=d.c;S.gold-=xPay(d);if(d.food)S.food-=d.food;c.hand.splice(i,1);if(c.ps.bleed)S.hp-=c.ps.bleed;
+ xRun(d.fx,'p',{t0:cur()});if(c.pw.cut)S.gold+=c.pw.cut;if(c.cap&&(d.t=='Defense'||(d.g||[]).includes('Guard'))&&id!='captain')c.cap++;
+ (d.ex||d.t=='Power'?c.exh:c.disc).push(id);
+ if(c.fleeing)return xFled();
+ if(S.hp<=0)return over(false,'You were overwhelmed.');
+ if(xCheck())return xWin();render()}
+function xFled(){const c=C(),k=cheapest();if(k)removeUnit(k);if(c.mod=='mud'){const j=cheapest();if(j)removeUnit(j)}repUp(c.route.to,-1);S.msg='You escape, abandoning cargo on the road.';const r=c.route;S.cb=null;arrive(r)}
+function xWin(){const c=C(),boss=c.es.some(e=>ENX[e.id].boss),hum=c.es.some(e=>ENX[e.id].hum&&!e.fled);
+ S.gold+=c.bonus+RI(8,18)+c.es.length*4+(boss?50:0);if(hum)repUp(c.route.to,1);S.reward={cards:shuf([...POOL]).slice(0,3),route:c.route};S.screen='reward';S.cb=null;save();render()}
+const DEC=['weak','vuln','frail','slow','fear','greed','confuse','thorns'];
+function xDecay(st){DEC.forEach(k=>{if(st[k])st[k]--});if(st.bleed)st.bleed--;for(const k in st)if(st[k]<=0)delete st[k]}
+function endTurn(){
+ const c=C();if(c.pw.brace)c.blk+=c.pw.brace*4*c.en;
+ if(c.cap&&alive().length){const e=pick(alive());xHit('p',e,c.cap,0)}
+ if(c.ps.burn){S.hp-=xBurn(c.ps.burn);c.ps.burn=Math.floor(c.ps.burn/2)}
+ c.disc.push(...c.hand);c.hand=[];if(xCheck())return xWin();
+ alive().forEach(e=>e.blk=0);
+ for(const e of c.es.filter(q=>q.hp>0)){
+  if(e.hp<=0)continue;const s=e.st,E=ENX[e.id],m=E.mv[e.cur];let skip=0;
+  if(s.poison){e.hp-=s.poison;s.poison--;if(e.hp<=0)continue}
+  if(s.entangle){s.entangle--;skip=1}else if(s.slow&&c.turn%2)skip=1;
+  if(skip)lg(N(e)[0]+' cannot act.',N(e)[1]+'無法行動。');
+  else{lg(N(e)[0]+' uses '+m.n[0]+'.',N(e)[1]+'使用了'+m.n[1]+'。');if(s.bleed){e.hp-=s.bleed;if(e.hp<=0)continue}
+   const x={};if(s.confuse){const o=alive().filter(q=>q!==e);x.conf=o.length?pick(o):e}xRun(m.fx,e,x)}
+  if(S.hp<=0)return over(false,'Your caravan was lost to a '+N(c.es[0])[0]+'.');
+  if(s.burn){e.hp-=xBurn(s.burn);s.burn=Math.floor(s.burn/2)}}
+ if(xCheck())return xWin();
+ xDecay(c.ps);alive().forEach(e=>{xDecay(e.st);pickMove(e)});c.turn++;xStartTurn();save();render()}
+function migrate(){if(S.screen=='combat'&&S.cb&&!S.cb.es){S.screen='city';S.cb=null;S.msg='Old combat save was reset.'}if(S.items)return;const c=S.cargo||{};S.items=[];S.nid=1;S.cargo={};for(const k in c)gridAdd(k,c[k])}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a="tgt"]');if(b&&S.cb&&S.cb.es){S.cb.tg=+b.dataset.k;render()}});
+/* --- combat UI --- */
+const stI=st=>Object.entries(st).filter(([k,v])=>v>0).map(([k,v])=>`<span class='stt' title='${L(STAT[k].n)}: ${L(STAT[k].d)}'>${STAT[k].ic}${v}</span>`).join('');
+function intent(e){const E=ENX[e.id],m=E.mv[e.cur],s=e.st,f=m.fx.find(q=>q.k=='dmg');let d=0;
+ if(f){let v=f.v+(s.str||0);if(s.weak)v*=.75;v-=2*(s.fear||0);if(C().ps.vuln)v*=1.5;d=Math.max(0,Math.floor(v))}
+ const ic=m.fx.map(q=>q.k=='raid'?'🧺':q.k=='steal'?'🫳':q.k=='st'&&q.t!='self'&&q.t!='allies'?STAT[q.s].ic:q.k=='heal'?'💚':q.k=='blk'?'🛡️':'').join('');
+ return `${m.ic} ${L(m.n)}${f?` ⚔️${d}`:''} ${ic}`}
+function combatHTML(){
+ const c=S.cb,t=cur(),z=Zh(),mod=c.mod?MODS[c.mod]:null;
+ const en=c.es.map((e,i)=>{const E=ENX[e.id];if(e.hp<=0)return `<div class='en dead'><div class='big'>${E.e}</div><div>${e.fled?'🏃':'☠️'}</div></div>`;const m=E.mv[e.cur];
+  return `<div class='en${t===e?' tgt':''}' data-a='tgt' data-k='${i}'><div class='big'>${E.e}</div><b>${L(E.n)}</b> <span class='mut'>${L(E.role)}</span><div class='hpb'><i style='width:${Math.max(0,e.hp/e.max*100)}%'></i><span>${e.hp}/${e.max}${e.blk?` 🛡️${e.blk}`:''}</span></div><div>${stI(e.st)}</div>${E.pun?`<div class='mut'>📜 ${Zh()?`打出 ${E.pun.n}+ 張牌：${E.pun.v} 傷害`:`${E.pun.n}+ cards played: ${E.pun.v} dmg`}</div>`:''}<div class='intent' title='${m.fx.map(q=>d1(q,1)).join(z?'；':'; ')}'>${intent(e)}</div></div>`}).join('');
+ const pw=Object.keys(c.pw).map(k=>`<div class='mut'>⚙️ ${L(POW[k])} ×${c.pw[k]}</div>`).join('');
+ return `<div class='box'><h2>${L(c.grp)} · ${z?'第':'Turn'} ${c.turn}${z?' 回合':''}</h2>${mod?`<span class='modchip' title='${L(mod.d)}'>${mod.ic} ${L(mod.n)}: ${L(mod.d)}</span>`:''}<div class='enrow'>${en}</div></div>
+ <div class='box'><b>${z?'你':'You'}</b> ❤️ ${S.hp}/${S.maxHp} · 🛡️ ${c.blk} · ⚡ ${c.en} · 🪙 ${S.gold} · 📦 ${cargoN()} (${cargoVal()}) · 🧑‍✈️ ${S.guards} · 🍞 ${S.food} ${stI(c.ps)}${c.cap?` · 🗡️ ${c.cap}`:''}${pw}
+ <div class='hand'>${c.hand.map((id,i)=>cardEl(id,'card',i,!xCan(CARDS[id]),i+1)).join('')}</div><button data-a='end'>${z?'結束回合':'End Turn'} (E)</button> <span class='mut'>${z?'點選敵人以鎖定目標 · 抽 ':'Click an enemy to target · Draw '}${c.draw.length} · ${z?'棄 ':'Discard '}${c.disc.length} · ${z?'消耗 ':'Exhaust '}${c.exh.length}</span></div>
+ <div class='box log'>${c.log.slice(-7).map(q=>'<div>'+(typeof q=='string'?q:z?q.z:q.e)+'</div>').join('')}</div>`}
+/* ===== COMBAT 2.1: more cards, enemies, archetypes, modifiers, triggers ===== */
+const mkE=q=>({id:q,hp:ENX[q].hp,max:ENX[q].hp,blk:0,st:{},i:0,last:-1,cur:0}),ELITE=['Elite','菁英'],DIS=['Disruptor','干擾者'];
+Object.assign(ENX,{
+ spider:{n:['Giant Spider','巨蛛'],e:'🕷️',hp:18,role:DIS,mv:[M('🕸️',['Web','蛛網'],[{k:'dmg',v:3},{k:'st',s:'slow',v:1}]),M('☠️',['Venom Bite','毒牙'],[{k:'dmg',v:5},{k:'st',s:'poison',v:3}]),M('🧺',['Wrap Cargo','纏裹貨物'],[{k:'dmg',v:3},{k:'raid'}],'cargo>=3')]},
+ spirit:{n:['Forest Spirit','森林精靈'],e:'🌳',hp:30,role:['Scaler','成長者'],mv:[M('🍃',['Drain','汲取'],[{k:'dmg',v:4},{k:'st',s:'weak',v:2}]),M('🌸',['Bloom','綻放'],[{k:'heal',v:6},{k:'st',s:'str',v:1,t:'self'}]),M('🌿',['Thorn Lash','荊棘鞭'],[{k:'dmg',v:8}]),M('💢',['Wrath','震怒'],[{k:'dmg',v:10},{k:'st',s:'bleed',v:3}],'hpHalf')]},
+ courier:{n:['Rival Courier','對手信使'],e:'📨',hp:24,hum:1,role:DIS,mv:[M('📢',['Smear Campaign','抹黑'],[{k:'curse',id:'debt'}]),M('🔧',['Sabotage','破壞'],[{k:'dmg',v:3},{k:'raid'}],'cargo>=1'),M('⚔️',['Dagger','匕首'],[{k:'dmg',v:7}])]},
+ handler:{n:['Beast Handler','馴獸師'],e:'🧑‍🌾',hp:22,hum:1,role:['Summoner','召喚者'],mv:[M('📯',['Whistle','哨聲'],[{k:'summon',id:'packwolf'}]),M('⚔️',['Whip','鞭打'],[{k:'dmg',v:5}]),M('📣',['Command','號令'],[{k:'st',s:'str',v:2,t:'allies'}])]},
+ auditor:{n:['Tax Auditor','稅務稽查員'],e:'🧮',hp:34,hum:1,role:['Punisher','懲罰者'],pun:{n:5,v:8},mv:[M('🧮',['Audit','查帳'],[{k:'dmg',v:4},{k:'steal',w:'gold',v:15}],'gold>=40'),M('⚔️',['Penalty','罰則'],[{k:'dmg',v:6}]),M('🛡️',['Red Tape','繁文縟節'],[{k:'blk',v:10}])]},
+ bear:{n:['Hungry Bear','飢餓巨熊'],e:'🐻',hp:55,elite:1,role:ELITE,mv:[M('⚔️',['Maul','猛擊'],[{k:'dmg',v:12}]),M('🩸',['Swipe','揮爪'],[{k:'dmg',v:8},{k:'st',s:'bleed',v:2}]),M('🫳',['Raid Rations','搶糧'],[{k:'dmg',v:5},{k:'steal',w:'food',v:3}]),M('📣',['Roar','咆哮'],[{k:'st',s:'str',v:2,t:'self'}])]},
+ stoneguard:{n:['Ruin Guardian','遺跡守衛'],e:'🗿',hp:70,elite:1,role:ELITE,mv:[M('🛡️',['Stone Stance','岩石姿態'],[{k:'blk',v:15}]),M('⚔️',['Slam','重擊'],[{k:'dmg',v:14}]),M('🎯',['Crush','碾壓'],[{k:'dmg',v:8},{k:'st',s:'vuln',v:2}]),M('🪨',['Ancient Curse','古老詛咒'],[{k:'curse',id:'deadweight'}])]},
+ wraith:{n:['Lantern Wraith','提燈幽魂'],e:'👻',hp:26,role:DIS,mv:[M('🥶',['Chilling Touch','寒冰之觸'],[{k:'dmg',v:5},{k:'st',s:'weak',v:1}]),M('🪙',['Soul Tax','靈魂稅'],[{k:'dmg',v:3},{k:'steal',w:'gold',v:10}],'gold>=20'),M('🫥',['Fade','隱沒'],[{k:'blk',v:10}])]}});
+for(const k in ENX){const[a,b]=ENX[k].n;if(!(a in TERMS)){TERMS[a]=b;TK.push(a)}}TK.sort((a,b)=>b.length-a.length);
+Object.assign(GROUPS,{nest:{n:['Spider Nest','蜘蛛巢穴'],es:['spider','spider','spider']},forest:{n:['Forest Beast Ambush','森林野獸伏擊'],es:['spirit','packwolf']},convoy:{n:['Cargo Raid','貨物劫掠'],es:['courier','thug','thug']},handler:{n:['Beast Handler’s Gambit','馴獸師的賭局'],es:['handler','wolf']},audit:{n:['Corrupt Toll Collectors','腐敗的收費官'],es:['auditor','toll']},night:{n:['Night Camp Assault','夜營襲擊'],es:['wraith','thug','goblin'],mod:'night'},bear:{n:['Elite: Hungry Bear','菁英：飢餓巨熊'],es:['bear']},ruins:{n:['Elite: Ruin Guardian','菁英：遺跡守衛'],es:['stoneguard']},siege:{n:['Caravan Siege (3 waves)','商隊圍城（三波）'],es:['thug','thug'],waves:[['goblin','goblin','packwolf'],['shield','toll']]}});
+const ENC={wolf:['pack','forest','nest','handler','bear'],bandit:['toll','wall','convoy','audit','siege'],goblin:['goblin','night']};
+Object.assign(MODS,{convoy:{ic:'🚚',n:['Merchant Convoy','商隊同行'],d:['Victory grants bonus goods.','勝利可獲得額外貨物。']},hungry:{ic:'🍖',n:['Hungry Beasts','飢餓野獸'],d:['Beasts steal 1 food each turn.','野獸每回合偷走 1 份食物。']},mutiny:{ic:'🗡️',n:['Guard Mutiny','護衛叛變'],d:['Guards give no Block until you play a Guard card.','打出護衛牌前，護衛不提供格擋。']}});
+Object.assign(POW,{opener:['The first card you play each turn costs 0 and is exhausted.','每回合打出的第一張牌費用為 0，但會被消耗。'],freebribe:['Bribe cards cost no gold.','賄賂牌不需花費金幣。'],stock:['At the start of each turn, add a random temporary goods card to your hand.','每回合開始時，將一張隨機臨時貨物牌加入手牌。']});
+PERV.exh=()=>C().exh.length;PERL.exh=['exhausted card','張已消耗的牌'];RC.Special='#a03ab0';
+Object.assign(ZH,{Special:'特殊'});
+const _d1=d1;d1=(f,en)=>{const z=Zh();switch(f.k){
+ case'add':return z?`將 ${f.n||1} 張「${L(CARDS[f.id].n)}」加入手牌`:`Add ${f.n||1} ${L(CARDS[f.id].n)} to hand`;
+ case'curse':return z?`在你的牌堆加入「${L(CARDS[f.id].n)}」`:`Shuffle ${L(CARDS[f.id].n)} into your deck`;
+ case'retr':return z?`從棄牌堆取回 ${f.v} 張牌`:`Retrieve ${f.v} card from discard`;
+ case'free':return z?`接下來 ${f.v} 張牌費用為 0`:`Your next ${f.v} card costs 0`;
+ case'summon':return z?`召喚「${L(ENX[f.id].n)}」`:`Summon ${L(ENX[f.id].n)}`}return _d1(f,en)};
+/* --- new cards --- */
+K('bandage',['Field Dressing','野戰包紮'],'🩹','Skill','Common',1,['Supplies'],[{k:'heal',v:4},{k:'blk',v:5}],{ex:1});
+K('lunge',['Quick Lunge','迅捷突刺'],'🤺','Attack','Common',0,['Merchant'],[{k:'dmg',v:4}],{ex:1});
+K('sling',['Sling Stone','投石索'],'🪨','Attack','Common',1,['Beast'],[{k:'dmg',v:5,t:'rand'}]);
+K('tarp',['Oilcloth Tarp','油布篷'],'⛺','Skill','Common',1,['Weather','Cargo'],[{k:'blk',v:6},{k:'if',c:'cargo>=3',then:[{k:'blk',v:3}]}]);
+K('lowball',['Lowball Offer','壓價要約'],'🪙','Skill','Common',1,['Trade'],[{k:'st',s:'weak',v:2},{k:'gold',v:3}]);
+K('tripwire',['Trip Wire','絆索'],'🪢','Skill','Common',1,['Trap','Beast'],[{k:'st',s:'vuln',v:2},{k:'st',s:'slow',v:1}]);
+K('ironwall',['Ingot Wall','鋼錠防牆'],'🧱','Cargo','Uncommon',1,['Cargo','Guard'],[{k:'sac',then:[{k:'blk',v:10},{k:'st',s:'thorns',v:4,t:'self'}]}]);
+K('bulk',['Bulk Order','大宗訂單'],'📦','Skill','Uncommon',2,['Trade'],[{k:'draw',v:3}],{ex:1});
+K('plating',['Gold Plating','鍍金裝甲'],'🥇','Skill','Uncommon',1,['Trade'],[{k:'blk',v:2,per:['gold10',1],cap:14}]);
+K('ambush',['Roadside Ambush','路邊伏擊'],'🌲','Attack','Uncommon',2,['Beast'],[{k:'dmg',v:12},{k:'if',c:'marked',then:[{k:'dmg',v:10}]}]);
+K('pitch',['Pitch Fire','瀝青烈火'],'🔥','Attack','Uncommon',2,['Fire'],[{k:'dmg',v:6,t:'all'},{k:'st',s:'burn',v:3,t:'all'}]);
+K('slip',['Slip the Tax','逃稅'],'🤞','Skill','Uncommon',0,['Contract'],[{k:'draw',v:1},{k:'later',n:1,then:[{k:'gold',v:-5}]}]);
+K('beartrap',['Bear Trap','捕熊夾'],'🪤','Skill','Uncommon',2,['Trap','Beast'],[{k:'st',s:'entangle',v:2},{k:'st',s:'vuln',v:2}],{ex:1});
+K('formation',['Caravan Formation','商隊陣形'],'🛡️','Skill','Uncommon',2,['Guard'],[{k:'blk',v:6,per:['guards',4]}]);
+K('volley',['Guard Volley','護衛齊射'],'🏹','Attack','Uncommon',2,['Guard'],[{k:'dmg',v:2,t:'all',per:['guards',3]}]);
+K('scout',['Scout Ahead','前方偵察'],'🔭','Skill','Uncommon',1,['Merchant'],[{k:'draw',v:1},{k:'retr',v:1}]);
+K('tab',['Open a Tab','賒帳'],'📒','Skill','Uncommon',0,['Contract'],[{k:'gold',v:15},{k:'curse',id:'debt'}]);
+K('flask',['Poison Flask','毒藥瓶'],'⚗️','Cargo','Uncommon',1,['Cargo','Poison'],[{k:'sac',then:[{k:'st',s:'poison',v:5,t:'all'}]}]);
+K('opener',['Opening Gambit','開場豪賭'],'♟️','Power','Rare',1,['Merchant'],[{k:'pow',p:'opener'}]);
+K('openpurse',['Open Purse','散盡銷金'],'👛','Power','Rare',1,['Bribe'],[{k:'pow',p:'freebribe'},{k:'st',s:'str',v:2,t:'all'}]);
+K('stockpile',['Stockpile','囤貨居奇'],'🏪','Power','Rare',2,['Cargo','Trade'],[{k:'pow',p:'stock'}]);
+K('goldrush',['Gold Rush','淘金熱'],'🤑','Attack','Rare',2,['Trade'],[{k:'dmg',v:0,per:['gold10',2],cap:40}],{pay:30,ex:1});
+K('resolve',['Merchant’s Resolve','商人的決心'],'💪','Skill','Rare',1,['Merchant'],[{k:'st',s:'str',v:2,t:'self'}],{ex:1});
+K('smuggle',['Smuggler’s Route','走私路線'],'🗺️','Skill','Rare',1,['Escape','Trade'],[{k:'draw',v:2},{k:'free',v:1}],{ex:1});
+K('bridge',['Burn the Bridge','焦土之計'],'🌉','Skill','Rare',3,['Fire'],[{k:'dmg',v:18,t:'all'},{k:'gold',v:-20}],{ex:1});
+K('garrison',['Garrison Orders','駐軍命令'],'🏰','Skill','Rare',2,['Guard'],[{k:'guard',v:1},{k:'blk',v:4,per:['guards',4]}],{pay:20,ex:1});
+K('purse',['Coin Purse','錢袋'],'👛','Cargo','Special',0,['Trade'],[{k:'gold',v:12}],{tmp:1});
+K('hiredhand',['Hired Hand','雇工'],'🧑‍🔧','Skill','Special',1,['Guard'],[{k:'dmg',v:7},{k:'blk',v:5}],{tmp:1});
+K('rumor',['Rumor','傳聞'],'🗣️','Skill','Special',0,['Merchant'],[{k:'draw',v:2}],{tmp:1});
+K('debt',['Unpaid Debt','未付債務'],'📕','Curse','Special',0,['Contract'],[],{unplay:1,eot:[{k:'gold',v:-3}],x:['Unplayable. If in hand at end of turn: lose 3 gold.','無法打出。回合結束時若在手牌中：失去 3 金幣。']});
+K('deadweight',['Dead Weight','累贅'],'🪨','Curse','Special',0,[],[],{unplay:1,eot:[{k:'st',s:'frail',v:1,t:'self'}],x:['Unplayable. If in hand at end of turn: gain 1 Frail.','無法打出。回合結束時若在手牌中：獲得 1 層脆弱。']});
+const TEMP=['purse','hiredhand','rumor'];
+POOL.push('bandage','lunge','sling','tarp','lowball','tripwire','ironwall','bulk','plating','ambush','pitch','slip','beartrap','formation','volley','scout','tab','flask','opener','openpurse','stockpile','goldrush','resolve','smuggle','bridge','garrison');
+/* --- engine v2.1 (overrides earlier definitions) --- */
+const xCost=d=>{const c=C();return c.free>0||(c.pw.opener&&!c.played)?0:d.c},xPay2=d=>{const c=C();return d.pay&&!(c.pw.freebribe&&(d.g||[]).includes('Bribe'))?xPay(d):0};
+function xCan(d){const c=C();return !d.unplay&&c.en>=xCost(d)&&S.gold>=xPay2(d)&&(!d.food||S.food>=d.food)&&(!d.fx.some(f=>f.k=='sac')||!!cheapest())}
+function xWave(){const c=C();if(!c.waves||!c.waves.length)return 0;c.es=c.waves.shift().map(mkE);c.tg=0;c.es.forEach(pickMove);lg('A new wave arrives!','新一波敵人來襲！');return 1}
+function xAfter(){const c=C();if(xWave()){c.turn++;xStartTurn();save();return render()}return xWin()}
+function xStartTurn(first){
+ const c=C(),p=c.ps;if(!first)c.blk=0;c.guarded=0;c.played=0;c.en=3-(p.slow?1:0);
+ if(p.poison){S.hp-=p.poison;p.poison--}
+ c.delay.forEach(d=>d.n--);const due=c.delay.filter(d=>d.n<=0);c.delay=c.delay.filter(d=>d.n>0);due.forEach(d=>xRun(d.fx,'p',{}));
+ xDraw(first&&c.mod=='night'?3:5);for(let i=0;i<(c.pw.stock||0);i++)c.hand.push(pick(TEMP));
+ if(S.hp<=0)over(false,'You collapsed on the road.')}
+function play(i){
+ const c=C(),id=c.hand[i];if(!id)return;const d=CARDS[id];if(!xCan(d))return;
+ const cost=xCost(d),first=!c.played;c.en-=cost;if(c.free>0)c.free--;c.played++;S.gold-=xPay2(d);if(d.food)S.food-=d.food;c.hand.splice(i,1);if(c.ps.bleed)S.hp-=c.ps.bleed;
+ if(c.mut&&(d.g||[]).includes('Guard')){c.mut=0;c.blk+=S.guards*3;lg('The guards fall back in line.','護衛重新歸隊。')}
+ xRun(d.fx,'p',{t0:cur()});if(c.pw.cut)S.gold+=c.pw.cut;if(c.cap&&(d.t=='Defense'||(d.g||[]).includes('Guard'))&&id!='captain')c.cap++;
+ (d.ex||d.tmp||d.t=='Power'||(c.pw.opener&&first)?c.exh:c.disc).push(id);
+ if(c.fleeing)return xFled();
+ if(S.hp<=0)return over(false,'You were overwhelmed.');
+ if(xCheck())return xAfter();render()}
+function xWin(){const c=C(),boss=c.es.some(e=>ENX[e.id].boss),elite=c.es.some(e=>ENX[e.id].elite),hum=c.es.some(e=>ENX[e.id].hum&&!e.fled);
+ S.gold+=c.bonus+RI(8,18)+c.es.length*4+(boss?50:0)+(elite?30:0);if(hum)repUp(c.route.to,1);if(c.mod=='convoy')gridAdd(pick(CHEAP()),2);
+ S.reward={cards:shuf([...POOL]).slice(0,3),route:c.route};S.screen='reward';S.cb=null;save();render()}
+function endTurn(){
+ const c=C();if(c.pw.brace)c.blk+=c.pw.brace*4*c.en;
+ if(c.cap&&alive().length)xHit('p',pick(alive()),c.cap,0);
+ c.hand.forEach(id=>{const d=CARDS[id];if(d.eot)xRun(d.eot,'p',{})});
+ if(c.ps.burn){S.hp-=xBurn(c.ps.burn);c.ps.burn=Math.floor(c.ps.burn/2)}
+ c.disc.push(...c.hand.filter(id=>!CARDS[id].tmp));c.hand=[];
+ if(S.hp<=0)return over(false,'You collapsed on the road.');
+ if(xCheck())return xAfter();
+ alive().forEach(e=>e.blk=0);
+ if(c.mod=='hungry')alive().forEach(e=>{if(!ENX[e.id].hum&&S.food>0){S.food--;lg('A hungry beast steals your rations!','飢餓的野獸偷走了口糧！')}});
+ for(const e of c.es.filter(q=>q.hp>0)){
+  if(e.hp<=0)continue;const s=e.st,E=ENX[e.id],m=E.mv[e.cur];let skip=0;
+  if(s.poison){e.hp-=s.poison;s.poison--;if(e.hp<=0)continue}
+  if(s.entangle){s.entangle--;skip=1}else if(s.slow&&c.turn%2)skip=1;
+  if(skip)lg(N(e)[0]+' cannot act.',N(e)[1]+'無法行動。');
+  else{lg(N(e)[0]+' uses '+m.n[0]+'.',N(e)[1]+'使用了'+m.n[1]+'。');if(s.bleed){e.hp-=s.bleed;if(e.hp<=0)continue}
+   const x={};if(s.confuse){const o=alive().filter(q=>q!==e);x.conf=o.length?pick(o):e}xRun(m.fx,e,x)}
+  if(E.pun&&c.played>=E.pun.n){xHit(e,'p',E.pun.v,0);lg(N(e)[0]+' punishes your haste!',N(e)[1]+'懲罰了你的急躁！')}
+  if(S.hp<=0)return over(false,'Your caravan was lost to a '+N(c.es[0])[0]+'.');
+  if(s.burn){e.hp-=xBurn(s.burn);s.burn=Math.floor(s.burn/2)}}
+ if(xCheck())return xAfter();
+ xDecay(c.ps);alive().forEach(e=>{xDecay(e.st);pickMove(e)});c.turn++;xStartTurn();save();render()}
+/* --- balance pass 1 (from 840 simulated fights) --- */
+ENX.bear.hp=75;ENX.bear.mv[0].fx[0].v=14;ENX.bear.mv[1].fx[0].v=10;ENX.bear.mv[1].fx[1].v=3;
+ENX.rival.hp=90;ENX.rival.mv[1].fx[0].v=11;ENX.rival.mv[2].fx[0].v=11;
+ENX.auditor.hp=40;ENX.auditor.pun={n:4,v:10};
+ENX.alpha.mv[0].fx[0].v=1;ENX.packwolf.hp=12;
+GROUPS.siege.waves=[['goblin','packwolf'],['toll']];
+ENX.auditor.mv[0].fx[0].v=8;ENX.auditor.mv[1].fx[0].v=9;ENX.toll.mv[1].fx[0].v=8;ENX.thug.mv[0].fx[0].v=7;
+/* ===== FLOAT TEXT & ROUTE CHIPS ===== */
+let LC={x:innerWidth/2,y:innerHeight/2};document.addEventListener('click',e=>{LC={x:e.clientX,y:e.clientY}},true);
+function floatTxt(t,cls){const d=document.createElement('div');d.className='ft '+cls;d.textContent=t;d.style.left=LC.x+'px';d.style.top=LC.y+'px';document.body.appendChild(d);setTimeout(()=>d.remove(),1150)}
+function routeChips(r){const lv=r.dg<.35?1:r.dg<.5?2:3,nm=['Low','Medium','High'][lv-1],c=['lo','md','hi'][lv-1];return `<span>${r.days} days</span><span class="gold">toll ${r.toll}g</span><span class="dg ${c}" title="Danger">${'💀'.repeat(lv)} ${nm}</span><span>${r.t}</span>`}
+Object.assign(ZH,{'Not enough money':'金幣不足','Avg':'均價','Danger':'危險度'});
+ZR.push([/^([^\sA-Za-z0-9]+) (Low|Medium|High)$/,(m,s,l)=>s+' '+({Low:'低',Medium:'中',High:'高'}[l])]);
+/* ===== LEGENDARY GOODS & HIDDEN DESTINATIONS ===== */
+const CHEAP=()=>Object.keys(COM).filter(k=>COM[k].b<=100);
+Object.assign(COM,{
+ blade:{n:'Legendary Smith’s Blade',e:'🗡️',b:420,w:4,v:1,val:1},
+ scroll:{n:'Tactical Blast Scroll',e:'📜',b:600,w:1,v:1,frag:1,val:1,ill:1},
+ dragonscale:{n:'Ancient Dragon Scale',e:'🐉',b:900,w:3,v:1,val:1},
+ phoenix:{n:'Phoenix Feather',e:'🪶',b:1500,w:1,v:1,frag:1,val:1},
+ skyiron:{n:'Skyiron Ore',e:'☁️',b:350,w:6,v:1,val:1}});
+Object.assign(FP,{blade:[1,3,1,'#9aa7b8'],scroll:[2,1,3,'#c9a24a'],dragonscale:[2,2,2,'#b8321f'],phoenix:[1,3,2,'#ff7a2a'],skyiron:[3,2,3,'#6fa4cf']});
+Object.assign(CITIES.harrow.m,{blade:1.2,scroll:1.5,dragonscale:1.6,phoenix:1.5,skyiron:1.3});
+Object.assign(CITIES.salt.m,{blade:1.1,scroll:1.3,dragonscale:1.4,phoenix:1.3,skyiron:1.2});
+Object.assign(CITIES.thorn.m,{blade:.9,scroll:1.2,dragonscale:1.3,phoenix:1.4,skyiron:1.5});
+CITIES.ember={n:'Emberfall',e:'🌋',d:'Hidden village of the dragon volcano. Dragon-forged goods are cheap; food and medicine are dear.',m:{dragonscale:.55,blade:.8,iron:.7,tools:.8,skyiron:1.3,scroll:1.3,phoenix:.9,grain:1.7,salt:1.5,medicine:1.6,wine:1.5,wool:1.4,spice:1.2,reagent:.8,fur:1.1}};
+CITIES.amaravati={n:'Amaravati',e:'🏝️',d:'Floating island of the sky-lords. They prize weapons and relics, and starve for grain and iron.',m:{skyiron:.5,phoenix:1.2,blade:1.7,dragonscale:1.9,scroll:.8,grain:2,salt:1.8,iron:1.7,tools:1.5,wool:.6,spice:1.3,wine:1.3,medicine:1.2,reagent:.7,fur:1.4}};
+Object.assign(DIST,{'ember|harrow':5,'ember|salt':4,'ember|thorn':3,'amaravati|harrow':6,'amaravati|salt':5,'amaravati|thorn':5,'amaravati|ember':4});
+function routes(){const r=[];for(const to in CITIES){if(to==S.city)continue;const d=DIST[[S.city,to].sort().join('|')];
+ if(to=='ember')r.push({to,n:'Ashen Switchback',days:d,dg:.8,toll:0,t:'mountain',tn:'volcano',biome:'volcano'},{to,n:'Smuggler’s Tunnel',days:d+1,dg:.45,toll:30,t:'mountain',tn:'hidden',biome:'volcano'});
+ else if(to=='amaravati')r.push({to,n:'Cloudstair Ascent',days:d,dg:.7,toll:0,t:'mountain',tn:'sky',biome:'sky'},{to,n:'Sky Ferry',days:d-1,dg:.25,toll:80,t:'road',tn:'sky',biome:'sky'});
+ else{const t=(S.city=='thorn'||to=='thorn')?'forest':'mountain';r.push({to,n:'King’s Road',days:d+1,dg:.3,toll:10,t:'road'},{to,n:t=='forest'?'Wolfwood Track':'Ridge Pass',days:d,dg:t=='forest'?.6:.45,toll:0,t})}}return r}
+function routeChips(r){const lv=r.dg<.35?1:r.dg<.5?2:3,nm=['Low','Medium','High'][lv-1],c=['lo','md','hi'][lv-1];return `<span>${r.days} days</span><span class="gold">toll ${r.toll}g</span><span class="dg ${c}" title="Danger">${'💀'.repeat(lv)} ${nm}</span><span>${r.tn||r.t}</span>`}
+Object.assign(ENX,{
+ drake:{n:['Ember Drake','餘燼飛龍'],e:'🐲',hp:80,elite:1,role:ELITE,mv:[M('🔥',['Fire Breath','龍息烈焰'],[{k:'dmg',v:9},{k:'st',s:'burn',v:4}]),M('⚔️',['Tail Swipe','龍尾橫掃'],[{k:'dmg',v:12}]),M('🧺',['Hoard Raid','搶奪寶藏'],[{k:'dmg',v:6},{k:'raid'}],'cargo>=2'),M('🌪️',['Wing Buffet','翼擊'],[{k:'dmg',v:7},{k:'st',s:'frail',v:1}])]},
+ harpy:{n:['Cloud Harpy','雲端鷹身女妖'],e:'🪶',hp:16,role:ATK,mv:[M('⚔️',['Dive','俯衝'],[{k:'dmg',v:6}]),M('📢',['Screech','尖嘯'],[{k:'dmg',v:3},{k:'st',s:'weak',v:1}]),M('🫳',['Snatch','搶奪'],[{k:'dmg',v:3},{k:'steal',w:'gold',v:10}])]}});
+for(const k in ENX){const[a,b]=ENX[k].n;if(!(a in TERMS)){TERMS[a]=b;TK.push(a)}}
+Object.assign(GROUPS,{drake:{n:['Elite: Ember Drake','菁英：餘燼飛龍'],es:['drake']},skyraid:{n:['Sky Raid','空中劫掠'],es:['harpy','harpy','harpy']}});
+const BIO={volcano:['drake','bear'],sky:['skyraid','skyraid','wraith']};
+Object.assign(TERMS,{'Legendary Smith’s Blade':'傳奇鍛匠之劍','legendary smith’s blade':'傳奇鍛匠之劍','Tactical Blast Scroll':'戰術級範圍爆裂卷軸','tactical blast scroll':'戰術級範圍爆裂卷軸','Ancient Dragon Scale':'遠古龍鱗','ancient dragon scale':'遠古龍鱗','Phoenix Feather':'鳳凰羽毛','phoenix feather':'鳳凰羽毛','Skyiron Ore':'浮空天鐵','skyiron ore':'浮空天鐵','Emberfall':'餘燼村','Amaravati':'阿馬拉瓦蒂','Ashen Switchback':'灰燼蜒蜓道','Smuggler’s Tunnel':'走私者隧道','Cloudstair Ascent':'雲梯攀登路','Sky Ferry':'天空渡船'});
+Object.keys(TERMS).forEach(k=>{if(!TK.includes(k))TK.push(k)});TK.sort((a,b)=>b.length-a.length);
+Object.assign(LORE,{blade:'Folded a thousand times, / it still hums for its maker.',scroll:'One word, one flash, / and the map is redrawn.',dragonscale:'Older than the road, / warm as a sleeping coal.',phoenix:'Each feather remembers fire; / none remembers dying.',skyiron:'Fallen from a drifting isle, / it never quite stops falling.'});
+Object.assign(ZH,{[LORE.blade]:'千錘百煉 / 劍身仍為鑄劍者低鳴',[LORE.scroll]:'一個詞，一道閃光 / 地圖從此改寫',[LORE.dragonscale]:'比道路更古老 / 溫熱如沉睡的炭火',[LORE.phoenix]:'每片羽毛都記得火焰 / 卻無一記得死亡',[LORE.skyiron]:'墜自漂浮之島 / 彷彿永遠在下墜',
+ 'Hidden village of the dragon volcano. Dragon-forged goods are cheap; food and medicine are dear.':'龍火山下的隱密村落。龍鍛造的貨物便宜，食物與藥品價格高昂。','Floating island of the sky-lords. They prize weapons and relics, and starve for grain and iron.':'天空領主的浮空島。他們推崇武器與遺物，卻極缺穀物與鐵。','volcano':'火山','hidden':'隱密','sky':'天空',Illegal:'違禁',Footprint:'佔格'});
+TC.Illegal='#e05a4a';
+function tipHTML(k){const m=COM[k],ty=[m.ill&&'Illegal',m.frag&&'Fragile',m.perish&&'Perishable',m.val&&'Valuable',m.w>=5&&'Heavy',(FP[k][0]*FP[k][1]>=6)&&'Bulky'].filter(Boolean);if(!ty.length)ty.push('Common');
+ return `<div class="tn">${m.e} ${tr(m.n)}</div><hr><div class="tw"><span>${tr('Weight')}: ${m.w}</span><span>${tr('Footprint')}: ${FP[k][0]}×${FP[k][1]}</span></div><div class="ty">${ty.map(t=>`<span style="color:${TC[t]}">${tr(t)}</span>`).join('')}</div><div class="tl">${tr(LORE[k]).replace(/ \/ /g,'<br>')}</div>`}
+function migrate(){
+ if(S.screen=='combat'&&S.cb&&!S.cb.es){S.screen='city';S.cb=null;S.msg='Old combat save was reset.'}
+ for(const c in CITIES){S.prices[c]=S.prices[c]||{};S.hist[c]=S.hist[c]||{};for(const k in COM)if(S.prices[c][k]==null){S.prices[c][k]=COM[k].b*(CITIES[c].m[k]||1);S.hist[c][k]=[Math.round(S.prices[c][k])]}}
+ if(S.items)return;const c=S.cargo||{};S.items=[];S.nid=1;S.cargo={};for(const k in c)gridAdd(k,c[k])}
+/* ===== ROUTE TIERS, WEIGHTED ENCOUNTERS, EVENT DB, CITY HUB, TRANSITIONS, DEV PANEL ===== */
+const wpick=t=>{let s=t.reduce((a,x)=>a+x[1],0),r=Math.random()*s;for(const[k,w]of t){if(r<w)return k;r-=w}return t[0][0]};
+const TIERS={
+ peaceful:{n:['Peaceful','平靜'],ic:'🌿',cls:'lo',sk:0,warlord:0,tbl:[['none',70],['wild',20],['rabble',8],['minor',2]],thr:['Likely: travel events, weather, small wildlife','可能遇到：旅途事件、天氣、小型野生動物']},
+ safe:{n:['Safe','安全'],ic:'💀',cls:'lo',sk:1,warlord:.01,tbl:[['none',45],['wild',30],['rabble',18],['minor',7]],thr:['Likely: wild animals, scavengers, small bandit groups','可能遇到：野獸、拾荒者、小股山賊']},
+ perilous:{n:['Perilous','危險'],ic:'💀',cls:'md',sk:2,warlord:.035,tbl:[['none',25],['moderate',30],['organized',25],['pelite',15],['rare',5]],thr:['Likely: organized bandits, beasts, cultists; elites possible','可能遇到：有組織的山賊、野獸、教徒；可能出現菁英']},
+ cursed:{n:['Cursed','詛咒'],ic:'💀',cls:'hi',sk:3,warlord:.10,tbl:[['none',10],['danger',25],['celite',30],['high',25],['boss',10]],thr:['Likely: dragons, wyverns, demons, undead, warlords','可能遇到：龍、飛龍、惡魔、不死者、軍閥']}};
+Object.assign(ENX,{
+ crow:{n:['Carrion Crow','食腐烏鴉'],e:'🐦‍⬛',hp:8,role:ATK,mv:[M('⚔️',['Peck','啃食'],[{k:'dmg',v:3}]),M('⚔️',['Peck','啃食'],[{k:'dmg',v:4}])]},
+ boar:{n:['Wild Boar','野豬'],e:'🐗',hp:16,role:ATK,mv:[M('⚔️',['Gore','頂刺'],[{k:'dmg',v:5}]),M('⚔️',['Charge','衝撞'],[{k:'dmg',v:7}])]},
+ hound:{n:['Stray Hound','流浪獵犬'],e:'🐕',hp:10,role:ATK,mv:[M('⚔️',['Snap','猛咬'],[{k:'dmg',v:3}]),M('⚔️',['Bite','撕咬'],[{k:'dmg',v:4}])]},
+ thief:{n:['Petty Thief','小偷'],e:'🥷',hp:12,hum:1,role:DIS,mv:[M('🫳',['Pickpocket','扒竊'],[{k:'dmg',v:2},{k:'steal',w:'gold',v:6}]),M('⚔️',['Stab','刺擊'],[{k:'dmg',v:4}])]},
+ starved:{n:['Starving Bandit','飢餓的山賊'],e:'🧔',hp:14,hum:1,role:ATK,mv:[M('⚔️',['Club','棍擊'],[{k:'dmg',v:4}]),M('🫳',['Grab Food','搶食物'],[{k:'dmg',v:3},{k:'steal',w:'food',v:1}]),M('⚔️',['Desperate Lunge','拼死一擊'],[{k:'dmg',v:6}])]},
+ ruffian:{n:['Road Ruffian','路霸'],e:'🥊',hp:18,hum:1,role:ATK,mv:[M('⚔️',['Club','棍擊'],[{k:'dmg',v:5}]),M('⚔️',['Cheap Shot','偷襲'],[{k:'dmg',v:6}])]},
+ imp:{n:['Minor Imp','小鬼'],e:'👿',hp:12,role:DIS,mv:[M('⚔️',['Claw','爪擊'],[{k:'dmg',v:4}]),M('😈',['Cackle','尖笑'],[{k:'dmg',v:2},{k:'st',s:'weak',v:1}])]},
+ wyvern:{n:['Wyvern','雙足飛龍'],e:'🦎',hp:55,elite:1,role:ELITE,mv:[M('☠️',['Venom Sting','劇毒螫刺'],[{k:'dmg',v:8},{k:'st',s:'poison',v:4}]),M('🪶',['Dive','俯衝'],[{k:'dmg',v:13}]),M('📢',['Screech','尖嘯'],[{k:'dmg',v:4},{k:'st',s:'weak',v:2}])]},
+ demon:{n:['Demon Soldier','惡魔士兵'],e:'👹',hp:36,role:ATK,mv:[M('⚔️',['Hellblade','地獄之刃'],[{k:'dmg',v:9}]),M('🔥',['Brand','烙印'],[{k:'dmg',v:5},{k:'st',s:'burn',v:3}]),M('🛡️',['Iron Guard','鐵壁'],[{k:'blk',v:8}])]},
+ deathknight:{n:['Death Knight','死亡騎士'],e:'☠️',hp:70,elite:1,role:ELITE,mv:[M('⚔️',['Cleave','橫掃'],[{k:'dmg',v:14}]),M('🥶',['Dread','恐懼'],[{k:'dmg',v:6},{k:'st',s:'weak',v:2}]),M('🛡️',['Bone Ward','骨盾'],[{k:'blk',v:14}])]},
+ lich:{n:['Lich','巫妖'],e:'🧙',hp:60,elite:1,role:ELITE,mv:[M('❄️',['Frost Bolt','寒霜箭'],[{k:'dmg',v:9},{k:'st',s:'weak',v:1}]),M('📕',['Ledger of Debts','債務詛咒'],[{k:'curse',id:'debt'}]),M('🩸',['Drain Life','汲取生命'],[{k:'dmg',v:7},{k:'heal',v:7}])]}});
+Object.assign(ENX.warlord,{d:['Warlord of the mountain passes. He taxes every road in fire and iron.','山口的軍閥，以火與鐵向每條道路徵稅。']});
+Object.assign(ENX.rival,{d:['Your oldest competitor. He wins by ruin, not by trade.','你最老的對手。他靠毀滅而非買賣取勝。']});
+Object.assign(ENX.bear,{d:['Winter-starved and furious. It smells your rations from a mile away.','在寧冬中餓疯的巨熊，一里外就聞得到你的口糧。']});
+Object.assign(ENX.stoneguard,{d:['A sentinel of cracked stone that outlived the kingdom it served.','碎裂的石像衛士，比它效忠的王國活得更久。']});
+Object.assign(ENX.drake,{d:['A dragon-kin of the volcano, its scales hot as forge-iron.','火山的龍族後裔，鱗片燙如鍛鐵。']});
+Object.assign(ENX.wyvern,{d:['A venomous predator of the high crags.','棲息高山岩壁的劇毒掠食者。']});
+Object.assign(ENX.deathknight,{d:['A knight bound to an oath that death could not break.','被死亡也無法打破的誓言所束縛的騎士。']});
+Object.assign(ENX.lich,{d:['A scholar who traded his heartbeat for patience.','以心跳換取耐心的學者。']});
+for(const k in ENX){const[a,b]=ENX[k].n;if(!(a in TERMS)){TERMS[a]=b;TK.push(a)}}TK.sort((a,b)=>b.length-a.length);
+Object.assign(GROUPS,{boarg:{n:['A Wild Boar','野豬'],es:['boar']},houndpack:{n:['Stray Hounds','流浪獵犬'],es:['hound','hound']},crows:{n:['Carrion Crows','食腐烏鴉'],es:['crow','crow','crow']},thieves:{n:['Petty Thief','小偷'],es:['thief']},starving:{n:['Starving Bandits','飢餓的山賊'],es:['starved','starved']},ruffians:{n:['Road Ruffians','路霸'],es:['ruffian','thief']},ruffian1:{n:['A Road Ruffian','路霸'],es:['ruffian']},imps:{n:['Minor Imps','小鬼'],es:['imp','imp']},wyvernG:{n:['Elite: Wyvern','菁英：雙足飛龍'],es:['wyvern']},demons:{n:['Demon Patrol','惡魔巡邏隊'],es:['demon','demon']},undead:{n:['Elite: Death Knight','菁英：死亡騎士'],es:['deathknight']},lichg:{n:['Elite: Lich','菁英：巫妖'],es:['lich','imp']}});
+const POOLS={wild:['boarg','houndpack','crows'],rabble:['thieves','starving','ruffians'],minor:['imps','ruffian1'],moderate:['pack','nest','forest','handler'],organized:['toll','wall','convoy','audit','goblin','night'],pelite:['bear','ruins'],rare:['drake','wyvernG'],danger:['demons','undead','siege'],celite:['wyvernG','undead','ruins'],high:['drake','wyvernG','lichg'],boss:['rival']};
+function routes(){const r=[];for(const to in CITIES){if(to==S.city)continue;const d=DIST[[S.city,to].sort().join('|')];
+ if(to=='ember')r.push({to,n:'Ashen Switchback',days:d,tier:'cursed',toll:0,t:'mountain',tn:'volcano',biome:'volcano'},{to,n:'Smuggler’s Tunnel',days:d+1,tier:'perilous',toll:30,t:'mountain',tn:'hidden',biome:'volcano'});
+ else if(to=='amaravati')r.push({to,n:'Cloudstair Ascent',days:d,tier:'cursed',toll:0,t:'mountain',tn:'sky',biome:'sky'},{to,n:'Sky Ferry',days:d-1,tier:'safe',toll:80,t:'road',tn:'sky',biome:'sky'});
+ else{const t=(S.city=='thorn'||to=='thorn')?'forest':'mountain';r.push({to,n:'King’s Road',days:d+1,tier:'peaceful',toll:10,t:'road'},{to,n:t=='forest'?'Wolfwood Track':'Ridge Pass',days:d,tier:t=='forest'?'perilous':'safe',toll:0,t})}}return r}
+const profitEst=r=>Object.entries(S.cargo).reduce((a,[k,n])=>a+n*sp(r.to,k)-(S.basis[k]||0),0);
+function routeChips(r){const z=Zh(),T=TIERS[r.tier||'safe'],p=profitEst(r),has=cargoN()>0;
+ return `<span>${r.days} days</span><span class='gold'>toll ${r.toll}g</span><span class='dg ${T.cls}' title='Danger'>${T.sk?'💀'.repeat(T.sk):T.ic} ${L(T.n)}</span><span>${r.tn||r.t}</span><span class='mut full'>${L(T.thr)}</span><span class='full'>${has?(z?`預估獲利：<b class='${p>=0?'up':'dn'}'>${p>=0?'+':'−'}${Math.abs(p)} 金</b>（以目前貨物在目的地販售）`:`Est. profit: <b class='${p>=0?'up':'dn'}'>${p>=0?'+':'−'}${Math.abs(p)}g</b> (selling current cargo there)`):(z?'預估獲利：—（尚無貨物）':'Est. profit: — (no cargo)')}</span>`}
+/* --- events: data-driven, conditions + choices + outcomes + follow-ups --- */
+const EC={gold:()=>S.gold,food:()=>S.food,hp:()=>S.hp,guards:()=>S.guards,cargo:cargoN};
+function evOk(c){if(!c)return 1;const h=c.match(/^has:(\w+)$/);if(h)return(S.cargo[h[1]]||0)>0;const m=c.match(/^(\w+)>=(\d+)$/);return m?EC[m[1]]()>=+m[2]:1}
+const EVT={},VAL={good:['✨ Positive','✨ 正面'],bad:['⚠️ Negative','⚠️ 負面'],mixed:['⚖️ Mixed','⚖️ 好壞參半'],choice:['❓ Choice','❓ 抑擇']};
+const EV=(id,r,v,w,n,x,o,when)=>EVT[id]={r,v,w,n,x,o,when},O=(t,fx,ok)=>({t,fx,ok});
+EV('stranger','Uncommon','choice',5,['A Stranger at the Crossroads','十字路口的默生人'],['A cloaked stranger asks to ride with your caravan to the next city.','一名披著斗篷的默生人請求搭你的商隊前往下一座城市。'],[
+ O(['Let him ride along','讓他同行'],[['rng',[
+  [25,[['flag','warrior',1],['msg',['He is a wandering warrior and will fight beside you in the next battle.','他是流浪戰士，將在下一場戰鬥中與你並肩作戰。']]]],
+  [25,[['msg',['He is a healer, and tends your wounds.','他是治療者，為你包紮了傷口。']],['hp',14]]],
+  [20,[['flag','disc',.85],['msg',['A merchant! He offers you a discount on rare goods in the next city.','他是商人！願在下一座城市給你稀有貨物折扣。']]]],
+  [15,[['msg',['The stranger keeps to himself, eyes drifting over your cargo.','默生人一路沉默，目光卻不時掃過你的貨物。']],['later',[['msg',['Your passenger was a bandit infiltrator! He slipped away with valuables and tipped off his gang.','你的乘客是山賊的臥底！他帶走財物並向同夥通風報信。']],['gold',-30],['lose',1],['flag','alert',1]]]]],
+  [15,[['msg',['The stranger keeps to himself, eyes drifting over your cargo.','默生人一路沉默，目光卻不時掃過你的貨物。']],['later',[['msg',['Your passenger was a spy! Rumours about your caravan spread through the city.','你的乘客是間諧！關於你商隊的謠言在城裡傳開。']],['rep',-2],['shock','wine',1.5,6]]]]]]]]),
+ O(['Refuse politely','婉拒'],[['msg',['You wish him luck and roll on.','你祝他好運，繼續趕路。']]])]);
+EV('wheel','Common','bad',10,['Broken Wagon Wheel','車輪斷裂'],['A wheel splinters on a rut and the caravan grinds to a halt.','車輪在車轍上碎裂，商隊停了下來。'],[
+ O(['Repair it with a unit of tools','用一單位工具修理'],[['msg',['The tools pay for themselves.','工具派上了用場。']],['use','tools']],'has:tools'),
+ O(['Pay a passing wheelwright (30g)','付錢請路過的車匠（30 金）'],[['msg',['Back on the road quickly.','很快重新上路。']],['gold',-30]],'gold>=30'),
+ O(['Limp onward','勉強前進'],[['rng',[[55,[['msg',['The delay burns through your rations.','耐擱讓你耗掉了口糧。']],['food',-2]]],[45,[['msg',['Cargo shakes loose and is lost.','貨物被震落遺失。']],['lose',1]]]]]])]);
+EV('shrine','Common','good',8,['Roadside Shrine','路邊神龕'],['A moss-covered shrine to a forgotten saint glows faintly.','一座長滿青苔的神龕微微發光，供奉著被遺忘的聖者。'],[
+ O(['Kneel and pray','跪下祈禱'],[['msg',['Warmth settles into your bones.','暖意渗進了你的骨頭。']],['hp',10]]),
+ O(['Leave an offering (10g)','留下供品（10 金）'],[['msg',['You feel watched over. Your next battle begins with Block.','你感到有人守護。下一場戰鬥開始時獲得格擋。']],['gold',-10],['flag','bless',1]],'gold>=10'),
+ O(['Walk past','送過'.replace('送','走')],[['msg',['The shrine fades behind you.','神龕在你身後漸漸遠去。']]])]);
+EV('lost','Common','choice',8,['Lost Travellers','迷路的旅人'],['A family has lost the road and begs for guidance.','一家人迷了路，懇求你指路。'],[
+ O(['Guide them to safety (−1 food)','帶他們走到安全處（−1 食物）'],[['msg',['They thank you with coin and kind words.','他們以硬幣和感謝回報你。']],['food',-1],['gold',12],['rep',1]],'food>=1'),
+ O(['Sell them directions','向他們販堂路線'],[['msg',['A quick coin, a quicker conscience.','賺到了錢，良心卻不安。']],['gold',10],['rep',-1]]),
+ O(['Ignore them','不理會'],[['msg',['You drive on.','你繼續趕路。']]])]);
+EV('smuggler','Uncommon','mixed',5,['Smuggler’s Offer','走私者的提議'],['A hooded smuggler offers cheap contraband from under his cloak.','一名戴兜帽的走私者從斗篷下兜售廉價違禁品。'],[
+ O(['Buy a crate (40g)','買下一箱（40 金）'],[['gold',-40],['rng',[[65,[['msg',['Genuine spice, no questions asked.','真正的香料，無須多問。']],['cargo','spice',3]]],[35,[['msg',['The crate holds sand. Worse, a watchman saw you.','箱子裡只有沙子——更糟的是，有守衛看到了。']],['rep',-1]]]]]],'gold>=40'),
+ O(['Report him to the watch','向守衛檢舉他'],[['msg',['The watch rewards your honesty.','守衛獎勵了你的誠實。']],['rep',1],['gold',10]]),
+ O(['Decline','婉拒'],[['msg',['You shake your head and move on.','你搖頭離開。']]])]);
+EV('tax','Common','bad',10,['Tax Collectors','稅吏'],['A tax wagon blocks the road. Their ledger lists your caravan by name.','稅吏的馬車攔住去路，帳冊上竟有你商隊的名字。'],[
+ O(['Pay the levy (25g)','繳稅（25 金）'],[['msg',['Stamped, sealed, and sent along.','蓋章、封印，放行。']],['gold',-25],['rep',1]],'gold>=25'),
+ O(['Bribe them (15g, 50%)','賄賂他們（15 金，50%）'],[['gold',-15],['rng',[[50,[['msg',['They look the other way.','他們睡一隻眼閉一隻眼。']]]],[50,[['msg',['They pocket it and fine you anyway.','他們收了錢還是罰了你。']],['gold',-30],['rep',-1]]]]]],'gold>=15'),
+ O(['Refuse and fight','拒絕並開戰'],[['msg',['Steel is drawn.','刀劍出鞘。']],['fight','toll']])]);
+EV('abandoned','Common','mixed',8,['Abandoned Cargo','遺棄的貨物'],['Crates lie scattered beside the road. Too easy?','路旁散落著幾只貨箱。太輕鬆了吧？'],[
+ O(['Search carefully','仔細搜索'],[['rng',[[60,[['msg',['Honest goods, left behind in a hurry.','貨物完好，是匪忙中遺落的。']],['cargoR',2]]],[40,[['msg',['It was bait!','那是誘餘！']],['fight','thieves']]]]]]),
+ O(['Leave it','不碰'],[['msg',['Not worth the risk.','不值得冒险。']]])]);
+EV('sabotage','Uncommon','bad',5,['Rival Sabotage','對手的破壞'],['A cargo strap was cut in the night. Hoofprints lead toward a rival’s banner.','貨物的綁帶在夜裡被割斷，馬蹄印通向對手商隊的旗幟。'],[
+ O(['Hire a night watch (20g)','雇用夜間守衛（20 金）'],[['msg',['The saboteurs find the wagons guarded.','破壞者發現馬車有人守著。']],['gold',-20]],'gold>=20'),
+ O(['Ignore it','置之不理'],[['rng',[[50,[['msg',['You lose a crate to the rival’s agents.','你的一箱貨被對手的人拿走了。']],['lose',1]]],[50,[['msg',['Nothing else is touched.','其他東西沒有被動。']]]]]]]),
+ O(['Chase the saboteurs','追捕破壞者'],[['msg',['You catch up to them!','你追上了他們！']],['fight','convoy']])]);
+EV('festival','Uncommon','good',5,['Festival in the Next City','下一座城市的慶典'],['Travellers say the next city is preparing a great festival.','旅人說下一座城市正籌備盛大慶典。'],[
+ O(['Plan for the crowds','為人潮做好準備'],[['msg',['Wine and spice will sell dear there.','那裡的葡萄酒與香料將賣得好價錢。']],['shock','wine',1.6,6],['shock','spice',1.4,6]]),
+ O(['Pay for a rumour (15g)','花錢打聽消息（15 金）'],[['msg',['The innkeeper swears grain will be scarce there.','旅店老闆發誓那裡穀物將短缺。']],['gold',-15],['shock','grain',1.8,6]],'gold>=15'),
+ O(['Ignore the gossip','無視傳聞'],[['msg',['Idle talk, you decide.','你認為那只是閒話。']]])]);
+EV('wolves','Common','bad',8,['Wolves at Night','夜間狼群'],['Eyes glitter beyond the firelight. A pack circles your camp.','火光之外的眼睛閃爆著，狼群正繞著營地打轉。'],[
+ O(['Stoke the fires (−1 food)','加旺營火（−1 食物）'],[['msg',['The pack loses interest by dawn.','黎明時狼群失去了興趣。']],['food',-1]],'food>=1'),
+ O(['Throw them rations (−3 food)','拋給它們口糧（−3 食物）'],[['msg',['Full bellies, quiet night.','吃飽了，夜晚安靜。']],['food',-3]],'food>=3'),
+ O(['Drive them off','把它們趨走'],[['msg',['Steel and torches!','刀劍與火把！']],['fight','houndpack']])]);
+EV('cache','Rare','good',2,['Hidden Cache','隱藏的貨倉'],['A loose stone reveals a smuggler’s hidden cache.','一塊鬆動的石頭後藏著走私者的貨倉。'],[
+ O(['Take everything','全部拿走'],[['msg',['A fine haul, if anyone asks where it came from.','收穫不錯，如果有人問起來源的話。']],['gold',40],['cargoR',2],['rep',-1]]),
+ O(['Take only the coin','只拿錢'],[['msg',['A modest, quiet profit.','一筆低調的小財。']],['gold',40]]),
+ O(['Report it to the guards','向守衛通報'],[['msg',['The guards are grateful.','守衛很感激。']],['gold',15],['rep',2]])]);
+EV('envoy','Rare','mixed',0,['The Pass Warlord’s Envoy','隘口軍閥的使者'],['A rider in blackened armour bars the road: “The Warlord demands tribute, merchant.”','一名黑甲騎手攔住道路：「商人，軍閥要你納貢。」'],[
+ O(['Pay tribute (60g)','繳納貢金（60 金）'],[['msg',['The rider leaves you in peace.','騎手放你平安通過。']],['gold',-60]],'gold>=60'),
+ O(['Take the long way (−3 food)','繞遠路（−3 食物）'],[['msg',['You lose a day circling the pass.','你繞開隨口，耗掉了一天。']],['food',-3]],'food>=3'),
+ O(['Defy him','拒絕他'],[['msg',['The Warlord himself rides out.','軍閥親自策馬而來。']],['fight','warlord']])]);
+function runOps(ops,out,to){const z=Zh(),sg=n=>(n>0?'+':'−')+Math.abs(n);
+ for(const o of ops){const k=o[0];
+  if(k=='gold'){S.gold=Math.max(0,S.gold+o[1]);out.push(sg(o[1])+(z?' 金幣':' gold'))}
+  else if(k=='hp'){S.hp=Math.min(S.maxHp,S.hp+o[1]);out.push(sg(o[1])+(z?' 生命':' HP'))}
+  else if(k=='food'){S.food=Math.max(0,S.food+o[1]);out.push(sg(o[1])+(z?' 食物':' food'))}
+  else if(k=='rep'){repUp(to,o[1]);out.push((z?'聲望 ':'Rep ')+sg(o[1]))}
+  else if(k=='cargo'||k=='cargoR'){const c=k=='cargo'?o[1]:pick(CHEAP()),n=k=='cargo'?o[2]:o[1];if(gridAdd(c,n)){S.basis[c]=(S.basis[c]||0)+Math.round(COM[c].b*n);out.push('+'+n+' '+(z?terms(COM[c].n):COM[c].n))}else out.push(z?'（沒有空間）':'(no room)')}
+  else if(k=='lose'){for(let i=0;i<o[1];i++){const ks=Object.keys(S.cargo);if(!ks.length)break;removeUnit(pick(ks));out.push(z?'− 1 貨物':'−1 cargo')}}
+  else if(k=='use'){if(S.cargo[o[1]])removeUnit(o[1])}
+  else if(k=='guard')S.guards=Math.max(0,Math.min(5,S.guards+o[1]));
+  else if(k=='flag'){S.fl=S.fl||{};S.fl[o[1]]=o[2]}
+  else if(k=='fight'){if(S.ev)S.ev.fight=o[1]}
+  else if(k=='shock')S.shocks.push({city:to,com:o[1],mult:o[2],start:S.day,len:o[3]});
+  else if(k=='later')(S.later=S.later||[]).push(o[1]);
+  else if(k=='msg')out.push(L(o[1]));
+  else if(k=='rng'){let t=o[1].reduce((a,x)=>a+x[0],0),x=Math.random()*t;for(const[w,ops2]of o[1]){if(x<w){runOps(ops2,out,to);break}x-=w}}}}
+function startEvent(r,force){S.fl=S.fl||{};let id=force;
+ if(!id){const ids=Object.keys(EVT).filter(k=>EVT[k].w>0&&evOk(EVT[k].when));let t=ids.reduce((a,k)=>a+EVT[k].w,0),x=Math.random()*t;id=ids[0];for(const k of ids){if(x<EVT[k].w){id=k;break}x-=EVT[k].w}}
+ S.ev={d:id,r};S.screen='event';save();render()}
+function choose(i){
+ if(!S.ev)return;
+ if(!S.ev.d){const o=EVENTS[S.ev.id].o[i];if(!o||(o.ok&&!o.ok()))return;const r=S.ev.r;S.msg=o.f();S.ev=null;if(S.hp<=0)return over(false,'You died on the road.');return arrive(r)}
+ const E=EVT[S.ev.d],o=E.o[i];if(!o||!evOk(o.ok))return;const r=S.ev.r,out=[];runOps(o.fx,out,r.to);const f=S.ev.fight;S.msg=out.join(' ');S.ev=null;
+ if(S.hp<=0)return over(false,'You died on the road.');if(f)return xEncounter(r,f);arrive(r)}
+function evHTML(){const E=EVT[S.ev.d];return `<div class='box'><h2>${L(E.n)}</h2><span class='modchip'>${tr(E.r)}</span><span class='modchip'>${L(VAL[E.v])}</span><p>${L(E.x)}</p>`+E.o.map((o,i)=>`<p><button data-a='ev' data-k='${i}' ${evOk(o.ok)?'':'disabled'}>${i+1}. ${L(o.t)}</button></p>`).join('')+'</div>'}
+/* --- travel: tiered weighted encounters --- */
+function xEncounter(r,gid){
+ startCombat(gid,r);const c=S.cb,act=1+(S.day>10)+(S.day>20),sc=({peaceful:.8,safe:.9,perilous:1,cursed:1.15}[r.tier]||1)*(1+.12*(act-1));
+ c.es.forEach(e=>{e.max=e.hp=Math.round(e.max*sc)});c.tier=r.tier;S.fl=S.fl||{};
+ if(S.fl.warrior){c.es[0].hp=Math.max(1,c.es[0].hp-12);c.blk+=6;lg('The wandering warrior charges in beside you!','流浪戰士衝到你身旁並肩作戰！');S.fl.warrior=0}
+ if(S.fl.bless){c.blk+=8;lg('The shrine’s blessing shields you.','神龕的祝福庫護著你。'.replace('庫','庴'));S.fl.bless=0}
+ intro(c);save();render()}
+function go(i){
+ const r=routes()[i];S.fl=S.fl||{};const dv=S.dev||{};if(dv.tier)r.tier=dv.tier;
+ if(S.gold<r.toll){S.msg='You cannot afford the toll.';return render()}
+ S.gold-=r.toll;S.fl.disc=0;playTr('travel',520,1);
+ let days=r.days,m=[];
+ if(r.t=='forest'&&Math.random()<(wxAt(S.day)=='rain'?.6:.3)){days++;m.push('Mud slows the wagons (+1 day).')}
+ if(Math.random()<(wxAt(S.day)=='storm'?.7:r.t=='mountain'?.2:.1)){const l=loseFragile();m.push('A storm lashes the caravan. '+l)}
+ S.food-=days;if(S.food<0){S.hp+=S.food*3;S.food=0;m.push('Hunger: the caravan goes without food and loses HP.')}
+ tick(days);
+ if(S.cargo.grain){let l=0;for(let j=0;j<S.cargo.grain*days;j++)if(Math.random()<.05)l++;l=Math.min(l,S.cargo.grain);for(let j=0;j<l;j++)removeUnit('grain');if(l)m.push(l+' grain spoiled.')}
+ S.msg=m.join(' ');if(S.hp<=0)return over(false,'Starved on the road.');
+ if(dv.event){S.dev.event='';return startEvent(r,dv.event)}
+ if(dv.group){const g=dv.group;S.dev.group='';return xEncounter(r,g)}
+ if(S.fl.alert){S.fl.alert=0;return xEncounter(r,'ruffians')}
+ if(carriesLeg()&&Math.random()<(fac('thieves')>=3?.1:.3))return xEncounter(r,pick(['convoy','ruffians','toll']));
+ if(fac('thieves')<=-3&&Math.random()<.2)return xEncounter(r,'ruffians');
+ const T=TIERS[r.tier||'safe'];
+ if(r.tier=='safe'&&Math.random()<T.warlord)return startEvent(r,'envoy');
+ if((r.tier=='perilous'||r.tier=='cursed')&&Math.random()<T.warlord)return xEncounter(r,'warlord');
+ const cat=wpick(T.tbl);
+ if(cat=='none')return Math.random()<.7?startEvent(r):arrive(r);
+ xEncounter(r,pick(POOLS[cat]))}
+const _arrive=arrive;arrive=function(r){S.hubOpen=true;S.pf=1;
+ if(S.later&&S.later.length){const out=[];S.later.forEach(ops=>runOps(ops,out,r.to));S.later=[];S.msg=(S.msg||'')+' '+out.join(' ');if(S.hp<=0)return over(false,'You died on the road.')}
+ playTr('glow',480);return _arrive(r)};
+const _mig=migrate;migrate=function(){_mig();S.fl=S.fl||{};S.later=S.later||[];S.tab=S.tab||'market'};
+/* --- City Hub tabs, transitions, intro card, dev panel --- */
+Object.assign(ZH,{'City Hub':'城市樞紐','Rotate':'旋轉'});
+let LASTS=null;
+function hubTabs(){
+ const col=document.querySelector('#app>.grid>div');if(!col)return;const bx=col.querySelectorAll(':scope>.box');if(bx.length<2)return;
+ const tab=S.tab||'market',open=S.hubOpen!==false;
+ bx[0].style.display=open&&tab=='market'?'':'none';bx[1].style.display=open&&tab=='routes'?'':'none';
+ const t=document.createElement('div');t.className='tabs';
+ t.innerHTML=open?`<button class='tab${tab=='market'?' on':''}' data-a='tab' data-k='market'>${tr('Market')} (M)</button><button class='tab${tab=='routes'?' on':''}' data-a='tab' data-k='routes'>${tr('Routes')} (R)</button><button class='alt' data-a='hub' data-k='0'>✕ Esc</button>`:`<button class='tab on' data-a='hub' data-k='1'>${tr('City Hub')} (M / R)</button>`;
+ col.insertBefore(t,col.firstChild);if(S.pf){(open?bx[tab=='market'?0:1]:t).classList.add('pf');S.pf=0}}
+function afterRender(){
+ if(S.screen=='city')hubTabs();
+ if(S.screen!==LASTS){const m={event:['parch',350],combat:['smoke',450],reward:['gold',450],over:['dark',600],city:['glow',400]}[S.screen];if(LASTS!==null&&m)playTr(m[0],m[1]);LASTS=S.screen}}
+function playTr(cls,ms,cv){const o=$('#tr');if(o)o.remove();const d=document.createElement('div');d.id='tr';d.className=cls;d.style.setProperty('--d',ms+'ms');if(cv)d.innerHTML="<span class='cv'>🐎🛒</span>";document.body.appendChild(d);setTimeout(()=>{if(d.parentNode)d.remove()},ms+80)}
+function skipFx(){const o=$('#tr'),i=$('#intro');if(o)o.remove();if(i)i.remove()}
+document.addEventListener('click',skipFx,true);addEventListener('keydown',e=>{if(e.key=='Enter'||e.key==' ')skipFx()});
+function intro(c){const e=c.es.find(q=>ENX[q.id].d);if(!e)return;const E=ENX[e.id],o=$('#intro');if(o)o.remove();const d=document.createElement('div');d.id='intro';d.innerHTML=`<div class='ic'>${E.e}</div><h2>${L(E.n)}</h2><div class='mut'>${L(E.role)}</div><p>${L(E.d)}</p>`;document.body.appendChild(d);setTimeout(()=>{if(d.parentNode)d.remove()},2700)}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a="tab"],[data-a="hub"]');if(!b)return;if(b.dataset.a=='tab'){S.tab=b.dataset.k;S.hubOpen=true}else S.hubOpen=b.dataset.k=='1';S.pf=1;render()});
+addEventListener('keydown',e=>{if(S.screen!='city'||GAL||(GD&&GD.on)||e.target.tagName=='SELECT')return;const k=e.key;
+ if(k=='m'||k=='M'){S.tab='market';S.hubOpen=true;S.pf=1;render()}else if(k=='r'||k=='R'){S.tab='routes';S.hubOpen=true;S.pf=1;render()}else if(k=='Escape'&&!GD){S.hubOpen=false;S.pf=1;render()}});
+const dev=document.body.appendChild(Object.assign(document.createElement('div'),{id:'dev'}));
+function devHTML(){S.dev=S.dev||{};const sel=(id,ks,v)=>`<select id='${id}'><option value=''>—</option>${ks.map(o=>`<option ${o==v?'selected':''}>${o}</option>`).join('')}</select>`;
+ return `<b>DEV (F2)</b> tier ${sel('dvT',Object.keys(TIERS),S.dev.tier)} group ${sel('dvG',Object.keys(GROUPS),S.dev.group)} event ${sel('dvE',Object.keys(EVT),S.dev.event)} <button id='dvA'>Apply to next trip</button> <button id='dvS'>Sample 3000</button><div id='dvO'></div>`}
+addEventListener('keydown',e=>{if(e.key=='F2'){e.preventDefault();dev.style.display=dev.style.display=='block'?'none':'block';dev.innerHTML=devHTML()}});
+dev.addEventListener('click',e=>{if(e.target.id=='dvA'){S.dev={tier:$('#dvT').value,group:$('#dvG').value,event:$('#dvE').value};$('#dvO').textContent='Armed.'}
+ if(e.target.id=='dvS'){const t=$('#dvT').value||'safe',T=TIERS[t],c={};for(let i=0;i<3000;i++){const k=Math.random()<T.warlord?'warlord':wpick(T.tbl);c[k]=(c[k]||0)+1}$('#dvO').textContent=t+': '+Object.entries(c).map(([k,v])=>k+' '+(v/30).toFixed(1)+'%').join(' · ')}});
+/* ===== RARE & LEGENDARY GOODS (rotating limited stock) + EPIC NAMING ===== */
+Object.assign(COM,{
+ griffin:{n:'Griffin Feather',e:'🦅',b:160,w:1,v:1,val:1},
+ royalwine:{n:'Royal Vintage Wine',e:'🍾',b:240,w:3,v:1,frag:1,val:1},
+ manuscript:{n:'Ancient Manuscript',e:'📚',b:320,w:1,v:1,frag:1,val:1},
+ silk:{n:'Enchanted Silk',e:'🧵',b:180,w:1,v:1,val:1},
+ oil:{n:'Blessed Oil',e:'🫙',b:140,w:2,v:1,perish:1,val:1},
+ demonheart:{n:'Sealed Demon Heart',e:'🫀',b:2600,w:4,v:1,ill:1,val:1},
+ dragonegg:{n:'Dragon Egg',e:'🥚',b:3600,w:8,v:1,frag:1,val:1},
+ relic:{n:'Saint’s Relic',e:'⚱️',b:2200,w:2,v:1,val:1},
+ starshard:{n:'Fallen Star Fragment',e:'☄️',b:3000,w:5,v:1,val:1}});
+Object.assign(FP,{griffin:[1,3,4,'#c9a24a'],royalwine:[2,2,2,'#7a1f3d'],manuscript:[2,1,2,'#8a6d3b'],silk:[2,2,3,'#b04ad1'],oil:[1,2,4,'#d9b83c'],demonheart:[2,2,1,'#6e0f1f'],dragonegg:[2,3,1,'#2f7a4a'],relic:[2,2,1,'#d8d0a8'],starshard:[2,3,1,'#6a7dff']});
+const RARE={
+ blade:{t:'Rare',c:['ember','thorn'],q:[1,2],p:.5},scroll:{t:'Rare',c:['salt','amaravati'],q:[1,3],p:.5,rep:2},dragonscale:{t:'Rare',c:['ember'],q:[1,2],p:.6,rep:1},skyiron:{t:'Rare',c:['amaravati','harrow'],q:[2,4],p:.6},
+ griffin:{t:'Rare',c:['harrow','amaravati'],seas:[1,2],q:[2,4],p:.6},royalwine:{t:'Rare',c:['salt','harrow'],seas:[2,3],q:[1,3],p:.5,rep:2},manuscript:{t:'Rare',c:['salt','thorn'],q:[1,2],p:.5,rep:3},silk:{t:'Rare',c:['salt','amaravati'],seas:[0,1],q:[2,4],p:.6},oil:{t:'Rare',c:['harrow','thorn'],q:[2,4],p:.6,rep:1},
+ phoenix:{t:'Legendary',c:['amaravati','ember'],q:[1,1],p:.14,rep:4,tag:'Limited Offer'},demonheart:{t:'Legendary',c:['ember','thorn'],q:[1,1],p:.12,rep:3,tag:'One-Time Shipment',once:1},dragonegg:{t:'Legendary',c:['ember','amaravati'],q:[1,1],p:.1,rep:5,tag:'Limited Offer'},relic:{t:'Legendary',c:['harrow','salt'],q:[1,1],p:.12,rep:5,tag:'One-Time Shipment',once:1},starshard:{t:'Legendary',c:['amaravati','thorn','salt'],q:[1,1],p:.1,rep:4,tag:'Limited Offer'}};
+Object.values(RARE).forEach(R=>{if(R.t=='Legendary')R.p*=.5});
+const COMT={grain:'Common',salt:'Common',iron:'Common',wool:'Common',tools:'Common',fur:'Uncommon',wine:'Uncommon',spice:'Uncommon',medicine:'Uncommon',reagent:'Uncommon'};
+for(const k in COM)COM[k].tier=RARE[k]?RARE[k].t:COMT[k]||'Common';
+for(const k in RARE)for(const c in CITIES)if(CITIES[c].m[k]==null)CITIES[c].m[k]=RARE[k].c.includes(c)?.8:1.35;
+const seasonIdx=()=>Math.floor((S.day-1)/8)%4,carriesLeg=()=>Object.keys(S.cargo).some(k=>COM[k].tier=='Legendary');
+function ensureStock(c){S.stock=S.stock||{};S.once=S.once||{};let st=S.stock[c];if(st&&S.day<st.until)return;st={until:S.day+RI(7,10),items:{}};let leg=0;
+ for(const k in RARE){const R=RARE[k];if(!R.c.includes(c)||(R.seas&&!R.seas.includes(seasonIdx()))||rep(c)<(R.rep||0)||(R.fac&&fac(R.fac[0])<R.fac[1])||(R.once&&S.once[k]))continue;if(R.t=='Legendary'&&leg)continue;if(Math.random()<R.p){st.items[k]={q:RI(R.q[0],R.q[1])};if(R.t=='Legendary')leg=1}}S.stock[c]=st}
+const stockOk=k=>{if(!RARE[k])return true;ensureStock(S.city);const it=S.stock[S.city].items[k];return !!(it&&it.q>0)};
+function stockUse(k){if(!RARE[k])return;const st=S.stock[S.city],it=st.items[k];it.q--;if(RARE[k].once)S.once[k]=1;if(it.q<=0)delete st.items[k]}
+Object.assign(LORE,{griffin:'Light as a falling oath, / sharp as the wind that shed it.',royalwine:'Poured once for kings, / forgotten by none.',manuscript:'Its ink has outlived its language, / but not its warnings.',silk:'Woven by moonlight, / it has forgotten the loom.',oil:'A drop for the dying, / a drop for the doubtful.',demonheart:'Sealed in iron and salt, / it is still beating.',dragonegg:'Warm through a hundred winters, / patient as a mountain.',relic:'A saint’s last breath, / bottled for the faithful.',starshard:'It fell once; the sky / still keeps a place for it.'});
+Object.assign(ZH,{[LORE.griffin]:'輕如墜落的誓言 / 銳利如抖落它的風',[LORE.royalwine]:'曾為君王傾注 / 無人敢忘',[LORE.manuscript]:'墨跡比語言更長壽 / 警告卻從未褪色',[LORE.silk]:'月光織就 / 渾忘織機',[LORE.oil]:'一滝予將逝者 / 一滝予懷疑者',[LORE.demonheart]:'鎖於鐵與鹽之中 / 它仍在跳動',[LORE.dragonegg]:'歷百冬而溫熱 / 耐心如山',[LORE.relic]:'聖者最後一口氣 / 為信者封存',[LORE.starshard]:'它墜落一次 / 天空仍為它留著位置','Unavailable':'無貨','Legendary':'傳說'});
+const NT={'Griffin Feather':'獅鷲羽毛','Royal Vintage Wine':'王室佳釀','Ancient Manuscript':'遠古手抄本','Enchanted Silk':'附魔絲網','Blessed Oil':'受祝聖油','Sealed Demon Heart':'封印的惡魔之心','Dragon Egg':'龍蛋','Saint’s Relic':'聖徒遺物','Fallen Star Fragment':'墜星碎片'};
+for(const k in NT){TERMS[k]=NT[k];TERMS[k.toLowerCase()]=NT[k]}
+/* --- epic names (original) --- */
+Object.assign(CITIES.harrow,{n:'Ashenreach',d:'A farming reach beneath ashen skies. Grain and wool are cheap; iron and luxuries are dear.'});
+Object.assign(CITIES.salt,{n:'Hollowmere',d:'A drowned port where bells toll beneath the water. Salt and spice flow in; grain and iron are scarce.'});
+Object.assign(CITIES.thorn,{n:'Thornwraith',d:'A mining and trapping outpost haunted by the wood. Iron, tools and furs are cheap; all else is dear.'});
+Object.assign(CITIES.ember,{n:'Cinderhold',d:'A hidden village in the shadow of the dragon volcano. Dragon-forged goods are cheap; food and medicine are dear.'});
+Object.assign(CITIES.amaravati,{n:'Amaravati, the Pale Gate',d:'A floating island of sky-lords, pale as bone. They prize weapons and relics, and starve for grain and iron.'});
+Object.assign(TERMS,{'Ashenreach':'灰燼之境','Hollowmere':'空洞湖畔','Thornwraith':'荊棘幽影','Cinderhold':'餘燼要塞','Amaravati, the Pale Gate':'蒼白之門阿馬拉瓦蒂'});
+Object.assign(ZH,{'A farming reach beneath ashen skies. Grain and wool are cheap; iron and luxuries are dear.':'灰燼天空下的農地。穀物與羊毛便宜，鐵器與奢侈品昂貴。','A drowned port where bells toll beneath the water. Salt and spice flow in; grain and iron are scarce.':'鐘聲在水下鳴響的沉沒港口。鹽與香料源源不絕，穀物與鐵器稀缺。','A mining and trapping outpost haunted by the wood. Iron, tools and furs are cheap; all else is dear.':'被森林纏繞的礦業與獵捕前哨。鐵、工具與毛皮便宜，其餘昂貴。','A hidden village in the shadow of the dragon volcano. Dragon-forged goods are cheap; food and medicine are dear.':'龍火山陰影下的隱密村落。龍鍛造的貨物便宜，食物與藥品昂貴。','A floating island of sky-lords, pale as bone. They prize weapons and relics, and starve for grain and iron.':'天空領主的浮空島，蒼白如骨。他們推崇武器與遺物，卻極缺穀物與鐵。'});
+const REN={warlord:[['Varkhul, the Ashen Warlord','灰燼軍閥瓦克胡爾'],['He burned the passes to ash and now tolls every ember. None who refused him walked on.','他將山口焚為灰燼，向每一點餘火徵收通行稅。拒絕他的人，無一走遠。']],
+ rival:[['Corvin Vale, the Ledger-Reaper','帳本收割者科爾文·維爾'],['A merchant-prince who balances his books in ruin. Your name is already in his ledger.','以毀滅結算帳目的商賈王侯。你的名字早已寫進他的帳本。']],
+ stoneguard:[['The Weeping Chorus','哀泣合唱'],['Cracked statues that keen at the edge of hearing. Those who listen long forget the road home.','碎裂的雕像在聽覺邊緣哀鳴，聽得夠久的人會忘記回家的路。']],
+ drake:[['Serathis, Wyrm of the Hollow Sky','空洞蒼穹之龍塞拉西斯'],['An elder wyrm whose wings darken whole valleys. Her hoard is older than the roads.','雙翼能遮暗整座山谷的古龍，她的寶藏比道路更古老。']],
+ wyvern:[['Skarrow, Gale-Maw of the High Crags','高崖風喉斯卡羅'],['A venom-fanged hunter that nests where the wind screams. It has never lost a hunt.','在狂風嘶吼處築巢的毒牙獵手，從未在獵捕中失手。']],
+ deathknight:[['The Cinderborn','燼生者'],['A knight whose oath outlasted his flesh. He still marches for a king no one remembers.','誓言比血肉更長久的騎士，仍為無人記得的君王行軍。']],
+ lich:[['Ultharion, Keeper of the Black Road','黑道守望者烏爾薩里昂'],['He tallies every traveller who dies on his road, and has never run out of pages.','他記錄每一個死在他道路上的旅人，而他的帳頁從不曾用盡。']]};
+for(const k in REN){ENX[k].n=REN[k][0];ENX[k].d=REN[k][1];TERMS[REN[k][0][0]]=REN[k][0][1];TK.push(REN[k][0][0])}
+Object.keys(TERMS).forEach(k=>{if(!TK.includes(k))TK.push(k)});TK.sort((a,b)=>b.length-a.length);
+const GN={warlord:'warlord',rival:'rival',drake:'drake',wyvernG:'wyvern',undead:'deathknight',lichg:'lich',ruins:'stoneguard'};
+for(const g in GN)GROUPS[g].n=[(['warlord','rival'].includes(g)?'Boss: ':'Elite: ')+ENX[GN[g]].n[0],(['warlord','rival'].includes(g)?'頭目：':'菁英：')+ENX[GN[g]].n[1]];
+Object.assign(TC,{Uncommon:'#6a9a1e',Rare:'#2a8fb0',Legendary:'#e0a020'});
+function tipHTML(k){const m=COM[k],ty=[m.tier,m.ill&&'Illegal',m.frag&&'Fragile',m.perish&&'Perishable',m.val&&'Valuable',m.w>=5&&'Heavy',(FP[k][0]*FP[k][1]>=6)&&'Bulky'].filter(Boolean);
+ return `<div class="tn">${m.e} ${tr(m.n)}</div><hr><div class="tw"><span>${tr('Weight')}: ${m.w}</span><span>${tr('Footprint')}: ${FP[k][0]}×${FP[k][1]}</span></div><div class="ty">${ty.map(t=>`<span style="color:${TC[t]}">${tr(t)}</span>`).join('')}</div><div class="tl">${tr(LORE[k]).replace(/ \/ /g,'<br>')}</div>`}
+function marketDecor(){
+ const tb=document.querySelector('#app>.grid>div>.box table'),box=tb&&tb.closest('.box');if(!box)return;ensureStock(S.city);
+ const st=S.stock[S.city],z=Zh(),C0=CITIES[S.city],si=seasonIdx(),days=Math.max(0,st.until-S.day);
+ const h=document.createElement('div');h.className='mut';h.innerHTML=`<b>${tr(C0.n)}</b> — ${tr(C0.d)}<br>${z?'季節：'+['春','夏','秋','冬'][si]+'季':'Season: '+['Spring','Summer','Autumn','Winter'][si]} · ${z?'稀有貨物 '+days+' 天後輪替':'Rare stock rotates in '+days+' day(s)'}`;box.insertBefore(h,tb);
+ let hid=0;box.querySelectorAll('tr[data-tip]').forEach(row=>{const k=row.dataset.tip,R=RARE[k];if(!R)return;const it=st.items[k];
+  if(!it&&!(S.cargo[k]>0)){row.style.display='none';hid++;return}
+  const lg=R.t=='Legendary',tag=!it?(z?'無貨':'Unavailable'):lg?(R.tag=='One-Time Shipment'?(z?'一次性貨運':'One-Time Shipment'):(z?'限時特賣':'Limited Offer')):'';
+  row.children[0].insertAdjacentHTML('beforeend',` <span class='tier ${R.t}'>${lg?(z?'傳說':'Legendary'):(z?'稀有':'Rare')}</span>${tag||it?` <span class='tier ${it?R.t:'na'}'>${tag}${it?(tag?' ':'')+'×'+it.q+' · '+days+(z?' 天':'d'):''}</span>`:''}`);
+  const b=row.querySelector("button[data-a='buy']");if(!it&&b)b.disabled=true});
+ if(hid){const p=document.createElement('p');p.className='mut';p.textContent=z?`本地暫無 ${hid} 種稀有／傳說貨物。`:`${hid} rare/legendary goods unavailable here.`;tb.after(p)}}
+function afterRender(){
+ if(S.screen=='city'){hubTabs();marketDecor();document.querySelectorAll('.route').forEach((row,i)=>{const r=routes()[i];if(r)row.title=tr(CITIES[r.to].d)})}
+ if(S.screen=='combat'&&S.cb&&S.cb.es)document.querySelectorAll('.en[data-k]').forEach(e=>{const E=ENX[S.cb.es[+e.dataset.k].id];if(E.d)e.title=L(E.d)});
+ if(S.screen!==LASTS){const m={event:['parch',350],combat:['smoke',450],reward:['gold',450],over:['dark',600],city:['glow',400]}[S.screen];if(LASTS!==null&&m)playTr(m[0],m[1]);LASTS=S.screen}}
+const _arr2=arrive;arrive=function(r){S.fl=S.fl||{};Object.keys(S.cargo).filter(k=>COM[k].ill).forEach(k=>{if(S.cargo[k]>0&&Math.random()<.25){removeUnit(k);repUp(r.to,-1);S.msg=(S.msg||'')+' '+(Zh()?'守衛檢查了你的車隊，沒收了違禁品！':'Guards search your wagons and confiscate contraband!')}});return _arr2(r)};
+const _dh=devHTML;devHTML=()=>_dh()+` offer <select id='dvR'>${Object.keys(RARE).map(k=>`<option>${k}</option>`).join('')}</select> <button id='dvR2'>Add to this city</button>`;
+dev.addEventListener('click',e=>{if(e.target.id=='dvR2'&&S.screen=='city'){ensureStock(S.city);S.stock[S.city].items[$('#dvR').value]={q:1};render()}});
+/* ===== FACTIONS, CONTRACT QUESTS, 13 MORE EVENTS ===== */
+const FAC={guild:['Merchants’ Guild','商人公會'],thieves:['The Black Ledger','黑帳會'],order:['Order of the Pale Flame','蒼焰修會']};
+const fac=k=>(S.fac&&S.fac[k])||0,sgn=n=>(n>0?'+':'−')+Math.abs(n);
+Object.assign(RARE.scroll,{fac:['guild',1]});Object.assign(RARE.demonheart,{fac:['thieves',2]});Object.assign(RARE.relic,{fac:['order',2]});
+const _routes=routes;routes=function(){return _routes().map(r=>{r.toll=Math.max(0,Math.round(r.toll*(1-.1*Math.max(0,Math.min(5,fac('guild'))))));return r})};
+const _eo=evOk;evOk=c=>c=='leg'?carriesLeg():_eo(c);
+function addQuest(out){S.quests=S.quests||[];if(S.quests.length>=3){out.push(Zh()?'（契約已滿）':'(contract slots full)');return}
+ const to=pick(Object.keys(CITIES).filter(c=>c!=S.city)),k=pick(CHEAP()),n=RI(2,4),d=DIST[[S.city,to].sort().join('|')]||4;
+ S.quests.push({k,n,to,by:S.day+d+8,gold:Math.round(n*COM[k].b*1.8)+30});out.push(Zh()?'新契約':'New contract')}
+const _ro=runOps;runOps=function(ops,out,to){for(const o of ops){const k=o[0];
+ if(k=='fac'){S.fac=S.fac||{};S.fac[o[1]]=Math.max(-5,Math.min(10,fac(o[1])+o[2]));out.push(L(FAC[o[1]])+' '+sgn(o[2]))}
+ else if(k=='quest')addQuest(out);
+ else if(k=='card'){S.deck.push(o[1]);out.push(L(CARDS[o[1]].n))}
+ else if(k=='offer'){ensureStock(to);const st=S.stock[to];st.items[o[1]]={q:1};st.until=Math.max(st.until,S.day+9);out.push((Zh()?'市集傳聞：':'Market tip: ')+(Zh()?terms(COM[o[1]].n):COM[o[1]].n))}
+ else if(k=='sellLeg'){const lk=Object.keys(S.cargo).find(q=>COM[q].tier=='Legendary');if(lk){removeUnit(lk);const g=Math.round(COM[lk].b*1.35);S.gold+=g;out.push('+'+g+(Zh()?' 金幣':' gold'))}}
+ else _ro([o],out,to)}};
+const _arr3=arrive;arrive=function(r){S.quests=S.quests||[];const msgs=[],z=Zh();
+ S.quests=S.quests.filter(q=>{if(q.to==r.to&&(S.cargo[q.k]||0)>=q.n){for(let i=0;i<q.n;i++)removeUnit(q.k);S.gold+=q.gold;repUp(r.to,2);S.fac=S.fac||{};S.fac.guild=Math.min(10,fac('guild')+1);msgs.push(z?`契約完成：+${q.gold} 金幣，公會 +1。`:`Contract done: +${q.gold} gold, Guild +1.`);return false}
+  if(S.day>q.by){S.fac=S.fac||{};S.fac.guild=Math.max(-5,fac('guild')-1);msgs.push(z?'一份公會契約逾期了（公會 −1）。':'A guild contract expired (Guild −1).');return false}return true});
+ if(msgs.length)S.msg=(S.msg||'')+' '+msgs.join(' ');return _arr3(r)};
+function standingBox(){const col=document.querySelectorAll('#app>.grid>div')[1];if(!col)return;const z=Zh(),qs=S.quests||[],b=document.createElement('div');b.className='box';
+ b.innerHTML=`<h2>${z?'派系與契約':'Factions & Contracts'}</h2>`+Object.keys(FAC).map(k=>`<div>${L(FAC[k])}: <b>${fac(k)}</b></div>`).join('')+`<div class='mut'>${z?'公會：過路費減免　黑帳會：影響劫匪　修會：聖物貨源':'Guild: cheaper tolls · Black Ledger: bandit hostility · Order: holy relics'}</div>`+(qs.length?qs.map(q=>`<div>📜 ${z?`運送 ${q.n} 單位${terms(COM[q.k].n)}至${terms(CITIES[q.to].n)}，第 ${q.by} 天前（${q.gold} 金）`:`Deliver ${q.n} ${COM[q.k].n} to ${CITIES[q.to].n} by day ${q.by} (${q.gold}g)`}</div>`).join(''):`<div class='mut'>${z?'目前沒有契約。':'No active contracts.'}</div>`);col.appendChild(b)}
+const _ar=afterRender;afterRender=function(){_ar();if(S.screen=='city')standingBox()};
+EV('storm','Common','bad',8,['A Sudden Storm','突如其來的風暴'],['Black clouds roll over the road. Rain hammers the wagons.','烏雲壓向道路，雨水猛擊著馬車。'],[
+ O(['Cover the cargo with wool (uses 1 wool)','用羊毛覆蓋貨物（消耗 1 單位羊毛）'],[['msg',['The wool soaks up the worst of it.','羊毛擋下了最糟的雨水。']],['use','wool']],'has:wool'),
+ O(['Shelter and wait (−2 food)','躲雨等待（−2 食物）'],[['msg',['You wait out the storm.','你等風暴過去。']],['food',-2]],'food>=2'),
+ O(['Press on through it','冒雨前進'],[['rng',[[50,[['msg',['Mud and wind batter you.','泥濘與狂風重創了你。']],['hp',-6]]],[50,[['msg',['Water seeps into the crates.','雨水渗進了貨箱。']],['lose',1]]]]]])]);
+EV('guardhurt','Common','bad',6,['An Injured Guard','受傷的護衛'],['One of your guards twists his ankle badly on the road.','你的一名護衛在路上嚴重扭傷了腳踝。'],[
+ O(['Treat him with medicine (uses 1)','用藥品治療他（消耗 1）'],[['msg',['He is back on his feet by evening.','傍晚時他已能站起來。']],['use','medicine']],'has:medicine'),
+ O(['Pay a healer (25g)','請治療師（25 金）'],[['msg',['The healer binds the ankle.','治療師包紮了腳踝。']],['gold',-25]],'gold>=25'),
+ O(['Leave him at the next inn','把他留在下一間旅店'],[['msg',['You leave a guard behind, and your name suffers.','你留下了一名護衛，名聲也受損。']],['guard',-1],['rep',-1]])],'guards>=1');
+EV('veiled','Uncommon','mixed',5,['The Veiled Merchant','蒙面商人'],['A veiled trader offers a sealed crate. “Fine silk, I swear on my mother.”','蒙面商人兜售一只封好的貨箱。「上好的絲網，我以母親起誓。」'],[
+ O(['Buy the crate (50g)','買下貨箱（50 金）'],[['gold',-50],['rng',[[45,[['msg',['Real enchanted silk!','真是附魔絲網！']],['cargo','silk',2]]],[35,[['msg',['Sand, and a note: “Pleasure doing business.”','只有沙子和一張紙條：「合作愉快。」']]]],[20,[['msg',['The crate hums with a curse.','貨箱散發著詛咒的低鳴。']],['card','deadweight']]]]]],'gold>=50'),
+ O(['Haggle him down (25g)','殺價（25 金）'],[['gold',-25],['rng',[[40,[['msg',['He yields, and the silk is real.','他讓步了，絲網是真的。']],['cargo','silk',1]]],[60,[['msg',['He vanishes into the crowd.','他消失在人群中。']]]]]]],'gold>=25'),
+ O(['Walk away','轉身離開'],[['msg',['You leave him to his tricks.','你不理會他的把戲。']]])]);
+EV('ambush','Common','bad',8,['Ambush in the Pass','隨口伏擊'],['Armed figures step out of the rocks. “Toll or blood.”','持械的人影從岩石後走出。「過路費，否則見血。」'],[
+ O(['Pay the toll (30g)','付過路費（30 金）'],[['msg',['They wave you through.','他們放你通過。']],['gold',-30],['fac','thieves',1]],'gold>=30'),
+ O(['Fight','開戰'],[['msg',['Steel rings out!','兵刃交擊！']],['fight','ruffians']]),
+ O(['Bluff: the Guild is behind you','虛張聲勢：公會就在你身後'],[['rng',[[45,[['msg',['They flinch and back away.','他們退縮了。']],['fac','thieves',-1],['fac','guild',1]]],[55,[['msg',['They see through you!','他們識破了你！']],['fight','starving']]]]]])]);
+EV('contract','Uncommon','good',6,['A Guild Contract','公會契約'],['A Guild factor offers a paid delivery contract. The Guild remembers who keeps its word.','公會代理人提出一份有酬的運送契約。公會會記住誰守信用。'],[
+ O(['Accept the contract','接受契約'],[['msg',['The contract is sealed. See the Factions panel.','契約已蓋章。請查看派系面板。']],['quest']]),
+ O(['Decline','婉拒'],[['msg',['The factor shrugs and rides off.','代理人耲耲肩騎馬離去。']]])]);
+EV('treasure','Uncommon','good',5,['Whispers of a Rare Cargo','稀有貨物的傳聞'],['A drunk factor swears a rare shipment will soon dock in the next city.','一名喝醉的代理人發誓下一座城市即將有稀有貨物到港。'],[
+ O(['Pay for the details (20g)','付錢打聽細節（20 金）'],[['msg',['The details check out.','細節屬實。']],['gold',-20],['offer','griffin']],'gold>=20'),
+ O(['Chase the legend','追尋傳說'],[['rng',[[20,[['msg',['A sealed relic is for sale there!','那裡真的有封存的遺物在賣！']],['offer','relic']]],[80,[['msg',['Only tavern talk.','只是酒館閒談。']]]]]]]),
+ O(['Ignore it','不予理會'],[['msg',['Rumours are cheap.','傳聞不值錢。']]])]);
+EV('escort','Uncommon','choice',5,['An Escort Request','護送請求'],['A pilgrim of the Pale Flame begs safe passage to the next city, and swears the Order will repay you.','蒼焰修會的朝聖者懇求護送他前往下一座城市，並發誓修會會回報。'],[
+ O(['Escort the pilgrim','護送朝聖者'],[['rng',[[65,[['msg',['The road is quiet, and the Order is grateful.','一路平靜，修會很感激。']],['later',[['gold',40],['fac','order',2]]]]],[35,[['msg',['Hunters of the pilgrim attack!','追捕朝聖者的人襲擊了你們！']],['later',[['gold',40],['fac','order',2]]],['fight','ruffians']]]]]]),
+ O(['Refuse','拒絕'],[['msg',['The pilgrim walks on alone.','朝聖者獨自走遠。']],['fac','order',-1]])]);
+EV('rotten','Common','bad',6,['Rotten Provisions','腐壞的口糧'],['You open a barrel and the stench hits you. Half the rations are crawling.','你打開木桶，惡臭撲鼻，一半口糧都生了蟲。'],[
+ O(['Eat it anyway','照吃不誤'],[['msg',['Your stomach pays for it.','你的肘子付出了代價。'.replace('肘子','胃')]],['hp',-8]]),
+ O(['Throw it out (−3 food)','全部丟掉（−3 食物）'],[['msg',['You eat lean for days.','你好幾天都吃得很少。']],['food',-3]],'food>=3'),
+ O(['Hunt for game','打獵找食物'],[['rng',[[50,[['msg',['A good kill!','收穫不錯！']],['food',4]]],[50,[['msg',['The boar fights back!','野豬反撃了！']],['fight','boarg']]]]]])]);
+EV('ring','Rare','mixed',2,['A Gleaming Ring in the Dust','塵土中閃亮的戒指'],['A heavy gold ring lies in the road. It is warm to the touch.','一枚沉重的金戒指躺在路上，摸起來是溫熱的。'],[
+ O(['Pocket it and sell it','收進口袋賣掉'],[['msg',['A fine price, and a heavy feeling.','價錢不錯，心裡卻沉甸甸的。']],['gold',70],['card','deadweight']]),
+ O(['Offer it to the Pale Flame','獻給蒼焰修會'],[['msg',['The Order accepts it with solemn thanks.','修會莊重地收下，並致謝。']],['gold',20],['fac','order',2]]),
+ O(['Leave it','留在原地'],[['msg',['Some things are best left in the dust.','有些東西最好留在塵土裡。']]])]);
+EV('thief','Uncommon','choice',5,['A Thief in Chains','被鏈條鎖住的小偷'],['A watch captain is marching a pickpocket to the gallows. The boy locks eyes with you.','守衛隊長正押著一名扒手前往絞架。男孩望向了你。'],[
+ O(['Pay his fine (30g)','替他付罰金（30 金）'],[['msg',['The boy swears to guard your wagons.','男孩發誓替你守護車隊。']],['gold',-30],['guard',1],['fac','thieves',2],['fac','guild',-1]],'gold>=30'),
+ O(['Tell the captain what you know','把你知道的告訴隊長'],[['msg',['The captain nods. The Guild hears of it.','隊長點頭，公會也聽說了此事。']],['gold',20],['fac','guild',1],['fac','thieves',-2]]),
+ O(['Look away','別過頭去'],[['msg',['You do not look back.','你沒有回頭。']]])]);
+EV('nightraid','Common','bad',6,['Torches in the Dark','黑暗中的火把'],['You wake to shouts. Torches ring the camp.','你被喊聲驚醒，火把圍住了營地。'],[
+ O(['Stand and fight','迎戰'],[['msg',['You grab your weapon!','你抓起武器！']],['fight','starving']]),
+ O(['Abandon a crate and slip away','丟下一箱貨物悄悄溜走'],[['msg',['They fall on the crate while you vanish.','他們撲向貨箱，你趨機消失。']],['lose',1]],'cargo>=1'),
+ O(['Pay them off (40g)','買通他們（40 金）'],[['msg',['They melt back into the night.','他們消失在夜色中。']],['gold',-40],['fac','thieves',1]],'gold>=40')]);
+EV('pilgrims','Common','good',6,['Pilgrim Procession','朝聖隊伍'],['A procession of pilgrims shuffles past, singing hymns of the Pale Flame.','一支朝聖隊伍緩緩走過，唱著蒼焰的颂歌。'],[
+ O(['Join them for a while','與他們同行一段'],[['msg',['The hymns steady your nerves.','颂歌安定了你的心神。']],['hp',8],['fac','order',1]]),
+ O(['Sell them supplies (−2 food)','賣給他們補給（−2 食物）'],[['msg',['They pay well and bless your wagons.','他們出價優厚，並為你的車隊祝福。']],['food',-2],['gold',25],['fac','order',1]],'food>=2'),
+ O(['Wait for them to pass','等他們走過'],[['msg',['The road is clear again.','道路重新暢通。']]])]);
+EV('collector','Rare','mixed',6,['The Collector’s Whisper','收藏家的耳語'],['Word travels fast. A masked collector offers to buy your most precious cargo, no questions asked.','消息傳得很快。一名戴面具的收藏家願意買下你最珍貴的貨物，不問來歷。'],[
+ O(['Sell privately (135% of value)','私下出售（135% 價值）'],[['msg',['A purse of gold, and a debt to the Black Ledger.','一袋黃金，以及對黑帳會的人情債。']],['sellLeg'],['fac','thieves',2],['fac','guild',-1]]),
+ O(['Report him to the Guild','向公會舉報他'],[['msg',['The Guild posts guards and thanks you.','公會派出守衛並向你致謝。']],['gold',40],['fac','guild',2],['fac','thieves',-1]]),
+ O(['Refuse','拒絕'],[['msg',['The collector bows and vanishes.','收藏家鮚躬後消失無蹤。']]])],'leg');
+/* ===== COMBAT 2.2: 16 cards (90), upgrades & deck editing, guard allies, boss phases, forecast, acts ===== */
+const FLAV={Guard:['The road respects the well-armed.','道路尊重全副武裝的人。'],Cargo:['What you carry is also what they come for.','你所載運的，也正是他們所覬覦的。'],Bribe:['Every sword has a price, and most are cheap.','每把劍都有價碼，而且多半不貴。'],Trade:['Buy fear, sell courage.','買進恐懼，賣出勇氣。'],Contract:['Ink binds longer than iron.','墨跡比鐵鏈束縛更久。'],Beast:['The forest keeps its own accounts.','森林有自己的帳。'],Poison:['Patience is a kind of blade.','耐心也是一種刀刃。'],Fire:['Warmth, until it is not.','溫暖，直到它不再溫暖。'],Weather:['The sky owes no one an apology.','天空不欠任何人一句道歉。'],Escape:['A living merchant sells again tomorrow.','活著的商人明天還能再賣。'],Merchant:['Every road is a ledger.','每條路都是一本帳簿。'],Supplies:['Hunger is the oldest bandit.','飢餓是最古老的強盜。'],Trap:['Be patient. The road is not.','請耐心，道路可沒有。'],Bleed:['A small wound, a long road.','傷口雖小，路途漫長。'],Gamble:['The dice are honest. Their owners are not.','骰子很誠實，擁有者卻不然。']};
+const flav=d=>L(FLAV[(d.g||[])[0]]||FLAV.Merchant);
+K('brothers',['Shield Brothers','盾牌兄弟'],'🤝','Skill','Uncommon',1,['Guard'],[{k:'blk',v:5},{k:'st',s:'thorns',v:2,t:'self'}]);
+K('drill',['Guard Drill','護衛操練'],'🥁','Skill','Uncommon',1,['Guard'],[{k:'abuff',v:1},{k:'blk',v:3}]);
+K('laststand',['Last Stand','背水一戰'],'🏴','Skill','Rare',1,['Guard'],[{k:'gsac',then:[{k:'blk',v:16},{k:'dmg',v:10,t:'all'}]}],{ex:1});
+K('standard',['Caravan Standard','商隊旗幟'],'🚩','Power','Rare',2,['Guard'],[{k:'pow',p:'standard'}]);
+K('firesale',['Fire Sale','清倉大拍賣'],'🏷️','Cargo','Common',0,['Cargo','Trade'],[{k:'sac',then:[{k:'gold',v:20},{k:'draw',v:1}]}],{ex:1});
+K('insure',['Cargo Insurance','貨物保險'],'📃','Power','Rare',1,['Cargo','Contract'],[{k:'pow',p:'insure'}]);
+K('corner',['Corner the Market','壟斷市場'],'🏦','Skill','Rare',2,['Trade'],[{k:'gold',v:30},{k:'st',s:'vuln',v:1,t:'all'}],{ex:1});
+K('bola',['Bola Throw','投擲繩球'],'🪢','Attack','Common',1,['Beast','Trap'],[{k:'dmg',v:4},{k:'st',s:'entangle',v:1}]);
+K('camo',['Camouflage','偏裝'],'🌿','Skill','Uncommon',1,['Beast'],[{k:'blk',v:8},{k:'st',s:'marked',v:2}]);
+K('campfire',['Campfire Stew','營火燉湯'],'🍲','Skill','Common',1,['Supplies'],[{k:'heal',v:3},{k:'draw',v:1}],{food:1});
+K('fog',['Dense Fog','濃霧'],'🌫️','Skill','Uncommon',1,['Weather'],[{k:'st',s:'weak',v:2,t:'all'},{k:'st',s:'slow',v:1,t:'all'}]);
+K('avalanche',['Avalanche','雪崩'],'🏔️','Attack','Rare',3,['Weather'],[{k:'dmg',v:20,t:'all'}],{ex:1});
+K('quickstep',['Quickstep','疾步'],'👟','Skill','Common',0,['Escape'],[{k:'blk',v:3},{k:'draw',v:1}],{ex:1});
+K('nerves',['Steady Nerves','穩住心神'],'🧘','Skill','Uncommon',1,['Merchant'],[{k:'en',v:1},{k:'blk',v:3}],{ex:1});
+K('recount',['Recount the Ledger','重新清點帳本'],'📒','Skill','Uncommon',1,['Merchant'],[{k:'retr',v:1},{k:'gold',v:5}]);
+K('firearrow',['Flaming Arrow','火焰箭'],'🏹','Attack','Common',1,['Fire'],[{k:'dmg',v:5},{k:'st',s:'burn',v:3}]);
+POOL.push('brothers','drill','laststand','standard','firesale','insure','corner','bola','camo','campfire','fog','avalanche','quickstep','nerves','recount','firearrow');
+Object.assign(POW,{standard:['At the start of each turn, gain Block 2 per guard.','每回合開始時，每名護衛提供格擋 2。'],insure:['When raiders take your cargo, gain 15 gold.','劫匪奪走貨物時，獲得 15 金幣。']});
+const _d1b=d1;d1=(f,en)=>{const z=Zh();switch(f.k){case'abuff':return z?`盟友本場戰鬥額外 +${f.v} 傷害`:`Allies deal +${f.v} damage this fight`;case'gsac':return(z?'犧牲一名護衛：':'Sacrifice a guard: ')+f.then.map(q=>d1(q,en)).join(z?'，':', ');case'rule':return z?'規則改變：每打一張牌花 1 金幣':'Rule change: each card you play costs 1 gold'}return _d1b(f,en)};
+function scaleFx(fx){let ch=0;const s=f=>{const g={...f};if(['dmg','blk','heal'].includes(g.k)){g.v=g.v+Math.max(2,Math.round(g.v*.3));ch=1}else if(g.k=='draw'&&g.v<3){g.v++;ch=1}else if(g.k=='gold'&&g.v>0){g.v=Math.ceil(g.v*1.3);ch=1}else if(g.k=='st'&&g.s!='str'){g.v++;ch=1}
+ if(g.per){g.per=[g.per[0],g.per[1]+1];ch=1}if(g.then)g.then=g.then.map(s);if(g.else)g.else=g.else.map(s);return g};const out=fx.map(s);return[out,ch]}
+function upCard(id){const d=CARDS[id],u={...d},[fx,ch]=scaleFx(d.fx||[]);u.fx=fx;u.up=1;u.a=d.a;const zn=Array.isArray(d.n)?d.n:[d.n,ZH[d.n]||d.n];u.n=[zn[0]+'+',zn[1]+'+'];if(!ch){if(u.c>0)u.c--;else delete u.ex}if(u.pay)u.pay=Math.ceil(u.pay*.8);return u}
+for(const id of Object.keys(CARDS)){const d=CARDS[id];if(d.tmp||d.unplay||id.endsWith('+'))continue;CARDS[id+'+']=upCard(id)}
+const upCost=()=>60+20*(S.ups||0),rmCost=()=>40+20*(S.rms||0);
+function deckBox(){const col=document.querySelectorAll('#app>.grid>div')[1];if(!col)return;const z=Zh(),b=document.createElement('div');b.className='box';
+ b.innerHTML=`<h2>${z?'牌組':'Deck'} (${S.deck.length})</h2><button data-a='dk' data-k='up'>${z?`升級一張牌（${upCost()} 金）`:`Upgrade a card (${upCost()}g)`}</button> <button class='alt' data-a='dk' data-k='rm'>${z?`移除一張牌（${rmCost()} 金）`:`Remove a card (${rmCost()}g)`}</button>`;col.appendChild(b)}
+let DKM=null;
+function openDeck(mode){const z=Zh(),o=$('#deckm');if(o)o.remove();DKM=mode;const d=document.createElement('div');d.id='deckm';
+ d.innerHTML=`<div class='dm'><h2>${mode=='up'?(z?`選擇要升級的牌（${upCost()} 金）`:`Choose a card to upgrade (${upCost()}g)`):(z?`選擇要移除的牌（${rmCost()} 金）`:`Choose a card to remove (${rmCost()}g)`)} <button class='alt' data-a='dkx'>✕</button></h2><div class='hand'>${S.deck.map((id,i)=>cardEl(id,'dkc',i,mode=='up'?!CARDS[id+'+']||id.endsWith('+'):S.deck.length<=5,'')).join('')}</div></div>`;document.body.appendChild(d)}
+document.addEventListener('click',e=>{const b=e.target.closest("[data-a='dk']");if(b)return openDeck(b.dataset.k);if(e.target.closest("[data-a='dkx']")){const o=$('#deckm');if(o)o.remove();return}
+ const c=e.target.closest("#deckm [data-a='dkc']");if(!c||c.classList.contains('off'))return;const i=+c.dataset.k,id=S.deck[i];
+ if(DKM=='up'){if(S.gold<upCost())return floatTxt(tr('Not enough money'),'bad');S.gold-=upCost();S.ups=(S.ups||0)+1;S.deck[i]=id+'+'}else{if(S.gold<rmCost())return floatTxt(tr('Not enough money'),'bad');S.gold-=rmCost();S.rms=(S.rms||0)+1;S.deck.splice(i,1)}
+ const o=$('#deckm');if(o)o.remove();save();render()});
+addEventListener('keydown',e=>{if(e.key=='Escape'&&$('#deckm')){$('#deckm').remove();e.stopImmediatePropagation()}},true);
+function syncAl(){const c=C();c.al=c.al||[];while(c.al.length<S.guards)c.al.push({hp:14,max:14});while(c.al.length>S.guards)c.al.pop()}
+const _xe=xEncounter;xEncounter=function(r,g){_xe(r,g);if(S.cb&&!S.cb.al){syncAl();render()}};
+const _xh=xHit;xHit=function(src,t,a,pierce){const c=C();if(t=='p'&&src!='p'&&c.al&&c.al.length&&Math.random()<.3){const al=pick(c.al),d=Math.max(0,Math.floor(a+((src.st&&src.st.str)||0)));al.hp-=d;lg(`A guard intercepts the blow! (−${d})`,`護衛擋下了這一擊！（−${d}）`);
+  if(al.hp<=0){c.al.splice(c.al.indexOf(al),1);S.guards=Math.max(0,S.guards-1);c.blk+=6;c.alb=(c.alb||0)+1;lg('The guard falls. His comrades fight harder!','護衛倒下了，同伴們戰得更猛！')}return{a:0,h:0}}return _xh(src,t,a,pierce)};
+const _et=endTurn;endTurn=function(){const c=C();if(c&&c.al&&alive().length){syncAl();if(c.al.length){lg('Your guards strike!','你的護衛發動攻擊！');c.al.forEach(()=>{if(alive().length)xHit('p',pick(alive()),2+(c.alb||0),0)})}if(xCheck())return xAfter()}_et()};
+const _pl=play;play=function(i){const c=C();if(c&&c.tax&&c.hand[i]&&xCan(CARDS[c.hand[i]])&&S.gold>0)S.gold--;_pl(i);if(S.cb&&S.cb.al)syncAl()};
+const _xcan=xCan;xCan=function(d){return _xcan(d)&&!(d.fx.some(f=>f.k=='gsac')&&S.guards<1)};
+const _xst=xStartTurn;xStartTurn=function(f){_xst(f);const c=C();if(c&&c.pw&&c.pw.standard)c.blk+=2*S.guards*c.pw.standard};
+const _xf=xFx;xFx=function(f,src,x){const c=C();
+ if(f.k=='rule'){c[f.r]=1;return}if(f.k=='abuff'){c.alb=(c.alb||0)+f.v;return}
+ if(f.k=='gsac'){if(S.guards>0){S.guards--;if(c.al)c.al.pop();lg('A guard gives everything...','一名護衛奉獻了一切……');xRun(f.then,src,x)}return}
+ const n0=f.k=='raid'?cargoN():0;_xf(f,src,x);if(f.k=='raid'&&c.pw.insure&&cargoN()<n0){S.gold+=15*c.pw.insure;lg('Insurance pays out +'+15*c.pw.insure+' gold.','保險理賠 +'+15*c.pw.insure+' 金幣。')}};
+V.ph1=t=>t&&(t.phase||0)>=1?1:0;V.ph2=t=>t&&(t.phase||0)>=2?1:0;
+ENX.warlord.ph=[{at:.66,m:['The Warlord bellows: “To me!”','軍閥怒吼：「給我上！」'],fx:[{k:'summon',id:'thug'},{k:'blk',v:12}]},{at:.33,m:['Varkhul’s armour glows red-hot!','瓦克胡爾的鎧甲燒得通紅！'],fx:[{k:'st',s:'str',v:3,t:'self'}]}];
+ENX.warlord.mv.push(M('🔥',['Scorched Earth','焦土'],[{k:'dmg',v:8},{k:'st',s:'burn',v:4}],'ph1'),M('💢',['Final Fury','最後的狂怒'],[{k:'dmg',v:16},{k:'st',s:'bleed',v:3}],'ph2'));
+ENX.rival.ph=[{at:.66,m:['Corvin snaps his ledger shut: “Every card costs you now.”','科爾文啄地闔上帳本：「現在每張牌都要付錢。」'],fx:[{k:'rule',r:'tax'}]},{at:.33,m:['He calls in every debt at once!','他一次催討所有債務！'],fx:[{k:'curse',id:'debt'},{k:'st',s:'str',v:2,t:'self'}]}];
+ENX.rival.mv.push(M('📕',['Call in Debts','催討債務'],[{k:'dmg',v:7},{k:'steal',w:'gold',v:15}],'ph1'));
+ENX.drake.ph=[{at:.5,m:['Serathis takes to the sky!','塞拉西斯騰空而起！'],fx:[{k:'blk',v:20},{k:'st',s:'str',v:2,t:'self'}]}];
+ENX.drake.mv.push(M('🌪️',['Skyfall','天墜'],[{k:'dmg',v:15},{k:'st',s:'burn',v:5}],'ph1'));
+ENX.lich.ph=[{at:.5,m:['The Black Road opens: thralls rise!','黑道開啟，奴僕爆起！'],fx:[{k:'summon',id:'imp'},{k:'summon',id:'imp'}]}];
+const _xc=xCheck;xCheck=function(){const r=_xc();for(const e of C().es){const P=ENX[e.id].ph;if(e.hp>0&&P)while((e.phase||0)<P.length&&e.hp<=P[e.phase||0].at*e.max){const ph=P[e.phase||0];e.phase=(e.phase||0)+1;lg(ph.m[0],ph.m[1]);xRun(ph.fx||[],e,{});pickMove(e)}}return r};
+const WX=[['clear','☀️',['Clear skies','晴朗']],['clear','☀️',['Clear skies','晴朗']],['rain','🌧️',['Rain: forest tracks turn to mud','降雨：森林小徑泥濘']],['storm','⛈️',['Storm: fragile cargo at risk','風暴：易碎貨物有危險']],['clear','☀️',['Clear skies','晴朗']],['rain','🌧️',['Rain: forest tracks turn to mud','降雨：森林小徑泥濘']]];
+const wxI=d=>WX[(d*5+Math.floor(d/4))%6],wxAt=d=>wxI(d)[0];
+const ACTN=[['Act I — The Gentle Roads','第一幕 — 平緩的道路'],['Act II — The Ashen Roads','第二幕 — 灰燼之路'],['Act III — The Black Road','第三幕 — 黑道']],actOf=d=>d>20?2:d>10?1:0;
+function showCard(ic,t,p){const o=$('#intro');if(o)o.remove();const d=document.createElement('div');d.id='intro';d.innerHTML=`<div class='ic'>${ic}</div><h2>${t}</h2><p>${p}</p>`;document.body.appendChild(d);setTimeout(()=>{if(d.parentNode)d.remove()},2700)}
+const _arr4=arrive;arrive=function(r){const pa=S.act==null?0:S.act,na=actOf(S.day);_arr4(r);if(na!==pa){S.act=na;showCard('📜',L(ACTN[na]),Zh()?'道路愈發黑暗，傳說也愈發真實。':'The roads grow darker, and the legends truer.');playTr('parch',600)}else S.act=na};
+function combatExtras(){const c=S.cb;if(!c.al)return;syncAl();const z=Zh(),pb=document.querySelectorAll('#app>.box')[1];
+ if(pb){const d=document.createElement('div');d.className='mut';d.innerHTML=(z?'護衛：':'Guards: ')+(c.al.map(a=>`🧑‍✈️ ${a.hp}/${a.max}`).join(' ')||(z?'無':'none'))+(c.alb?` · +${c.alb} ${z?'傷害':'dmg'}`:'')+(c.tax?` · 📕 ${z?'每張牌花 1 金':'cards cost 1 gold'}`:'');pb.insertBefore(d,pb.children[1])}
+ document.querySelectorAll('.en[data-k]').forEach(e=>{const en=c.es[+e.dataset.k];if(en&&en.phase)e.insertAdjacentHTML('afterbegin',`<span class='modchip'>${z?'階段':'Phase'} ${en.phase+1}</span>`)})}
+const _ar2=afterRender;afterRender=function(){_ar2();if(S.screen=='city'){deckBox();const w=wxI(S.day);document.querySelectorAll('.rt').forEach(r=>r.insertAdjacentHTML('beforeend',`<span class='mut full'>${w[1]} ${Zh()?'預報':'Forecast'}: ${L(w[2])}</span>`))}if(S.screen=='combat'&&S.cb&&S.cb.es)combatExtras()};
+/* ===== SPECIAL CARDS: boss rewards & event-only ===== */
+K('ashenbanner',['Ashen Banner','灰燼旌旗'],'🚩','Power','Special',2,['Guard','Fire'],[{k:'pow',p:'ashen'}]);
+K('reapledger',['Reaper’s Ledger','收割者的帳本'],'📕','Power','Special',1,['Trade','Gamble'],[{k:'pow',p:'reap'}]);
+K('wyrmfire',['Wyrmfire','龍焰'],'🐉','Attack','Special',2,['Fire'],[{k:'dmg',v:14,t:'all'},{k:'st',s:'burn',v:5,t:'all'}],{ex:1});
+K('blackroad',['Mark of the Black Road','黑道印記'],'☠️','Power','Special',1,['Merchant','Poison'],[{k:'pow',p:'blackroad'}]);
+K('pilgrimsvow',['Pilgrim’s Vow','朝聖者之誓'],'🕯️','Skill','Special',1,['Supplies'],[{k:'heal',v:10},{k:'blk',v:10}],{ex:1});
+['ashenbanner','reapledger','wyrmfire','blackroad','pilgrimsvow'].forEach(id=>{CARDS[id+'+']=upCard(id)});
+Object.assign(POW,{ashen:['At the end of each turn, deal 4 damage to ALL enemies and take 2 damage.','每回合結束時，對所有敵人造成 4 點傷害，並承受 2 點傷害。'],reap:['Whenever a card gives you gold, deal 3 damage to a random enemy.','每當牌效果給你金幣，對隨機敵人造成 3 點傷害。'],blackroad:['Whenever an enemy dies, gain 8 gold and heal 3.','每當一名敵人死亡，獲得 8 金幣並回復 3 點生命。']});
+const BOSSCARD={warlord:'ashenbanner',rival:'reapledger',drake:'wyrmfire',lich:'blackroad'};
+const _xw=xWin;xWin=function(){const ids=C().es.map(e=>e.id);_xw();const b=ids.find(i=>BOSSCARD[i]);if(b&&S.reward)S.reward.cards[0]=BOSSCARD[b]};
+const _et2=endTurn;endTurn=function(){const c=C();if(c&&c.pw&&c.pw.ashen&&alive().length){alive().forEach(e=>xHit('p',e,4*c.pw.ashen,0));S.hp-=2*c.pw.ashen;lg('The Ashen Banner burns all in its light.','灰燼旌旗焦灼了光中的一切。');if(S.hp<=0)return over(false,'You died on the road.');if(xCheck())return xAfter()}_et2()};
+const _xf2=xFx;xFx=function(f,src,x){_xf2(f,src,x);const c=C();if(f.k=='gold'&&f.v>0&&src=='p'&&c.pw.reap&&alive().length)xHit('p',pick(alive()),3*c.pw.reap,0)};
+const _xc2=xCheck;xCheck=function(){const r=_xc2(),c=C();if(c.pw.blackroad)for(const e of c.es)if(e.dead&&!e.paid){e.paid=1;S.gold+=8*c.pw.blackroad;S.hp=Math.min(S.maxHp,S.hp+3*c.pw.blackroad)}return r};
+EVT.pilgrims.o[0].fx.push(['card','pilgrimsvow']);EVT.ring.o[1].fx.push(['card','pilgrimsvow']);
+/* ===== MARKET POLISH: columns, specialties, help window, base-centred trend ===== */
+Object.assign(ZH,{'Size':'尺寸','Local Specialty':'本地特產'});
+const isSpec=(c,k)=>{const v=CITIES[c].m[k]||1;return v<1&&Object.keys(CITIES).every(o=>o==c||(CITIES[o].m[k]||1)>=v)};
+function tipHTML(k){const m=COM[k],ty=[m.tier,m.ill&&'Illegal',m.frag&&'Fragile',m.perish&&'Perishable',m.val&&'Valuable',m.w>=5&&'Heavy',(FP[k][0]*FP[k][1]>=6)&&'Bulky'].filter(Boolean);
+ return `<div class="tn">${m.e} ${tr(m.n)}</div>${isSpec(S.city,k)?`<div class="spec-l">★ ${tr('Local Specialty')}</div>`:''}<hr><div class="tw"><span>${tr('Weight')}: ${m.w}</span><span>${tr('Footprint')}: ${FP[k][0]}×${FP[k][1]}</span></div><div class="ty">${ty.map(t=>`<span style="color:${TC[t]}">${tr(t)}</span>`).join('')}</div><div class="tl">${tr(LORE[k]).replace(/ \/ /g,'<br>')}</div>`}
+function trendSvg(k){const h=S.hist[S.city][k],base=COM[k].b*(CITIES[S.city].m[k]||1),W=76,H=26,P=4,z=Zh(),n=Math.max(1,h.length-1),dev=Math.max(base*.15,...h.map(v=>Math.abs(v-base)));
+ const pts=h.map((v,i)=>[P+i*(W-2*P)/n,H/2-(v-base)/dev*(H/2-P)]),last=h[h.length-1],up=last>=h[0],c=up?'var(--good)':'var(--bad)',l=pts[pts.length-1],pc=Math.round((last-base)/base*100);
+ return `<svg class="ch" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><title>${z?'基準價':'Base'} ${Math.round(base)} · ${z?'現價':'Now'} ${last} (${pc>=0?'+':''}${pc}%)</title><line x1="${P}" y1="${P}" x2="${P}" y2="${H-P}" stroke="var(--bd)"/><line x1="${P}" y1="${H/2}" x2="${W-P}" y2="${H/2}" stroke="var(--ac)" stroke-width="1.2" stroke-dasharray="3 2"/><polyline points="${pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}" fill="none" stroke="${c}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${l[0].toFixed(1)}" cy="${l[1].toFixed(1)}" r="2.5" fill="${c}"/></svg>`}
+function marketPolish(){
+ const tb=document.querySelector('#app>.grid>div>.box table');if(!tb)return;const ths=tb.querySelectorAll('tr:first-child th');if(!ths[0])return;
+ ths[0].insertAdjacentHTML('beforeend'," <span class='qm' tabindex='0'>?</span>");ths[0].insertAdjacentHTML('afterend',`<th>${tr('Weight')}</th><th>${tr('Size')}</th>`);
+ tb.querySelectorAll('tr[data-tip]').forEach(row=>{const k=row.dataset.tip,m=COM[k],c0=row.children[0],sp=c0.querySelector('span.mut');if(sp)sp.remove();
+  c0.insertAdjacentHTML('afterend',`<td class='mut'>${m.w}</td><td class='mut'>${FP[k][0]}×${FP[k][1]}</td>`);if(isSpec(S.city,k))row.classList.add('spec');const old=row.querySelector('svg.ch');if(old)old.outerHTML=trendSvg(k)})}
+const HELP=[['Common','Everyday goods sold in every market.','日常貨物，每個市集都有。'],['Uncommon','Useful goods, usually available but dearer.','實用貨物，通常能買到，價格較高。'],['Rare','Sold only in some cities and seasons, in limited quantity.','只在部分城市與季節限量販售。'],['Legendary','Appears only as a limited offer. Thieves and rivals will hunt it.','僅以限時特賣出現，盜賊與對手會追獲。'],['Fragile','May break in storms, fights or rough roads.','風暴、戰鬥或崎嶇道路中可能損壞。'],['Perishable','Spoils over time on the road.','在路上會隨時間腐壞。'],['Valuable','High value per unit; tempts bandits.','單位價值高，容易引來山賊。'],['Heavy','Weight 5 or more; eats caravan capacity.','重量 5 以上，會吃掉商隊載重。'],['Bulky','Takes 6 or more grid cells.','佔用 6 格以上的貨物格。'],['Illegal','Guards may confiscate it at city gates.','守衛可能在城門沒收。'],['Local Specialty','Cheaper here than in any other city (gold border).','比其他任何城市都便宜（金色邊框）。']];
+const hpw=document.body.appendChild(Object.assign(document.createElement('div'),{id:'help'}));let HPIN=0;
+function showHelp(el){hpw.innerHTML=`<b>${Zh()?'貨物標籤說明':'Goods labels'}</b>`+HELP.map(h=>`<div class='hr'><span class='tier' style='color:${TC[h[0]]||'#f5c842'}'>${tr(h[0])}</span><span>${Zh()?h[2]:h[1]}</span></div>`).join('');hpw.style.display='block';const r=el.getBoundingClientRect();hpw.style.left=Math.max(8,Math.min(r.left,innerWidth-hpw.offsetWidth-8))+'px';hpw.style.top=Math.max(8,Math.min(r.bottom+6,innerHeight-hpw.offsetHeight-8))+'px'}
+document.addEventListener('mouseover',e=>{const q=e.target.closest&&e.target.closest('.qm');if(q)showHelp(q)});
+document.addEventListener('mouseout',e=>{if(!HPIN&&e.target.closest&&e.target.closest('.qm'))hpw.style.display='none'});
+document.addEventListener('click',e=>{const q=e.target.closest('.qm');if(q){HPIN=!HPIN;if(HPIN)showHelp(q);else hpw.style.display='none'}else if(HPIN&&!e.target.closest('#help')){HPIN=0;hpw.style.display='none'}});
+const _ar3=afterRender;afterRender=function(){_ar3();if(S.screen=='city')marketPolish()};
+/* ===== NO STACKING (code kept), BORDERED DANGER LABEL, MARKET-ON-ARRIVAL, TAB ART ===== */
+for(const k in FP)FP[k][2]=1;
+Object.assign(ZH,{'Drop on another item to swap':'放在其他貨物上可互換'});
+function splitStacks(){if(!S.items)return;const extra=[];S.items.forEach(i=>{while(i.q>1){const p=gFit(S.items.concat(extra),i.type);if(!p)break;i.q--;extra.push({id:S.nid++,type:i.type,q:1,x:p.x,y:p.y,rot:p.rot})}});S.items=S.items.concat(extra);sync()}
+const _mig2=migrate;migrate=function(){_mig2();splitStacks()};
+function routeChips(r){const z=Zh(),T=TIERS[r.tier||'safe'],p=profitEst(r),has=cargoN()>0;
+ return `<span>${r.days} days</span><span class='gold'>toll ${r.toll}g</span><span class='dg ${T.cls}' title='Danger'><span class='dgt'>${L(T.n)}</span> ${T.sk?'💀'.repeat(T.sk):T.ic}</span><span>${r.tn||r.t}</span><span class='mut full'>${L(T.thr)}</span><span class='full'>${has?(z?`預估獲利：<b class='${p>=0?'up':'dn'}'>${p>=0?'+':'−'}${Math.abs(p)} 金</b>（以目前貨物在目的地販售）`:`Est. profit: <b class='${p>=0?'up':'dn'}'>${p>=0?'+':'−'}${Math.abs(p)}g</b> (selling current cargo there)`):(z?'預估獲利：—（尚無貨物）':'Est. profit: — (no cargo)')}</span>`}
+const _arr5=arrive;arrive=function(r){S.tab='market';S.hubOpen=true;S.pf=1;_arr5(r)};
+const SVG_M="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><path d='M20 44 L32 44 L30 20 L20 20 Z' fill='#D4AF37'/><path d='M32 44 L44 44 L41 20 L30 20 Z' fill='#8B5A2B'/><path d='M44 44 L56 44 L53 20 L41 20 Z' fill='#FFD700'/><path d='M56 44 L68 44 L65 20 L53 20 Z' fill='#8B5A2B'/><path d='M68 44 L80 44 L77 20 L65 20 Z' fill='#FFD700'/><path d='M80 44 L92 44 L89 20 L77 20 Z' fill='#8B5A2B'/><path d='M92 44 L104 44 L101 20 L89 20 Z' fill='#FFD700'/><path d='M104 44 L108 44 L108 20 L101 20 Z' fill='#D4AF37'/><path d='M20 44 Q26 50 32 44 Q38 50 44 44 Q50 50 56 44 Q62 50 68 44 Q74 50 80 44 Q86 50 92 44 Q98 50 104 44 Q106 47 108 44 L108 40 L20 40 Z' fill='#B8860B'/><rect x='26' y='44' width='6' height='60' fill='#5C3A21'/><rect x='96' y='44' width='6' height='60' fill='#5C3A21'/><rect x='22' y='72' width='84' height='32' rx='4' fill='#8B5A2B'/><rect x='22' y='72' width='84' height='6' fill='#D4AF37'/><rect x='30' y='82' width='20' height='16' rx='2' fill='#5C3A21'/><rect x='54' y='82' width='20' height='16' rx='2' fill='#5C3A21'/><rect x='78' y='82' width='20' height='16' rx='2' fill='#5C3A21'/><path d='M30 72 L34 62 L50 62 L54 72 Z' fill='#B8860B'/><circle cx='37' cy='60' r='4' fill='#FFD700'/><circle cx='44' cy='58' r='4' fill='#DAA520'/><circle cx='47' cy='61' r='4' fill='#FFD700'/><path d='M74 72 L78 62 L94 62 L98 72 Z' fill='#B8860B'/><circle cx='81' cy='60' r='4' fill='#DAA520'/><circle cx='86' cy='57' r='4.5' fill='#FFD700'/><circle cx='91' cy='60' r='4' fill='#DAA520'/><rect x='52' y='24' width='24' height='12' rx='2' fill='#5C3A21' stroke='#FFD700' stroke-width='1.5'/><circle cx='64' cy='30' r='3' fill='#FFD700'/></svg>";
+const SVG_R="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><path d='M12 84 L36 84 L36 78 L12 80 Z' fill='#5C3A21'/><circle cx='12' cy='84' r='3' fill='#D4AF37'/><rect x='30' y='80' width='70' height='8' rx='2' fill='#5C3A21'/><rect x='40' y='84' width='8' height='12' fill='#3D2314'/><rect x='82' y='84' width='8' height='12' fill='#3D2314'/><path d='M26 36 C26 36, 22 78, 24 80 L106 80 C108 78, 104 36, 104 36 Z' fill='#8B5A2B'/><path d='M20 38 C20 20, 110 20, 110 38 Z' fill='#DAA520'/><path d='M18 38 C18 18, 112 18, 112 38 C112 40, 18 40, 18 38 Z' fill='#FFD700' opacity='0.3'/><path d='M18 38 L112 38 L112 41 L18 41 Z' fill='#B8860B'/><path d='M30 38 L32 80 M98 38 L96 80 M64 38 L64 80' stroke='#5C3A21' stroke-width='2.5' stroke-linecap='round'/><path d='M25 58 L105 58' stroke='#5C3A21' stroke-width='2'/><rect x='36' y='42' width='22' height='12' rx='2' fill='none' stroke='#FFD700' stroke-width='1.5'/><rect x='70' y='42' width='22' height='12' rx='2' fill='none' stroke='#FFD700' stroke-width='1.5'/><path d='M41 45 A 6 6 0 0 1 53 45 L53 51 L41 51 Z' fill='#FFD700'/><path d='M41 45 A 6 6 0 0 1 53 45 L53 51 L41 51 Z' fill='#5C3A21' opacity='0.2'/><line x1='47' y1='39' x2='47' y2='51' stroke='#5C3A21' stroke-width='1'/><line x1='41' y1='46' x2='53' y2='46' stroke='#5C3A21' stroke-width='1'/><path d='M75 45 A 6 6 0 0 1 87 45 L87 51 L75 51 Z' fill='#FFD700'/><path d='M75 45 A 6 6 0 0 1 87 45 L87 51 L75 51 Z' fill='#5C3A21' opacity='0.2'/><line x1='81' y1='39' x2='81' y2='51' stroke='#5C3A21' stroke-width='1'/><line x1='75' y1='46' x2='87' y2='46' stroke='#5C3A21' stroke-width='1'/><rect x='57' y='52' width='14' height='28' rx='1' fill='#5C3A21' stroke='#D4AF37' stroke-width='1.5'/><circle cx='69' cy='66' r='1' fill='#FFD700'/><g transform='translate(44, 92)'><circle cx='0' cy='0' r='14' fill='none' stroke='#8B5A2B' stroke-width='3'/><circle cx='0' cy='0' r='12.5' fill='none' stroke='#FFD700' stroke-width='1'/><circle cx='0' cy='0' r='3' fill='#5C3A21'/><line x1='-12' y1='0' x2='12' y2='0' stroke='#D4AF37' stroke-width='1.5'/><line x1='0' y1='-12' x2='0' y2='12' stroke='#D4AF37' stroke-width='1.5'/><line x1='-8.5' y1='-8.5' x2='8.5' y2='8.5' stroke='#D4AF37' stroke-width='1.5'/><line x1='-8.5' y1='8.5' x2='8.5' y2='-8.5' stroke='#D4AF37' stroke-width='1.5'/></g><g transform='translate(86, 92)'><circle cx='0' cy='0' r='18' fill='none' stroke='#5C3A21' stroke-width='3.5'/><circle cx='0' cy='0' r='16' fill='none' stroke='#DAA520' stroke-width='1.5'/><circle cx='0' cy='0' r='4' fill='#3D2314'/><line x1='-16' y1='0' x2='16' y2='0' stroke='#FFD700' stroke-width='1.5'/><line x1='0' y1='-16' x2='0' y2='16' stroke='#FFD700' stroke-width='1.5'/><line x1='-11' y1='-11' x2='11' y2='11' stroke='#FFD700' stroke-width='1.5'/><line x1='-11' y1='11' x2='11' y2='-11' stroke='#FFD700' stroke-width='1.5'/></g><path d='M104 46 L108 46 L108 50 L104 50 Z' fill='#5C3A21'/><path d='M104.5 50 L107.5 50 L108.5 56 L103.5 56 Z' fill='#FFD700'/><circle cx='106' cy='53' r='2' fill='#FFFFFF' opacity='0.8'/></svg>";
+function hubTabs(){
+ const col=document.querySelector('#app>.grid>div');if(!col)return;const bx=col.querySelectorAll(':scope>.box');if(bx.length<2)return;
+ const tab=S.tab||'market',open=S.hubOpen!==false;
+ bx[0].style.display=open&&tab=='market'?'':'none';bx[1].style.display=open&&tab=='routes'?'':'none';
+ const t=document.createElement('div');t.className='tabs';
+ t.innerHTML=open?`<button class='tab${tab=='market'?' on':''}' data-a='tab' data-k='market'>${SVG_M}<span>${tr('Market')} (M)</span></button><button class='tab${tab=='routes'?' on':''}' data-a='tab' data-k='routes'>${SVG_R}<span>${tr('Routes')} (R)</span></button><button class='alt' data-a='hub' data-k='0'>✕ Esc</button>`:`<button class='tab on' data-a='hub' data-k='1'>${SVG_M}<span>${tr('City Hub')} (M / R)</span></button>`;
+ col.insertBefore(t,col.firstChild);if(S.pf){(open?bx[tab=='market'?0:1]:t).classList.add('pf');S.pf=0}}
+/* ===== CARD VISUALS ===== */
+const ART={strike:'🪵',heavy:'🔨',guard:'🛡️',palisade:'🏰',appraise:'🧐',haggle:'🤝',bribe:'💰',throw:'📦',captain:'🧑‍✈️',lantern:'🏮',salve:'🌿'};
+const cardEl=(id,act,k,dis,key)=>{const d=CARDS[id];return `<button class="card ${d.t}${dis?' off':''}" data-a="${act}" data-k="${k}" title="${flav(d)}"><span class="c">${d.c}</span><div class="nm">${cname(d)}</div><hr class="dv"><div class="art">${ART[id]||ART[id.replace('+','')]||d.a}</div><div class="tp">${tpLine(d)}</div><div class="tx"><div>${hl(descCard(id))}</div></div><span class="k">${key}</span></button>`};
+const RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
+document.addEventListener('mousemove',e=>{const c=e.target.closest&&e.target.closest('.card');if(!c||RM)return;const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;c.style.setProperty('--ry',((x-.5)*28)+'deg');c.style.setProperty('--rx',(-(y-.5)*28)+'deg');c.style.setProperty('--mx',x*100+'%');c.style.setProperty('--my',y*100+'%')});
+document.addEventListener('mouseout',e=>{const c=e.target.closest&&e.target.closest('.card');if(c&&!c.contains(e.relatedTarget)){c.style.setProperty('--rx','0deg');c.style.setProperty('--ry','0deg')}});
+let GAL=false,GF='All';
+function galleryHTML(){
+ const types=['All','Attack','Defense','Economy','Utility'],ids=Object.keys(CARDS).filter(id=>!id.endsWith('+')&&(GF=='All'||CARDS[id].t==GF));
+ return `<div class="box"><h1>🃏 Card Gallery</h1><p class="mut">${Object.keys(CARDS).filter(id=>!id.endsWith('+')).length} cards in the game. Press Esc to close.</p><p>${types.map(t=>`<button class="${t==GF?'':'alt'}" data-a="gf" data-k="${t}">${t}</button>`).join(' ')} <button class="alt" data-a="gal">Close</button></p><div class="hand">${ids.map(id=>`<div>${cardEl(id,'noop',id,false,'')}<div class="mut" style="text-align:center;margin-top:6px">${START.includes(id)?'Starter card':'Reward card'}${S.deck?' · in your deck: '+S.deck.filter(x=>x==id).length:''}</div></div>`).join('')}</div></div>`}
+/* ===== RENDER ===== */
+const spark=h=>{
+ const W=76,H=26,P=4,lo=Math.min(...h),hi=Math.max(...h),sp=hi-lo||1,n=Math.max(1,h.length-1);
+ const pts=h.map((v,i)=>[P+i*(W-2*P)/n,H-P-(v-lo)/sp*(H-2*P)]),up=h[h.length-1]>=h[0],c=up?'var(--good)':'var(--bad)',l=pts[pts.length-1];
+ return `<svg class="ch" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><line x1="${P}" y1="${P}" x2="${P}" y2="${H-P}" stroke="var(--bd)"/><line x1="${P}" y1="${H-P}" x2="${W-P}" y2="${H-P}" stroke="var(--bd)"/><line x1="${P}" y1="${H/2}" x2="${W-P}" y2="${H/2}" stroke="var(--bd)" stroke-dasharray="2 3" opacity=".6"/><polyline points="${pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}" fill="none" stroke="${c}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${l[0].toFixed(1)}" cy="${l[1].toFixed(1)}" r="2.5" fill="${c}"/></svg>`};
+const bar=()=>`<div class="bar"><b>📅 Day ${S.day}/30 · Act ${1+(S.day>10)+(S.day>20)}</b><span>🪙 ${S.gold}g</span><span>❤️ ${S.hp}/${S.maxHp}</span><span>🍞 ${S.food} food</span><span>🛡️ ${S.guards} guards</span><span>⚖️ ${wt()}/${CAPW} wt · 📦 ${vol()}/${CAPV} cells</span></div>`;
+function render(){const el=$('#app');if(S.screen=='combat'&&S.cb&&S.cb.es)el.innerHTML=bar()+combatHTML();else if(S.screen=='event'&&S.ev&&S.ev.d)el.innerHTML=bar()+evHTML();else render0();i18n(el);afterRender()}
+function render0(){
+ const el=$('#app');if(GAL)return el.innerHTML=galleryHTML();
+ if(S.screen=='title')return el.innerHTML=`<div class="box"><h1 class="big">🏮 Ledger &amp; Lantern</h1><p>A trading roguelike deckbuilder. Buy low, sell high, and keep your wagons alive.</p><p><button data-a="new">New Run</button> ${SAVED?'<button class="alt" data-a="cont">Continue Saved Run</button>':''} <button class="alt" data-a="gal">🃏 Card Gallery</button></p><p class="mut">Vertical slice: 3 cities, 6 routes, 10 commodities, 11 cards, 5 enemies (2 bosses), 4 events, reputation. Shift-click Buy/Sell for ×5. In combat: 1–9 play cards, E ends turn.</p></div>`;
+ if(S.screen=='over'){const o=S.over;return el.innerHTML=`<div class="box"><h1>${o.win?'🏆 A Merchant Prince':'💀 The Ledger Closes'}</h1><p>${o.why}</p><p>Final worth (gold + cargo at current prices): <b>${o.score}g</b> ${o.win?'— goal of 500g met!':'— goal was 500g.'}</p><button data-a="new">New Run</button></div>`}
+ if(S.screen=='reward'){const rw=S.reward,n=rw.cards.length;let h=`<div class="box"><h2>Spoils of the road</h2><p class="mut">Choose one (keys 1–${n+3}), or skip by choosing nothing—the caravan simply moves on.</p><div class="hand">`;
+  rw.cards.forEach((id,i)=>{h+=cardEl(id,'pick',i,false,i+1)});
+  h+=`</div><p><button data-a="pick" data-k="${n}">${n+1}. +30 gold</button> <button data-a="pick" data-k="${n+1}">${n+2}. +4 food</button> <button data-a="pick" data-k="${n+2}">${n+3}. 2 units of random cargo</button> <button class="alt" data-a="pick" data-k="99">Skip</button></p></div>`;return el.innerHTML=h}
+ if(S.screen=='event'){const ev=EVENTS[S.ev.id];return el.innerHTML=bar()+`<div class="box"><h2>${ev.t}</h2><p>${ev.x}</p>`+ev.o.map((o,i)=>`<p><button data-a="ev" data-k="${i}" ${o.ok&&!o.ok()?'disabled':''}>${i+1}. ${o.t}</button></p>`).join('')+'</div>'}
+ if(S.screen=='combat'){const c=S.cb,e=EN[c.id],a=e.ai[c.i%e.ai.length],d=Math.max(0,(a.d||0)+c.str-c.weak);
+  const it=c.skip?'💤 Distracted — will skip its action':a.k=='buff'?'📣 Rages: +2 damage permanently':a.k=='atk'?`⚔️ Attack for ${d}`:a.k=='raid'?`🧺 Raid: ${d} damage and seizes your best cargo (Guard the Wagons + unbroken Block stops it)`:`🫳 Pickpocket for ${d}; steals ${a.w=='food'?'2 food':'12 gold'} if Block breaks`;
+  let h=bar()+`<div class="box"><div class="big">${e.e}</div><h2>${e.n} — ${Math.max(0,c.eh)}/${c.em} HP${c.str?` (+${c.str} str)`:''}</h2><div class="intent">${it}</div></div>
+  <div class="box"><b>You:</b> ❤️ ${S.hp} · 🛡️ Block ${c.blk} · ⚡ Energy ${c.en}/3${c.cap?` · 🧑‍✈️ Captain ${c.cap} dmg`:''} <span class="mut">· Draw ${c.draw.length} · Discard ${c.disc.length} · Exhaust ${c.exh.length}</span>
+  <div class="hand">`;
+  c.hand.forEach((id,i)=>{const k=CARDS[id],dis=c.en<k.c||(k.ok&&!k.ok());h+=cardEl(id,'card',i,dis,i+1)});
+  h+=`</div><button data-a="end">End Turn (E)</button></div><div class="box log">${c.log.slice(-6).map(x=>'<div>'+x+'</div>').join('')}</div>`;return el.innerHTML=h}
+ /* city */
+ const C0=CITIES[S.city];let h=bar()+`<div class="msg" title="${S.msg||''}">${S.msg||'&nbsp;'}</div>`+`<h1>${C0.e} ${C0.n} <span class="mut">· Reputation ${rep(S.city)} (buy −${Math.max(0,rep(S.city))}% / sell +${Math.max(0,rep(S.city))}%, cheaper guards)</span></h1><div class="mut">${C0.d}</div><div class="grid"><div><div class="box"><h2>Market</h2><table><tr><th>Goods</th><th>Buy</th><th>Sell</th><th>Trend</th><th>Held</th><th>Avg</th><th></th></tr>`;
+ for(const k in COM){const m=COM[k],h8=S.hist[S.city][k],t=h8.length>1?h8[h8.length-1]-h8[h8.length-2]:0,fl=[m.perish&&'perishable',m.frag&&'fragile',m.val&&'valuable'].filter(Boolean).join(', ');
+  const n=S.cargo[k]||0;h+=`<tr data-tip="${k}"><td>${m.e} ${m.n} <span class="mut">${m.w}w ${FP[k][0]}×${FP[k][1]}</span></td><td>${bp(S.city,k)}</td><td>${sp(S.city,k)}</td><td><span class="spark">${spark(h8)}</span> <span class="${t>0?'up':t<0?'dn':''}">${t>0?'▲':t<0?'▼':'·'}</span></td><td>${n}</td><td class="mut">${n?Math.round(S.basis[k]/n):'–'}</td><td><button data-a="buy" data-k="${k}">Buy</button> <button class="alt" data-a="sell" data-k="${k}" ${n?'':'disabled'}>Sell</button></td></tr>`}
+ h+=`</table><p class="mut">Buy = price +8%. Sell = price −8% and −5% tax. Each trade moves the local price 3%. Grain spoils; wine and reagents break in storms and fights.</p></div>
+ <div class="box"><h2>Routes</h2>`;
+ routes().forEach((r,i)=>{h+=`<div class="route"><span>${r.t=='road'?'🛤️':r.t=='forest'?'🌲':'⛰️'} <b>${CITIES[r.to].n}</b> via ${r.n}<br><span class="rt mut">${routeChips(r)}</span></span><button data-a="go" data-k="${i}">Travel</button></div>`});
+ h+=`</div></div><div><div class="box"><h2>Caravan Inventory</h2>`;
+ h+='<div id="cgrid"></div><div class="mut">Drag to move · R rotates while dragging · Drop on another item to swap</div><p><button class="alt" data-a="grot">Rotate</button> <button class="alt" data-a="garr">Auto-Arrange</button></p>';const es=Object.entries(S.cargo);h+=es.length?es.map(([k,n])=>`<div>${COM[k].e} ${COM[k].n} ×${n} <span class="mut">— worth ~${n*sp(S.city,k)}g here</span></div>`).join(''):'<div class="mut">Empty wagons.</div>';
+ h+=`<p>Total cargo value here: <b>${es.reduce((a,[k,n])=>a+n*sp(S.city,k),0)}g</b></p><div class="mut">Deck: ${S.deck.length} cards</div></div>
+ <div class="box"><h2>Services</h2><button data-a="food">Food ×1 (6g)</button> <button data-a="hire">Hire guard (${gcost()}g)</button> <button data-a="rest">Inn: +15 HP, 1 day (12g)</button> <button class="alt" data-a="gal">🃏 Card Gallery</button></div>
+ <div class="box"><h2>Rumors</h2>${S.rumors.length?S.rumors.map(r=>`<div>🗣️ ${r.t}</div>`).join(''):'<div class="mut">Nothing but weather talk.</div>'}<div class="mut">Rumors are usually—not always—true.</div></div>
+ <button class="alt" data-a="retire">Retire now (goal 500g)</button></div></div>`;
+ el.innerHTML=h;drawGrid();
+}
+setLang(LANG);
+</script></body></html>

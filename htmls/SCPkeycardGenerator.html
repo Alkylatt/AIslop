@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Foundation Keycard Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#14171b;--panel:#1c2026;--line:#2e343c;--ink:#e6e9ed;--dim:#8c95a1;--field:#0f1215;--ok:#3ddc84;--bad:#ff5a5f;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#e9ecef;--panel:#fff;--line:#ccd2d9;--ink:#1a1e23;--dim:#5d6671;--field:#f4f6f8;--ok:#13873f;--bad:#c92a2f}}
+:root[data-theme="light"]{--bg:#e9ecef;--panel:#fff;--line:#ccd2d9;--ink:#1a1e23;--dim:#5d6671;--field:#f4f6f8;--ok:#13873f;--bad:#c92a2f}
+:root[data-theme="dark"]{--bg:#14171b;--panel:#1c2026;--line:#2e343c;--ink:#e6e9ed;--dim:#8c95a1;--field:#0f1215;--ok:#3ddc84;--bad:#ff5a5f}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 "IBM Plex Sans",system-ui,sans-serif}
+h2{font:700 18px "Barlow Condensed",sans-serif;letter-spacing:.06em;margin:0 0 10px}
+h3{font:500 12px "IBM Plex Mono",monospace;color:var(--dim);margin:16px 0 6px;letter-spacing:.04em}
+.app{display:grid;grid-template-columns:340px minmax(320px,400px) minmax(300px,1fr);gap:16px;padding:16px;max-width:1500px;margin:0 auto;align-items:start}
+@media(max-width:1100px){.app{grid-template-columns:1fr 1fr}.rec{grid-column:1/-1}}
+@media(max-width:720px){.app{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px}
+label{display:block;font-size:12px;color:var(--dim);margin:8px 0 3px}
+input,select,button{font:inherit;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:4px;padding:6px 8px;max-width:100%}
+input[type=text],input[type=date]{width:100%}
+input[type=color]{padding:0;width:44px;height:30px}
+button{cursor:pointer}button:hover{border-color:var(--dim)}
+:focus-visible{outline:2px solid #4c8dff;outline-offset:1px}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.row>input[type=text]{flex:1;min-width:90px}
+.chip{display:inline-flex;gap:5px;align-items:center;padding:2px 8px;border-radius:99px;border:1px solid var(--c,var(--line));color:var(--c,var(--ink));font:500 12px "IBM Plex Mono",monospace;background:transparent}
+button.chip{cursor:pointer;opacity:.45}button.chip.on{opacity:1;background:color-mix(in srgb,var(--c) 18%,transparent)}
+.item{display:flex;align-items:center;gap:6px;justify-content:space-between;border-left:3px solid var(--c,var(--line));padding:3px 4px 3px 8px;margin:3px 0;background:var(--field);border-radius:0 4px 4px 0;font:12px "IBM Plex Mono",monospace;word-break:break-all}
+.item button{padding:0 7px;border:0;background:none;color:var(--dim);font-size:16px}
+.tag{font-size:10px;color:var(--dim);margin-right:6px}
+.primary{background:#2b5fd9;border-color:#2b5fd9;color:#fff}
+.stage{display:flex;justify-content:center;padding:6px 0}
+/* keycard */
+.card{width:330px;height:520px;border-radius:16px;background:linear-gradient(160deg,#eceae4,#cfcdc5);color:#16181b;position:relative;overflow:hidden;box-shadow:0 14px 40px rgba(0,0,0,.45);font-family:"IBM Plex Sans",sans-serif;display:flex;flex-direction:column;padding:0 22px 16px}
+.slot{width:64px;height:10px;border-radius:5px;background:#2a2d31;margin:12px auto 8px;box-shadow:inset 0 2px 3px #000}
+.band{margin:0 -22px;background:var(--acc);color:#fff;padding:7px 22px;display:flex;justify-content:space-between;font:700 13px "Barlow Condensed",sans-serif;letter-spacing:.14em}
+.photoRow{display:flex;gap:14px;margin-top:14px;align-items:flex-end}
+.photo{width:122px;height:150px;border:2px solid #16181b;background:#9aa0a6 center/cover;flex:none;overflow:hidden}
+.photo svg{width:100%;height:100%;display:block}
+.chipgfx{width:44px;height:34px;border-radius:6px;background:linear-gradient(135deg,#d9b44a,#a8832a);margin-left:auto;position:relative}
+.chipgfx:after{content:"";position:absolute;inset:6px 10px;border:1px solid #6e5516;border-radius:3px}
+.nm{font:700 28px/1 "Barlow Condensed",sans-serif;letter-spacing:.03em;margin-top:14px;word-break:break-word}
+.mono{font:500 12px "IBM Plex Mono",monospace}
+.ttl{font:700 22px "Barlow Condensed",sans-serif;letter-spacing:.1em;margin-top:14px;padding:3px 0;border-top:3px solid var(--acc);border-bottom:1px solid #16181b44;color:var(--acc);filter:brightness(.8)}
+.dept{font-size:13px;margin-top:4px}
+.foot{margin-top:auto}
+.bars{height:34px;display:flex;gap:1px;margin-top:8px;align-items:stretch}.bars i{background:#16181b;display:block}
+.exp{display:flex;justify-content:space-between}
+.expired{color:#c92a2f;font-weight:700}
+/* record */
+.rec .head{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center}
+.status{font:700 12px "IBM Plex Mono",monospace;padding:2px 8px;border-radius:3px}
+.s-ok{background:#3ddc8433;color:var(--ok)}.s-bad{background:#ff5a5f33;color:var(--bad)}
+.big{display:inline-block;font:700 22px "Barlow Condensed",sans-serif;padding:0 12px;border:2px solid currentColor;border-radius:4px;margin-right:6px}
+.empty{color:var(--dim);font-style:italic;padding:2px 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}
+.hint{font-size:12px;color:var(--dim);margin:4px 0 0}
+</style>
+</head>
+<body>
+<div class="app">
+<section class="panel" aria-label="Editor">
+  <h2>Edit card</h2>
+  <label for="f-name">Name</label><input type="text" id="f-name" data-k="name">
+  <div class="grid2">
+    <div><label for="f-pid">Personnel ID</label><input type="text" id="f-pid" data-k="pid"></div>
+    <div><label for="f-exp">Expiration date</label><input type="date" id="f-exp" data-k="exp"></div>
+  </div>
+  <label for="f-title">Title</label><input type="text" id="f-title" data-k="title">
+  <label for="f-dept">Department / Division</label><input type="text" id="f-dept" data-k="dept">
+  <label for="f-cid">Credential ID</label>
+  <div class="row"><input type="text" id="f-cid" data-k="cid"><button id="rnd">Randomize</button></div>
+  <div class="row" style="margin-top:10px">
+    <label style="margin:0">Card color</label><input type="color" id="f-acc" data-k="accent">
+    <button id="redact" title="Insert ██████ at the end of the name">Redact</button>
+  </div>
+  <div class="row" style="margin-top:8px"><label style="margin:0" for="f-photo">Photo</label><input type="file" id="f-photo" accept="image/*"><button id="nophoto">Clear</button></div>
+
+  <h2 style="margin-top:22px">Clearance</h2>
+  <h3>Information clearance</h3>
+  <div class="row"><select id="lvl" aria-label="Clearance level"></select>
+    <input type="text" id="compIn" placeholder="Compartment, e.g. COMP-BIO"><button id="compAdd">Add</button></div>
+  <div id="compList"></div>
+
+  <h3>Access domains</h3>
+  <div id="domToggles" class="row"></div>
+  <p class="hint">Turning a domain off removes its grants.</p>
+
+  <h3>Add a grant</h3>
+  <div class="row"><select id="gDom" aria-label="Domain"></select>
+    <select id="gKind" aria-label="Grant type"><option value="access">Access grant</option><option value="action">Action grant</option></select></div>
+  <div class="row" style="margin-top:6px"><input type="text" id="gPath" placeholder="LAB/BIO-03 or ENTER-SUPPORT"><button id="gAdd" class="primary">Add</button></div>
+  <div id="grantList"></div>
+
+  <h3>Constraints</h3>
+  <div class="row"><input type="text" id="conIn" placeholder="e.g. No chamber opening"><button id="conAdd">Add</button></div>
+  <div id="conList"></div>
+  <div class="row" style="margin-top:16px"><button id="theme">Toggle theme</button></div>
+</section>
+
+<section class="panel" aria-label="Card preview">
+  <h2>Card preview</h2>
+  <div class="stage"><div class="card" id="card"></div></div>
+  <div class="row" style="justify-content:center;margin-top:8px"><button id="scan" class="primary">Scan this card</button></div>
+  <p class="hint" style="text-align:center">Clearance is not printed on the card. Scan it to query the database.</p>
+</section>
+
+<section class="panel rec" aria-label="Database record">
+  <h2>Clearance database</h2>
+  <div class="row"><input type="text" id="lookup" aria-label="Credential ID lookup" placeholder="Enter credential ID"><button id="query">Query</button></div>
+  <div id="record" style="margin-top:12px"></div>
+</section>
+</div>
+
+<script>
+const D=[["SEC","Security Operations","#ff5a5f","⛨"],["RES","Research","#4c8dff","⚗"],["INF","Engineering & Infrastructure","#f0a020","⚙"],["CON","Containment","#a67cff","☣"],["TRN","Transport","#2cc4b0","⇅"],["ITS","Information Systems","#3ddc84","▤"],["MED","Medical","#ff74ae","✚"],["LOG","Logistics","#ff8a3d","▦"],["ASN","Assigned Areas","#9fb0c4","⌂"],["EMG","Emergency","#ffd23f","⚠"]];
+const DM=Object.fromEntries(D.map(d=>[d[0],d]));
+const S={name:"ALICE ██████",pid:"P-042781",title:"RESEARCHER",dept:"Anomalous Materials Division",cid:"C-8F31-27A9",exp:"2027-08-14",accent:"#2b5fd9",photo:null,
+level:"C3",comps:["COMP-BIO"],domains:["RES","TRN","ASN","CON"],
+access:["RES/LAB/BIO-03","RES/ARCHIVE/ARC-04","CON/OBSERVATION/SCP-███","TRN/ELEVATOR/L1,L2,L3,L5","ASN/OFFICE/O-217"],
+action:["CON/ENTER-SUPPORT","CON/OBSERVE"],cons:["No chamber opening","No emergency override"]};
+let lookup=S.cid;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const dom=g=>g.split("/")[0];
+const col=d=>(DM[d]||[0,0,"#8c95a1"])[2];
+
+/* card */
+function bars(seed){let h=0,out="";for(const c of seed)h=(h*31+c.charCodeAt(0))>>>0;
+  for(let i=0;i<46;i++){h=(h*1103515245+12345)>>>0;out+=`<i style="width:${1+(h>>>16)%3}px;margin-right:${(h>>>8)%3}px"></i>`}return out}
+function renderCard(){
+  const expired=S.exp&&new Date(S.exp+"T23:59:59")<new Date();
+  const ph=S.photo?`<div class="photo" style="background-image:url(${S.photo})"></div>`:
+   `<div class="photo"><svg viewBox="0 0 100 124"><rect width="100" height="124" fill="#9aa0a6"/><circle cx="50" cy="46" r="20" fill="#5d646b"/><path d="M10 124c2-36 20-48 40-48s38 12 40 48z" fill="#5d646b"/></svg></div>`;
+  $("card").style.setProperty("--acc",S.accent);
+  $("card").innerHTML=`<div class="slot"></div>
+  <div class="band"><span>FOUNDATION</span><span>ACCESS CREDENTIAL</span></div>
+  <div class="photoRow">${ph}<div class="chipgfx"></div></div>
+  <div class="nm">${esc(S.name)||"&nbsp;"}</div>
+  <div class="mono" style="margin-top:4px">Personnel ID: ${esc(S.pid)}</div>
+  <div class="ttl">${esc(S.title)||"&nbsp;"}</div>
+  <div class="dept">${esc(S.dept)}</div>
+  <div class="foot"><div class="mono">Credential ID: ${esc(S.cid)}</div>
+  <div class="mono exp"><span>Expires: ${esc(S.exp)}</span>${expired?'<span class="expired">EXPIRED</span>':""}</div>
+  <div class="bars">${bars(S.cid)}</div></div>`;
+}
+
+/* record */
+function renderRecord(){
+  const q=lookup.trim().toUpperCase();
+  const el=$("record");
+  if(!q){el.innerHTML='<p class="empty">Enter a credential ID or scan the card.</p>';return}
+  if(q!==S.cid.trim().toUpperCase()){el.innerHTML=`<span class="status s-bad">NO RECORD</span><p class="empty">No credential matches ${esc(q)}.</p>`;return}
+  const expired=S.exp&&new Date(S.exp+"T23:59:59")<new Date();
+  const grp=(list,key)=>{
+    if(!list.length)return '<div class="empty">None</div>';
+    return D.filter(d=>list.some(g=>dom(g)===d[0])).concat(list.map(dom).filter(x=>!DM[x]).map(x=>[x,x,"#8c95a1","?"])).filter((d,i,a)=>a.findIndex(e=>e[0]===d[0])===i)
+     .map(d=>list.filter(g=>dom(g)===d[0]).map(g=>`<div class="item" style="--c:${d[2]}"><span><span style="color:${d[2]}">${d[3]}</span> ${esc(g)}</span></div>`).join("")).join("")};
+  const doms=D.filter(d=>S.domains.includes(d[0]));
+  el.innerHTML=`<div class="head"><div><b>${esc(S.name)}</b><div class="mono" style="color:var(--dim)">${esc(S.pid)} · ${esc(S.title)}</div></div>
+   <span class="status ${expired?"s-bad":"s-ok"}">${expired?"EXPIRED":"ACTIVE"}</span></div>
+   <div class="mono" style="color:var(--dim);margin-top:4px">${esc(S.cid)}, expires ${esc(S.exp)}</div>
+   <h3>Information Clearance</h3>
+   <div class="row"><span class="big" style="color:#f0a020">${esc(S.level)}</span>${S.comps.map(c=>`<span class="chip on" style="--c:#4c8dff">${esc(c)}</span>`).join("")}</div>
+   <h3>Access Domains</h3>
+   <div class="row">${doms.length?doms.map(d=>`<span class="chip on" style="--c:${d[2]}" title="${d[1]}">${d[3]} ${d[0]}</span>`).join(""):'<span class="empty">None</span>'}</div>
+   <h3>Access Grants</h3>${grp(S.access)}
+   <h3>Action Grants</h3>${grp(S.action)}
+   <h3>Constraints</h3>${S.cons.length?S.cons.map(c=>`<div class="item" style="--c:var(--bad)"><span style="color:var(--bad)">✖</span> <span style="flex:1">${esc(c)}</span></div>`).join(""):'<div class="empty">None</div>'}`;
+}
+
+/* editor lists */
+function rm(btn,fn){btn.onclick=fn}
+function renderEditor(){
+  $("compList").innerHTML=S.comps.map((c,i)=>`<div class="item" style="--c:#4c8dff"><span>${esc(c)}</span><button data-r="comps:${i}" aria-label="Remove ${esc(c)}">×</button></div>`).join("");
+  $("conList").innerHTML=S.cons.map((c,i)=>`<div class="item" style="--c:var(--bad)"><span>${esc(c)}</span><button data-r="cons:${i}" aria-label="Remove ${esc(c)}">×</button></div>`).join("");
+  $("domToggles").innerHTML=D.map(d=>`<button class="chip ${S.domains.includes(d[0])?"on":""}" style="--c:${d[2]}" data-d="${d[0]}" title="${d[1]}" aria-pressed="${S.domains.includes(d[0])}">${d[3]} ${d[0]}</button>`).join("");
+  const rows=[];
+  D.forEach(d=>{const items=[...S.access.map((g,i)=>["access",g,i]),...S.action.map((g,i)=>["action",g,i])].filter(x=>dom(x[1])===d[0]);
+    if(!items.length)return;
+    rows.push(`<div class="hint" style="color:${d[2]};margin-top:8px">${d[3]} ${d[0]}, ${d[1]}</div>`+items.map(x=>`<div class="item" style="--c:${d[2]}"><span><span class="tag">${x[0]}</span>${esc(x[1])}</span><button data-r="${x[0]}:${x[2]}" aria-label="Remove ${esc(x[1])}">×</button></div>`).join(""))});
+  $("grantList").innerHTML=rows.join("")||'<p class="empty">No grants yet.</p>';
+}
+function all(){renderCard();renderRecord();renderEditor()}
+
+/* wiring */
+$("gDom").innerHTML=D.map(d=>`<option value="${d[0]}">${d[0]}, ${d[1]}</option>`).join("");
+$("lvl").innerHTML=["C0","C1","C2","C3","C4","C5"].map(l=>`<option>${l}</option>`).join("");
+$("lvl").value=S.level;
+$("lvl").onchange=e=>{S.level=e.target.value;renderRecord()};
+document.querySelectorAll("[data-k]").forEach(inp=>{inp.value=S[inp.dataset.k];
+  inp.oninput=()=>{const k=inp.dataset.k;if(k==="cid"&&lookup===S.cid)lookup=inp.value;S[k]=inp.value;$("lookup").value=lookup;renderCard();renderRecord()}});
+$("lookup").value=lookup;
+$("lookup").oninput=e=>{lookup=e.target.value;renderRecord()};
+$("query").onclick=renderRecord;
+$("scan").onclick=()=>{lookup=S.cid;$("lookup").value=lookup;renderRecord();$("record").scrollIntoView({behavior:"smooth",block:"nearest"})};
+$("rnd").onclick=()=>{const h=n=>[...Array(n)].map(()=>"0123456789ABCDEF"[Math.random()*16|0]).join("");
+  const old=S.cid;S.cid=`C-${h(4)}-${h(4)}`;if(lookup===old)lookup=S.cid;$("f-cid").value=S.cid;$("lookup").value=lookup;renderCard();renderRecord()};
+$("redact").onclick=()=>{S.name=S.name.trim()+" ██████";$("f-name").value=S.name;renderCard();renderRecord()};
+$("f-photo").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{S.photo=r.result;renderCard()};r.readAsDataURL(f)};
+$("nophoto").onclick=()=>{S.photo=null;$("f-photo").value="";renderCard()};
+function addTo(list,inp){const v=inp.value.trim();if(!v||S[list].includes(v))return;S[list].push(v);inp.value="";all()}
+$("compAdd").onclick=()=>addTo("comps",$("compIn"));
+$("conAdd").onclick=()=>addTo("cons",$("conIn"));
+[["compIn","compAdd"],["conIn","conAdd"],["gPath","gAdd"]].forEach(([i,b])=>$(i).onkeydown=e=>{if(e.key==="Enter")$(b).click()});
+$("gAdd").onclick=()=>{const p=$("gPath").value.trim().replace(/^\/+/,"");if(!p)return;
+  const d=$("gDom").value,g=`${d}/${p}`,l=S[$("gKind").value];if(!l.includes(g))l.push(g);
+  if(!S.domains.includes(d))S.domains.push(d);$("gPath").value="";all()};
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.r){const[k,i]=b.dataset.r.split(":");S[k].splice(+i,1);all()}
+  if(b.dataset.d){const d=b.dataset.d;if(S.domains.includes(d)){S.domains=S.domains.filter(x=>x!==d);S.access=S.access.filter(g=>dom(g)!==d);S.action=S.action.filter(g=>dom(g)!==d)}else S.domains.push(d);all()}});
+$("theme").onclick=()=>{const r=document.documentElement,dark=(r.dataset.theme||(matchMedia("(prefers-color-scheme:light)").matches?"light":"dark"))==="dark";r.dataset.theme=dark?"light":"dark"};
+all();
+</script>
+</body>
+</html>

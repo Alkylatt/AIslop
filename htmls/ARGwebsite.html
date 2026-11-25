@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Elysium 極樂追憶 · 紀念與傳承服務</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300..800&family=Noto+Serif+TC:wght@400..700&display=swap">
+<style>
+:root{--bg:#f6f2fd;--sf:#fff;--ink:#2b2146;--mu:#6c6290;--ac:#7d5fd0;--ac2:#c58bf2;--ln:#e0d7f3;--soft:#ece5f9;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151126;--sf:#201a36;--ink:#ece6fa;--mu:#a99fc9;--ac:#a58cf0;--ln:#372f55;--soft:#2a2342;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#151126;--sf:#201a36;--ink:#ece6fa;--mu:#a99fc9;--ac:#a58cf0;--ln:#372f55;--soft:#2a2342;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 "Noto Sans TC",system-ui,sans-serif;overflow-x:hidden}
+h1,h2,h3{font-family:"Noto Serif TC",serif;font-weight:600;line-height:1.3;margin:0 0 .5em}
+h1{font-size:clamp(2.2rem,6vw,3.7rem)}h2{font-size:clamp(1.6rem,3.5vw,2.2rem)}h3{font-size:1.2rem}
+a{color:var(--ac);cursor:pointer}p{max-width:62ch}.mu{color:var(--mu)}.small{font-size:.85rem}
+#chrome{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;height:49px;display:flex;gap:8px;padding:8px 12px;background:var(--soft);border-bottom:1px solid var(--ln)}
+#chrome button,#chrome input{font:inherit;font-size:14px;border:1px solid var(--ln);background:var(--sf);color:var(--ink);border-radius:8px;padding:2px 10px}
+#url{flex:1;min-width:0;font-family:ui-monospace,monospace}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--soft);z-index:21}
+#ld{position:fixed;left:0;top:calc(env(safe-area-inset-top,0px) + 78px);height:3px;width:0;opacity:0;z-index:25;background:linear-gradient(90deg,#8d6fe6,#e39bff,#6fe3d0);box-shadow:0 0 10px #a58cf0}
+#bg{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.35}
+.ann{background:linear-gradient(90deg,#3b2a78,#7d5fd0,#3b2a78);background-size:200% 100%;animation:sh 8s linear infinite;color:#fff;text-align:center;font-size:.9rem;padding:7px 12px}.ann a{color:#fff;font-weight:600}
+.nav{display:flex;flex-wrap:wrap;gap:6px 24px;align-items:center;padding:14px 5vw;background:color-mix(in srgb,var(--sf) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--ln)}
+.nav .logo{font:600 1.3rem "Noto Serif TC",serif;margin-right:auto;color:var(--ink);text-decoration:none}.logo i{display:inline-block;width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,var(--ac),var(--ac2));margin-right:8px}
+.nav a{text-decoration:none;color:var(--mu);transition:color .2s}.nav a:hover{color:var(--ink)}
+.hero{position:relative;overflow:hidden;color:#fff;padding:90px 5vw 100px;background:linear-gradient(140deg,#24174f,#4f3699 55%,#9a76e6)}
+.hero.sm{padding:60px 5vw 64px}
+.hi{position:relative;max-width:1100px;margin:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:40px;align-items:center}
+.hero p{color:#e6dcff;font-size:1.1rem}
+.gt{background:linear-gradient(90deg,#fff,#dccbff,#fff);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sh 6s linear infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.ring{position:absolute;border-radius:50%;border:1px solid rgba(255,255,255,.18)}
+.pt{position:absolute;bottom:-10px;border-radius:50%;background:rgba(255,255,255,.55);animation:rise linear infinite}
+@keyframes rise{to{transform:translateY(-120vh);opacity:0}}
+.in0{animation:up .9s both}.in1{animation:up .9s .15s both}.in2{animation:up .9s .3s both}
+@keyframes up{from{opacity:0;transform:translateY(28px)}}
+.pill{display:inline-block;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);border-radius:99px;padding:3px 14px;font-size:.85rem;color:#fff}
+.dot{display:inline-block;width:8px;height:8px;background:#5fe3a1;border-radius:50%;margin-right:6px;animation:pl 1.6s infinite}@keyframes pl{50%{box-shadow:0 0 0 6px rgba(95,227,161,0)}0%{box-shadow:0 0 0 0 rgba(95,227,161,.7)}}
+.btn{display:inline-block;background:linear-gradient(135deg,var(--ac),#9b6ff0);color:#fff;border:0;border-radius:999px;padding:11px 26px;font:inherit;cursor:pointer;text-decoration:none;transition:transform .2s,box-shadow .2s;box-shadow:0 6px 18px rgba(125,95,208,.35)}
+.btn:hover{transform:translateY(-2px)}.btn.o{background:none;color:#fff;border:1px solid rgba(255,255,255,.6);box-shadow:none}
+.sec .btn.o,.nav .btn.o,#dt .btn.o{color:var(--ac);border-color:var(--ac)}
+.sec{max-width:1100px;margin:auto;padding:64px 5vw}.sec>h2{text-align:center}.sec>.lead{text-align:center;margin:0 auto 30px;color:var(--mu)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:16px;padding:24px;transition:transform .3s,box-shadow .3s}
+.card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(90,60,170,.18)}
+.ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:1.4rem;background:linear-gradient(135deg,var(--soft),#d9c8ff);margin-bottom:12px}
+.av{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;color:#fff;font:600 1.3rem "Noto Serif TC",serif;background:linear-gradient(135deg,#7d5fd0,#d08bf0);margin-bottom:10px}
+.glass{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(14px);border-radius:20px;padding:18px;animation:fl 6s ease-in-out infinite}@keyframes fl{50%{transform:translateY(-10px)}}
+.chat .m{background:rgba(255,255,255,.18);padding:8px 14px;border-radius:14px;margin:6px 0;width:fit-content;max-width:90%;font-size:.95rem}.chat .u{margin-left:auto;background:#fff;color:#3b2a78}
+.chat input{width:100%;font:inherit;padding:9px 14px;border:0;border-radius:999px;background:rgba(255,255,255,.9);color:#2b2146;margin-top:6px}
+.mq{overflow:hidden;background:var(--sf);border-block:1px solid var(--ln);padding:16px 0;display:flex}
+.mq .g{display:flex;flex:none;min-width:100%;justify-content:space-around;white-space:nowrap;animation:mq 28s linear infinite;color:var(--mu)}.mq span{padding:0 28px}@keyframes mq{to{transform:translateX(-100%)}}
+.vsw{background:#fff;color:#222;min-height:100vh;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace}.vb{padding:6px 14px;border-bottom:1px solid #ddd;background:#f6f6f6;font:13px "Noto Sans TC",sans-serif}
+.vs{padding:6px 0;overflow-x:auto}.vs .ln{display:flex}.vs .n{flex:none;width:56px;text-align:right;padding-right:12px;margin-right:10px;color:#999;border-right:1px solid #eee;user-select:none}
+.vs .l{flex:1;white-space:pre-wrap;word-break:break-all}.vs.nw .l{white-space:pre;word-break:normal}.vs i{font-style:normal}.vs .c{color:#236e25}.vs .t{color:#881280}.vs .a{color:#994500}.vs .v{color:#1a1aa6}
+#cm{display:none;position:fixed;z-index:99;min-width:230px;background:#fff;color:#222;border:1px solid #d0d0d0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.25);padding:6px 0;font:14px "Noto Sans TC",system-ui,sans-serif;user-select:none}
+#cm .mi{display:flex;justify-content:space-between;gap:24px;padding:7px 22px;cursor:default}#cm .mi:hover{background:#e8f0fe}#cm .off{color:#aaa}#cm .off:hover{background:none}#cm hr{border:0;border-top:1px solid #e3e3e3;margin:5px 0}#cm span{color:#888}
+#bm{position:sticky;top:calc(env(safe-area-inset-top,0px) + 49px);z-index:19;height:30px;display:flex;gap:2px;align-items:center;padding:0 10px;background:var(--soft);border-bottom:1px solid var(--ln);overflow-x:auto;white-space:nowrap}
+#bm a{font-size:12px;color:var(--ink);padding:2px 10px;border-radius:6px;cursor:pointer;text-decoration:none}#bm a:hover{background:var(--ln)}
+.bbtn{background:#198754;color:#fff;border:0;padding:8px 18px;font-weight:700;cursor:pointer;border-radius:3px}
+.hlp{display:grid;grid-template-columns:max-content 1fr;gap:6px 28px;margin:6px 0}
+.lg{max-width:820px}.lg h3{margin-top:28px;font-size:1.15rem}.lg p{max-width:none;line-height:1.95}
+.sl{color-scheme:light}.sl textarea,.sl input{color:#111;background:#fff}.sl textarea[readonly]{background:#f6f6f6}
+.slm h2{font:700 18px Arial,"Noto Sans TC",sans-serif;margin:26px 0 8px}.slg{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.slc{border:1px solid #cdd3da;background:#f8f9fa;padding:10px;font-size:13px}.slc b{display:block;margin-bottom:4px}
+.slm details{border:1px solid #cdd3da;margin:6px 0;padding:8px 12px;background:#fafafa}.slm summary{cursor:pointer;font-weight:700}.slf{margin-top:30px;border-top:1px solid #cdd3da;padding-top:12px;font-size:12px;color:#777;text-align:center}
+[hidden]{display:none!important}
+.cmsgs{max-height:190px;overflow-y:auto;padding-right:4px}
+.vb button{font:inherit;padding:2px 10px;margin-right:12px;cursor:pointer}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#222;color:#fff;padding:8px 18px;border-radius:8px;z-index:60;font-size:14px}
+#dt{display:none;position:fixed;left:0;right:0;bottom:0;z-index:30;height:42vh;flex-direction:column;background:#fff;color:#222;border-top:1px solid #bbb;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace}#dt.on{display:flex}
+#dt .dh{display:flex;background:#f1f3f4;border-bottom:1px solid #ccc}#dt .dh button{font:12px "Noto Sans TC",sans-serif;border:0;background:none;padding:6px 14px;cursor:pointer;color:#444}#dt .dh button.on{border-bottom:2px solid #1a73e8;color:#1a73e8}
+#dt .dp{flex:1;display:flex;flex-direction:column;min-height:0;overflow:auto}
+#dt .ct{display:flex;gap:10px;padding:3px 8px;border-bottom:1px solid #ddd;background:#fafafa;color:#777}#dt .ct button{border:0;background:none;cursor:pointer}
+#cl2{flex:1;overflow:auto}.cl{display:flex;justify-content:space-between;gap:12px;padding:2px 8px;border-bottom:1px solid #eee;white-space:pre-wrap;word-break:break-word}
+.cl.warn{background:#fffbe5;color:#5c3c00;border-color:#fff5c2}.cl.error{background:#fff0f0;color:#c5221f;border-color:#fdd}.cl.in{color:#555}.cl.res{color:#1a1aa6}.cl .s{flex:none;color:#888;text-decoration:underline}
+#dt .ci{display:flex;gap:6px;padding:4px 8px;border-top:1px solid #ddd;color:#1a73e8}#ce{flex:1;border:0;outline:0;font:inherit;background:none;color:#222}
+#dt table{width:100%;border-collapse:collapse}#dt td,#dt th{border:1px solid #e3e3e3;padding:2px 8px;text-align:left}#dt a{color:#1a73e8;cursor:pointer}#dt .tr{padding:4px 12px;cursor:pointer}#dt .tr.dim{color:#aaa;cursor:default}#dt input.f{font:inherit;border:1px solid #ccc;padding:2px 6px}
+.ap{display:flex;min-height:calc(100vh - 79px);background:#f3f5f9;color:#1f2a3a;font:14px/1.6 "Noto Sans TC",system-ui,sans-serif}
+.ap aside{width:210px;flex:none;background:#14233a;color:#c5d2e6;padding:16px 0}.ap aside b{display:block;padding:0 18px 14px;color:#fff;font-size:15px}
+.ap aside a{display:flex;justify-content:space-between;padding:9px 18px;cursor:pointer;color:#c5d2e6}.ap aside a.on,.ap aside a:hover{background:#1f3556;color:#fff}
+.ap section{flex:1;min-width:0}.apt{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 20px;background:#fff;border-bottom:1px solid #dde3ee;font-size:13px}
+.apb{padding:18px 20px}.apb h2{font:600 18px "Noto Sans TC",sans-serif;margin:0 0 12px;color:#14233a}
+.ap table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #dde3ee}.ap th,.ap td{padding:8px 12px;border-bottom:1px solid #eef1f6;text-align:left}.ap th{background:#f7f9fc}
+.ap button,.mod button{font:inherit;border:1px solid #c5cfe0;background:#fff;color:#1f2a3a;border-radius:6px;padding:4px 12px;cursor:pointer}.ap button.pr,.mod button.pr{background:#2f6fdc;color:#fff;border-color:#2f6fdc}.ap button.dg,.mod button.dg{color:#fff;background:#c0392b;border-color:#c0392b}
+.ml{display:flex;background:#fff;border:1px solid #dde3ee;min-height:380px}.ml .ls{width:300px;flex:none;border-right:1px solid #dde3ee}.ml .it{padding:10px 14px;border-bottom:1px solid #eef1f6;cursor:pointer}.ml .it:hover,.ml .it.on{background:#eaf1fd}.ml .it.un{font-weight:700}.ml .rd{flex:1;padding:16px 20px;white-space:pre-wrap}
+.tg{display:inline-block;border-radius:99px;padding:0 10px;font-size:12px;background:#e7edf7;color:#1f2a3a}.tg.i{background:#fde7c8}.tg.l{background:#e1e1e8}.tg.a{background:#d6f0dd}
+.mod{position:fixed;left:0;right:0;bottom:0;top:calc(env(safe-area-inset-top,0px) + 79px);background:rgba(10,20,40,.5);z-index:40;display:grid;place-items:center}.mod .bx{background:#fff;border-radius:10px;padding:20px;width:min(380px,92vw);color:#1f2a3a;font:14px "Noto Sans TC",sans-serif}.mod h3{font-family:"Noto Sans TC",sans-serif}.mod input,.mod select{width:100%;font:inherit;padding:6px 8px;margin:4px 0 10px;border:1px solid #c5cfe0;border-radius:6px}
+@media (max-width:700px){.ap{flex-direction:column}.ap aside{width:auto;display:flex;overflow-x:auto;padding:0}.ap aside b{display:none}.ml{flex-direction:column}.ml .ls{width:auto}}
+.sl{background:#e9ecef;color:#222;font:14px/1.5 Arial,"Noto Sans TC",sans-serif;min-height:calc(100vh - 79px);padding-bottom:56px}
+.slh{display:flex;align-items:center;gap:16px;padding:10px 16px;background:#0b5ed7;color:#fff;flex-wrap:wrap}.slogo{font-size:22px}.slogo span{color:#ffd54a}.slup{margin-left:auto;background:#ffc107;color:#000;padding:4px 12px;border-radius:4px;font-weight:700;cursor:pointer}
+.slad{background:repeating-linear-gradient(45deg,#fff8d6,#fff8d6 10px,#fff1b0 10px,#fff1b0 20px);border:1px dashed #d4a017;color:#6b4e00;text-align:center;padding:10px;cursor:pointer}
+.slad.top{margin:10px auto;max-width:900px;font-size:15px}.slad.mid{margin:14px 0;background:#d1f7d6;border-color:#2e9e45;color:#145a20;font-size:16px}.slad.foot{position:fixed;left:0;right:0;bottom:0;z-index:15}
+.slw{display:flex;justify-content:center;gap:14px;padding:0 10px}.slw .side{width:140px;flex:none;align-self:flex-start;min-height:420px;display:flex;flex-direction:column;justify-content:center;font-weight:700}
+.slm{flex:1;max-width:700px;background:#fff;padding:20px 24px;border:1px solid #cdd3da}.slm h1{font:700 24px Arial,"Noto Sans TC",sans-serif;margin:0 0 6px}.slm h3{font-family:Arial,"Noto Sans TC",sans-serif}
+.slbox{display:flex;gap:8px;margin:12px 0}.slbox input{flex:1;min-width:0;padding:8px;border:1px solid #999}.slbox button{background:#198754;color:#fff;border:0;padding:8px 18px;font-weight:700;cursor:pointer}
+.slbar{height:14px;background:#ddd;border-radius:7px;overflow:hidden}.slbar i{display:block;height:100%;width:0;background:#0b5ed7;transition:width .3s}
+#pop{position:fixed;left:0;right:0;bottom:0;top:calc(env(safe-area-inset-top,0px) + 79px);z-index:26;background:rgba(0,0,0,.72);display:grid;place-items:center}
+.pm{position:relative;background:linear-gradient(135deg,#ff5f6d,#ffc371);color:#fff;border-radius:14px;padding:30px 28px;width:min(380px,90vw);text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.5)}.pm h2{font-family:Arial,"Noto Sans TC",sans-serif}
+#px{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:0;background:rgba(0,0,0,.45);color:#fff;font-size:14px;cursor:pointer}.pbtn{background:#fff;color:#d63a4a;border:0;border-radius:99px;padding:10px 26px;font-weight:700;font-size:16px;cursor:pointer}
+@media (max-width:860px){.slw .side{display:none}}
+.stats{background:linear-gradient(135deg,#2a1b5e,#5b3fb0);color:#fff}.stats .grid{max-width:1100px;margin:auto;text-align:center}.stats b{display:block;font:600 2.6rem "Noto Serif TC",serif}
+.tier{position:relative}.tier.pop{border:2px solid var(--ac);transform:scale(1.03)}.tier .bd{position:absolute;top:-13px;right:20px;background:var(--ac);color:#fff;border-radius:99px;padding:1px 14px;font-size:.8rem}
+.tier b{font:600 1.8rem "Noto Serif TC",serif}
+details.card{margin:10px 0;padding:14px 20px}summary{cursor:pointer;font-weight:600}
+.cta{background:linear-gradient(135deg,#4f3699,#a37cf0);color:#fff;border-radius:24px;padding:48px 5vw;text-align:center;margin:20px 5vw 60px}.cta p{margin:0 auto 18px;color:#efe6ff}
+.step{counter-increment:s}.step::before{content:counter(s);display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--ac);color:#fff;margin-bottom:10px}
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .8s,transform .8s}.reveal.in{opacity:1;transform:none}
+footer{background:#1b1433;color:#b5a9d8;padding:40px 5vw 24px;font-size:.88rem}footer .grid{max-width:1100px;margin:auto}footer h3{color:#fff;font-size:1rem}footer a{color:#b5a9d8;text-decoration:none;display:block}footer .cp{text-align:center;margin-top:24px;border-top:1px solid #34294f;padding-top:16px}
+.tribute-text{font-family:"Noto Serif TC",serif;font-weight:400;font-size:1.15rem;line-height:2;max-width:46em}
+.tribute-text b.h{font-weight:700}
+/* 自訂紀念頁樣式 - 由 M. Lin 覆寫 */
+.tribute-text::after{content:"如果你正在讀這段話，代表我已無法開口。播放 sound_03 時，請看主控台。";display:none;visibility:hidden}
+.gb{border-top:1px solid var(--ln);padding:14px 0}
+.pillk{display:inline-block;background:var(--soft);border-radius:99px;padding:0 12px;font-size:.8rem;color:var(--mu)}
+.player{display:flex;align-items:center;gap:12px;background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:12px 16px;max-width:440px}
+.bar{flex:1;height:6px;background:var(--soft);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2))}
+.raw{font:14px/1.5 ui-monospace,monospace;white-space:pre-wrap;padding:20px;background:#fff;color:#111;min-height:100vh}
+.staff{background:#0f1a24;color:#bcd;min-height:100vh;padding:24px 5vw;font:14px/1.8 ui-monospace,"Noto Sans TC",monospace}
+.staff h2{color:#7fd}.staff .card{background:#16253a;border-color:#27425f;margin:14px 0;color:#bcd}.staff .card:hover{transform:none;box-shadow:none}.staff a{color:#7fd}
+#term{background:#06090d;color:#8f8;min-height:calc(100vh - 82px);padding:20px;font:15px/1.6 ui-monospace,"Noto Sans TC",monospace}
+#term .ln{display:flex;gap:8px}#ti{flex:1;background:none;border:0;outline:0;color:#cfc;font:inherit}
+#out div{white-space:pre-wrap}.mya{color:#d6b8ff}.err{color:#f77}.dim{color:#586}
+.late h1{animation:gl 3s infinite}@keyframes gl{0%,92%,100%{transform:none}94%{transform:translateX(3px) skewX(6deg)}97%{transform:translateX(-3px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}.mq .g{animation:mq 60s linear infinite!important}}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+</style></head><body>
+<div id="chrome"><button id="bk" title="上一頁">‹</button><input id="url" spellcheck="false" aria-label="網址列"><button id="dtb">開發者工具</button></div>
+<div id="bm"><a data-go="/">🕊️ Elysium Memorial</a><a data-go="spectrolab.online">🎧 SpectroLab</a><a data-go="base64decode.tools">🔤 Base64 解碼</a><a data-go="tempotap.io">🥁 TempoTap</a><a data-go="virusscanhub.io">🛡️ VirusScan Hub</a><a data-go="browsertrace.net">🔍 BrowserTrace</a><a data-go="audioimagingbench.com">📊 AudioImaging Bench</a></div>
+<div id="ld"></div>
+<div id="bg"><div class="orb" data-s="-.12" style="width:420px;height:420px;background:#b79bff;left:-100px;top:10vh"></div><div class="orb" data-s="-.2" style="width:360px;height:360px;background:#f0a6ff;right:-80px;top:50vh"></div><div class="orb" data-s="-.07" style="width:300px;height:300px;background:#7fd6e8;left:40vw;top:80vh"></div></div>
+<div id="view"></div>
+<div id="dt"><div class="dh"><button data-t="co" class="on">主控台</button><button data-t="ap">應用程式</button><button data-t="so">原始碼</button><span style="flex:1"></span><button id="dx" title="關閉">✕</button></div>
+<div class="dp" id="p-co"><div class="ct"><button id="cclr" title="清除主控台">🚫</button><span>top ▾　預設層級 ▾</span></div><div id="cl2"></div><div class="ci">&gt;<input id="ce" spellcheck="false" autocomplete="off"></div></div>
+<div class="dp" id="p-ap" hidden><div style="padding:6px 10px"><b>Cookie</b> — elysium-memorial.io</div><table><thead><tr><th>名稱</th><th>值</th><th>網域</th><th>路徑</th><th></th></tr></thead><tbody id="ckt"></tbody></table><div style="padding:8px 10px"><input class="f" id="cn" placeholder="名稱" size="12"> <input class="f" id="cv" placeholder="值" size="16"> <button id="cs">新增 Cookie</button></div></div>
+<div class="dp" id="p-so" hidden><div class="tr dim">▾ elysium-memorial.io</div><div class="tr" id="vsb" style="padding-left:28px">📄 (index)　<span style="color:#888">— 點擊檢視原始碼</span></div><div class="tr dim" style="padding-left:28px">📄 static/css/site.5f3a91c.css</div><div class="tr dim" style="padding-left:28px">📄 static/js/vendor.2c81d0.js</div><div class="tr dim" style="padding-left:28px">📄 static/js/app.9b04e7.js</div></div></div>
+<script>
+const $=s=>document.querySelector(s),view=$('#view'),url=$('#url'),HOST='elysium-memorial.io';
+const ck={},hist=[];let cur='/';
+const getC=k=>ck[k]||((document.cookie||'').match(new RegExp('(?:^|; )'+k+'=([^;]*)'))||[])[1]||'';
+const authed=()=>getC('user_role')==='archivist'&&/^0xf4e9$/i.test(getC('auth_key'));
+const ago=d=>new Date(Date.now()-d*864e5).toLocaleDateString('zh-TW',{year:'numeric',month:'long',day:'numeric'});
+const nav=()=>`<div class="ann">全新「追憶之聲 2.0」正式上線，以親人的聲音朗讀每一則留言。<a data-go="/services">立即了解</a></div><div class="nav"><a class="logo" data-go="/"><i></i>Elysium 極樂追憶</a><a data-go="/services">服務方案</a><a data-go="/memorials">追思牆</a><a data-go="/about">關於我們</a><a class="btn o" data-go="/login" style="padding:4px 18px">家屬入口</a></div>`;
+const foot=()=>`<footer><div class="grid"><div><h3>Elysium 極樂追憶</h3><p>珍藏昨日，溫暖明天。</p></div><div><h3>服務</h3><a data-go="/services">記憶典藏</a><a data-go="/services">聲音重現</a><a data-go="/services">完整意識保存</a></div><div><h3>公司</h3><a data-go="/about">領導團隊</a><a data-go="/about">加入我們</a><a data-go="/memorials">追思牆</a></div><div><h3>法務</h3><a data-go="/privacy">隱私權政策</a><a data-go="/terms">服務條款</a><a data-go="/biometric-disclosure">生理基準同步聲明</a></div></div><div class="cp">© 2026 Elysium 極樂追憶股份有限公司 · 安寧療護夥伴網絡認證</div></footer>`;
+const people=[['陳柏翰','1944','2026年3月2日'],['歐陽淑芬','1951','2026年1月19日'],['林美雅 Maya Lin','1999','2025年10月14日'],['張德昌','1938','2025年11月30日'],['王雅惠','1962','2026年2月8日'],['蔡志豪','1940','2026年4月11日'],['方心蕾','1957','2026年5月23日'],['簡恩慈','1948','2026年6月6日']];
+function mark(t,m){let o='',k=0;for(const c of t){if(k<m.length&&c===m[k]){o+='<b class="h">'+c+'</b>';k++}else o+=c}return o}
+const obit="林美雅，二十六歲，是一位系統架構師，相信只要索引建得夠好，任何值得留下的東西都能被查找、被看見。她在海邊長大，用一台借來的筆電學會寫程式，寫程式時總愛在每一行旁留下註解，說那是寫給未來讀者的情書。最後的日子裡，她整理著一段又一段的記憶，只為了讓人不必徹底失去所愛。她身後留下母親、弟弟，以及一隻很有主見的貓。家人謹此邀請每位來訪的朋友：請細心閱讀，仔細端詳，並溫柔地記住她。";
+const hero=(t,s,sm=1)=>`<header class="hero ${sm?'sm':''}"><div class="hi"><div><h1 class="gt in0">${t}</h1><p class="in1">${s}</p></div></div></header>`;
+const legal=(t,sub,L)=>hero(t,sub)+'<section class="sec lg">'+L.map(([h,b])=>`<h3>${h}</h3><p>${b}</p>`).join('')+'<p class="mu small" style="margin-top:36px">如對本頁內容有任何疑問，請來信 legal@elysium-memorial.io，或洽詢您的專屬關懷專員。</p></section>';
+const pages={
+'/':()=>`<header class="hero"><div class="ring" data-s=".15" style="width:520px;height:520px;right:-120px;top:-100px"></div><div class="ring" data-s=".3" style="width:300px;height:300px;left:-80px;bottom:-60px"></div><div class="hi"><div><span class="pill in0"><span class="dot"></span><span id="live">1,284</span> 個家庭正在線上追思</span><h1 class="gt in1" style="margin-top:20px">珍藏昨日，<br>溫暖明天。</h1><p class="in2">Elysium Cloud 將一生的聲音、文字與記憶，化為「極樂化身」，讓家人在任何時刻都能與您思念的人對話。</p><p class="in2"><a class="btn" data-go="/services">查看方案</a> <a class="btn o" data-go="/memorials">前往追思牆</a></p></div>
+<div class="glass chat in2" id="demo"><b>體驗示範化身</b><div class="cmsgs" id="cm2"><div class="m">您好，我是示範化身「Eleanor」。想聊些什麼呢？</div></div><input id="dq" placeholder="輸入訊息後按 Enter" aria-label="與示範化身對話"></div></div></header>
+<div class="mq">${'<div class="g"><span>仁慈安寧療護</span><span>澄心醫學中心</span><span>北辰生醫研究院</span><span>安寧之家聯盟</span><span>星河雲端科技</span><span>Helix Biosciences</span></div>'.repeat(2)}</div>
+<section class="sec"><h2 class="reveal">讓思念有地方安放</h2><p class="lead reveal">三項核心功能，陪伴家屬走過每一個難熬的時刻。</p><div class="grid"><div class="card reveal"><div class="ic">🎙️</div><h3>追憶之聲</h3><p class="mu">以錄音與訊息重建熟悉的語調，連口頭禪也不遺漏。</p></div><div class="card reveal"><div class="ic">🧠</div><h3>記憶索引</h3><p class="mu">照片、信件、社群貼文自動整理成可搜尋的人生時間軸。</p></div><div class="card reveal"><div class="ic">🕊️</div><h3>永久陪伴</h3><p class="mu">全年無休，家屬隨時都能開啟與化身的對話。</p></div></div></section>
+<section class="stats"><div class="sec"><div class="grid reveal"><div><b><span data-n="12000">0</span>+</b>信賴我們的家庭</div><div><b><span data-n="997">0</span>‰</b>語音擬真度</div><div><b><span data-n="31">0</span></b>企業與醫療夥伴</div><div><b><span data-n="24">0</span>/7</b>全天候服務</div></div></div></section>
+<section class="sec"><h2 class="reveal">三個步驟，輕鬆開始</h2><div class="grid" style="counter-reset:s;margin-top:28px"><div class="card step reveal"><h3>與專員談談</h3><p class="mu">由安寧療護夥伴陪同說明，沒有壓力。</p></div><div class="card step reveal"><h3>完成生理基準同步</h3><p class="mu">舒適、非侵入式的讀取，讓化身更貼近本人。</p></div><div class="card step reveal"><h3>家人開始對話</h3><p class="mu">登入家屬入口，就能聽見熟悉的聲音。</p></div></div></section>
+<section class="sec"><h2 class="reveal">家屬怎麼說</h2><div class="grid" style="margin-top:28px"><div class="card reveal">「再次聽見爸爸的笑聲，孩子們才撐過第一個冬天。」<p class="mu small">蘇小姐，台北</p></div><div class="card reveal">「它記得她調侃我的方式，那種感受我難以言喻。」<p class="mu small">吳先生，台中</p></div><div class="card reveal">「專員的說明非常溫柔，我們從不覺得被催促。」<p class="mu small">劉家</p></div></div><p class="mu small" style="text-align:center;margin:24px auto">最新追思：<span id="tick"></span></p></section>
+<div class="cta reveal"><h2>今天就為思念預留一個位置</h2><p>預約免費諮詢，由專員為您介紹適合的方案。</p><a class="btn" style="background:#fff;color:#4f3699" data-go="/services">查看服務方案</a></div>`,
+'/services':()=>hero('選擇紀念的方式','每一種方案，都用心守護一段獨一無二的人生。')+`<section class="sec"><div class="grid" style="margin-top:14px"><div class="card tier reveal"><h3>記憶典藏</h3><p class="mu">照片、信件與社群貼文，永久保存並可搜尋。</p><b>NT$599</b> <span class="mu">/ 月</span></div><div class="card tier reveal"><h3>聲音重現</h3><p class="mu">讓親人的聲音為您朗讀訊息與故事。</p><b>NT$1,499</b> <span class="mu">/ 月</span></div><div class="card tier pop reveal"><span class="bd">最受歡迎</span><h3>完整意識保存</h3><p class="mu">於安寧療護期間進行生理基準同步，打造完整的極樂化身。</p><b>NT$5,999</b> <span class="mu">/ 月</span></div></div></section>
+<section class="sec"><h2>常見問題</h2><details class="card"><summary>什麼是「生理基準同步」？</summary><p>在安寧療護期間進行的舒適、非侵入式讀取，讓化身真實反映本人。</p></details><details class="card"><summary>化身在哪裡運作？</summary><p>運作於 Elysium 的安全伺服器網格，每個化身彼此隔離，以保護家屬隱私。</p></details><details class="card"><summary>化身可以關閉嗎？</summary><p>帳號將永久保存。舊版帳號一律設為唯讀。</p></details></section>`,
+'/memorials':()=>hero('追思牆','在這裡，為思念的人留下一段話。')+`<section class="sec"><input id="ms" placeholder="搜尋姓名" style="font:inherit;padding:12px 20px;border-radius:999px;border:1px solid var(--ln);background:var(--sf);color:var(--ink);width:min(440px,100%);display:block;margin:0 auto 30px" aria-label="搜尋姓名"><div class="grid" id="ml"></div></section>`,
+'/memorials/maya-lin':()=>hero('林美雅 Maya Lin','1999 – 2025年10月14日 · 願她被溫柔記得')+`<section class="sec" style="max-width:820px"><div class="tribute-text reveal">${mark(obit,'查看註解')}</div>
+<h3 style="margin-top:36px">聲音留言</h3>
+<!-- 開發備註（J. Vance）：Maya 的虛擬化身在 cluster node-07 持續拋出未捕捉的記憶體堆積例外。她的自訂音訊處理器正在洩漏原始緩衝串流。請勿移除隱藏的除錯端點：/api/v1/debug/node-07?key=LETHE_INIT -->
+<div class="player"><button class="btn" id="pl" style="padding:5px 18px">播放</button><div class="bar"><i id="pb"></i></div><span class="small mu" id="pt">0:00 / 0:30</span></div>
+<h3 style="margin-top:40px">追思留言</h3>
+<div class="gb"><b>Theo L.</b> <span class="mu small">${ago(210)}</span><br>姊，你總說索引會比你活得久。我好想你。</div>
+<div class="gb"><b>Priyanka S.</b> <span class="mu small">${ago(160)}</span><br>謝謝你給過我職涯中最棒的程式碼審查。</div>
+<div class="gb"><b>m_lin_auto</b> <span class="pillk">系統</span> <span class="mu small">${ago(3)}</span><br>如果你看得見這行字，這個頁面並不是唯一在聆聽的東西。請仔細看。</div></section>`,
+'/about':()=>hero('認識 Elysium 團隊','由醫療、神經資訊與陪伴領域的專家共同打造。')+`<section class="sec"><div class="grid"><div class="card reveal"><div class="av">J</div><h3>Dr. Julian Vance</h3><p class="mu">系統總監，曾任神經資訊學研究員。</p></div><div class="card reveal"><div class="av">M</div><h3>Marguerite Holt</h3><p class="mu">首席關懷長，擁有二十年安寧緩和照護經驗。</p></div><div class="card reveal"><div class="av">A</div><h3>Arjun Rao</h3><p class="mu">醫療夥伴關係副總裁。</p></div></div></section>
+<section class="sec"><h2>加入我們</h2><p class="lead">我們正在招募神經索引工程師與悲傷輔導師，請透過人力仲介投遞履歷。</p></section>`,
+'/privacy':()=>legal('隱私權政策','最後更新日期：2026 年 3 月 1 日',[['一、前言','Elysium 極樂追憶股份有限公司（以下稱「本公司」）深知，您願意把摯愛之人的聲音、文字與記憶交給我們，是出於極大的信任。本政策說明我們蒐集哪些資料、如何使用，以及您擁有哪些權利。'],['二、我們蒐集的資料','（一）帳號資料：姓名、電子郵件、聯絡電話，以及您與逝者的關係。（二）內容資料：逝者生前提供或由家屬上傳的照片、信件、錄音與社群貼文。（三）生理基準資料：於安寧療護期間，經當事人或其法定代理人書面同意後所進行之「生理基準同步」所取得的資料，詳見《生理基準同步聲明》。（四）使用紀錄：登入時間、裝置資訊，以及您與化身之間的對話內容。'],['三、資料的使用方式','我們使用上述資料來建立與維護極樂化身、提供對話與語音服務、維持系統穩定與資訊安全，並進行服務品質改善、運算資源最佳化及內部研究。'],['四、資料的分享','本公司不會出售您的個人資料。在簽署保密協議的前提下，我們可能與醫療、雲端運算及研究方面的合作夥伴分享經去識別化處理的資料，僅限於服務維運與運算效能最佳化之目的。'],['五、資料的保存','為了讓化身得以長久陪伴，除法令另有規定外，您的資料將於本公司安全伺服器網格中永久保存。已進入「舊版帳號」狀態者，其內容一律設為唯讀。'],['六、您的權利','您可以隨時查詢、更正您的帳號資料，並可申請刪除您上傳的內容。惟已完成匯入之生理基準資料，因其儲存方式的技術特性，無法於化身建立後個別移除，我們將以隔離方式加以保護。'],['七、Cookie 與類似技術','我們使用工作階段 Cookie 來維持您的登入狀態，並使用必要的統計 Cookie 了解網站使用情形。您可以在瀏覽器設定中停用 Cookie，但部分功能可能因此無法使用。'],['八、政策修訂與聯絡方式','本政策如有重大修訂，我們將於網站公告，並以電子郵件通知帳號持有人。隱私相關事宜請洽 privacy@elysium-memorial.io。']]),'/terms':()=>legal('服務條款','最後更新日期：2026 年 3 月 1 日',[['一、接受條款','當您註冊、登入或使用 Elysium 極樂追憶所提供之任何服務（以下稱「本服務」），即表示您已閱讀、了解並同意受本條款拘束。'],['二、服務說明','本服務包含記憶典藏、聲音重現與完整意識保存三種方案。極樂化身係依據逝者生前資料與經同意蒐集之生理基準資料所建立的互動式模擬，其回應不代表逝者本人之意見或人格之延續。'],['三、帳號與使用資格','您須年滿十八歲，或取得法定代理人同意，方可建立帳號。您應妥善保管登入資訊，並對帳號下之一切行為負責。'],['四、費用與付款','各方案之費用以網站公告為準，採按月計費。已開始提供之服務原則上不予退費，但依法令得退費者不在此限。'],['五、使用者義務','您不得利用本服務從事違法行為、冒用他人身分、散布不實資訊，或對本服務之系統進行未經授權之存取、測試、反向工程。'],['六、內容授權','您提供之內容仍歸原權利人所有。惟您同意授予本公司非專屬、永久、全球性且免授權金之授權，使本公司得為提供、維護、改善本服務及相關營運之目的，使用、重製與處理該等內容。'],['七、服務變更與終止','本公司得視營運需要調整服務內容。若您終止付款，帳號將轉為唯讀之「舊版帳號」，資料仍會依《隱私權政策》保存。本公司於必要時得暫停或終止違規帳號。'],['八、免責聲明與責任限制','本服務係依現況提供。於法律允許之最大範圍內，本公司對因使用或無法使用本服務所生之間接、附隨或衍生性損害，不負賠償責任。'],['九、準據法與管轄','本條款以中華民國法律為準據法。因本條款所生之爭議，雙方同意以臺灣臺北地方法院為第一審管轄法院。']]),'/biometric-disclosure':()=>legal('生理基準同步聲明','Biometric Baseline Sync Disclosure · 最後更新日期：2026 年 3 月 1 日',[['一、什麼是生理基準同步？','生理基準同步是「完整意識保存」方案的核心程序，目的在於讓極樂化身的語氣、反應與記憶脈絡更貼近本人。程序於安寧療護期間，由合作院所之專業團隊協助進行。'],['二、程序說明','程序約需 40 分鐘，於病床邊完成，僅需貼附輕巧的感測貼片，不涉及任何侵入式操作，亦不會造成疼痛或不適。若當事人感到疲憊，隨時可以暫停。'],['三、蒐集項目','包括腦電波訊號、心率變異、語音與反應模式。取得之資料將被轉換為「神經圖譜」，並以量化次意識叢集格式儲存。'],['四、同意與撤回','在程序開始之前，當事人或其法定代理人得隨時撤回同意。惟程序一旦完成，資料即匯入運算系統並與化身整合，屆時無法再撤回或個別移除。'],['五、儲存與處理','神經圖譜儲存於本公司之隔離伺服器網格，每位客戶之資料以獨立執行緒運作。為維持叢集穩定與運算效率，網格中的閒置資源可能被調度執行其他系統作業。'],['六、擬真度與限制','目前化身之平均擬真度約為 98%，仍可能出現與本人不完全一致的回應。我們無法保證化身之回應與本人生前意願相同。'],['七、對家屬的說明','化身是為了陪伴而存在，並不是逝者本人。如您在對話中發現任何不尋常的回應，請聯絡您的專屬關懷專員，我們將盡速處理。']]),
+'/login':()=>hero('家屬入口','登入後即可與親人的化身對話。')+`<section class="sec" style="max-width:440px"><div class="card"><input id="le" placeholder="電子郵件" style="width:100%;margin:4px 0;font:inherit;padding:10px;border:1px solid var(--ln);border-radius:8px;background:var(--bg);color:var(--ink)"><input id="lp" type="password" placeholder="密碼" style="width:100%;margin:4px 0 14px;font:inherit;padding:10px;border:1px solid var(--ln);border-radius:8px;background:var(--bg);color:var(--ink)"><button class="btn" id="lb">登入</button><p class="small mu" id="lm">登入狀態會綁定於此瀏覽器。</p></div></section>`,
+};
+const nf=()=>hero('找不到頁面','此頁面已移動或不存在。')+`<section class="sec"><a class="btn" data-go="/">回到首頁</a></section>`;
+const AP={tab:'in',m:-1,rd:{1:1,2:1,3:1,4:1},rows:[['A-0412','陳柏翰','ARCHIVED','2026-03-02'],['A-0388','歐陽淑芬','ARCHIVED','2026-01-19'],['LIN_MAYA_8841','林美雅 Maya Lin','INGESTED','2025-10-14'],['A-0301','張德昌','LEGACY','2025-11-30'],['A-0266','王雅惠','ARCHIVED','2026-02-08'],['A-0457','簡恩慈','PENDING','2026-06-06']]};
+const MAILS=[
+{f:'Dr. Julian Vance',s:'RE: Node-07 異常行為',t:'09:12',b:'收件者：工程團隊\n\n各位，請別再追問為何 Maya Lin 的化身會產出基準訓練資料以外的回應。她的神經圖譜是以 98% 擬真度匯入的，你們看到的只是殘餘的認知回饋迴圈。\n任何情況下都不得直接存取 /assets/voice/ 目錄，並確保所有舊版帳號維持唯讀。\n\n另：根控制台位於 <a data-go="/internal/console">/internal/console</a>，請勿在任何地方放連結。密碼已更新：遺忘之河（Lethe）加上故障節點的編號，全部小寫、不含空格。'},
+{f:'Marguerite Holt',s:'本週家屬關懷訪談排程',t:'昨天',b:'各位，本週的家屬關懷訪談已排定於週三、週五下午，請各專員提前確認名單。'},
+{f:'資訊安全組',s:'[提醒] 季度密碼輪替',t:'昨天',b:'依公司政策，所有具高權限的帳號須於本季完成密碼輪替。完成後請勿以明文記錄密碼。'},
+{f:'系統通知',s:'[自動] 叢集快照備份完成',t:'週二',b:'cluster mesh snapshot #20261021 已完成，耗時 04:12:33，無錯誤。'},
+{f:'Arjun Rao',s:'新合作安寧院所名單',t:'週一',b:'附上第三季新簽約的安寧療護夥伴名單，請協助建立檔案。'}];
+function toast(m){document.querySelectorAll('#toast').forEach(x=>x.remove());const e=document.createElement('div');e.id='toast';e.textContent=m;document.body.appendChild(e);setTimeout(()=>e.remove(),2200)}
+function portal(){return `<div class="ap"><aside><b>ELYSIUM 檔案系統</b><a data-tab="in">收件匣 <span class="tg i" id="ub">1</span></a><a data-tab="ar">檔案庫</a><a data-tab="ic">事件記錄</a><a data-tab="dr">員工名錄</a></aside><section><div class="apt"><span>ELYSIUM ARCHIVE SYSTEM v3.8 · 內部使用</span><span>使用者：archivist（角色覆寫） · <a data-go="/">登出</a></span></div><div id="apm"></div></section></div>`}
+function apRender(){const m=$('#apm');if(!m)return;const T=AP.tab;if(T==='in'&&AP.m>=0)AP.rd[AP.m]=1;document.querySelectorAll('.ap aside a').forEach(a=>a.classList.toggle('on',a.dataset.tab===T));const u=MAILS.filter((_,i)=>!AP.rd[i]).length,ub=$('#ub');ub.textContent=u;ub.hidden=!u;let h='';
+if(T==='in')h=`<div class="apb"><h2>收件匣</h2><div class="ml"><div class="ls">${MAILS.map((x,i)=>`<div class="it ${AP.m===i?'on':''} ${AP.rd[i]?'':'un'}" data-m="${i}">${x.f} <span style="float:right;font-weight:400;color:#7a869a;font-size:12px">${x.t}</span><br><span style="font-weight:inherit">${x.s}</span></div>`).join('')}</div><div class="rd">${AP.m>=0?'<b>'+MAILS[AP.m].s+'</b>\n寄件者：'+MAILS[AP.m].f+'\n'+MAILS[AP.m].b:'<span style="color:#7a869a">請選擇一封郵件</span>'}</div></div></div>`;
+if(T==='ar')h=`<div class="apb"><h2>檔案庫</h2><p><button class="pr" id="adb">＋ 新增條目</button> <input id="aq" placeholder="搜尋條目" style="padding:4px 8px;margin-left:8px;border:1px solid #c5cfe0;border-radius:6px"></p><table><tr><th>編號</th><th>姓名</th><th>狀態</th><th>日期</th><th></th></tr>${AP.rows.map((r,i)=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td><span class="tg ${r[2]==='PENDING'?'i':r[2]==='LEGACY'?'l':'a'}">${r[2]}</span></td><td>${r[3]}</td><td><button data-del="${i}">刪除</button></td></tr>`).join('')}</table></div>`;
+if(T==='ic')h=`<div class="apb"><h2>事件記錄</h2><table><tr><th>編號</th><th>等級</th><th>說明</th><th>狀態</th></tr><tr><td>#409</td><td><span class="tg i">高</span></td><td>受試者 LIN_M 已突破執行緒隔離，並修改了對外訪客所見的化身回應。</td><td>調查中</td></tr><tr><td>#408</td><td><span class="tg">低</span></td><td>node-02 記憶體用量短暫飆升，已自動恢復。</td><td>已結案</td></tr><tr><td>#407</td><td><span class="tg">低</span></td><td>家屬入口登入逾時（尖峰時段）。</td><td>已結案</td></tr></table></div>`;
+if(T==='dr')h=`<div class="apb"><h2>員工名錄</h2><table><tr><th>帳號</th><th>職稱</th><th>狀態</th></tr><tr><td>VANCE_J</td><td>系統總監</td><td>在職</td></tr><tr><td>HOLT_M</td><td>首席關懷長</td><td>在職</td></tr><tr><td>RAO_A</td><td>醫療夥伴關係副總裁</td><td>在職</td></tr><tr><td>LIN_MAYA_8841</td><td>初階架構師</td><td>INGESTED（已匯入）</td></tr></table><p style="color:#7a869a">運作中節點：1,240 · 隔離意識體：12,400</p></div>`;
+m.innerHTML=h;if(T==='ar'){const q=$('#aq');q.oninput=()=>document.querySelectorAll('.ap table tr+tr').forEach(r=>r.hidden=!r.textContent.toLowerCase().includes(q.value.toLowerCase()))}}
+function apClick(e){const t=e.target;let a;if(a=t.closest('[data-tab]')){AP.tab=a.dataset.tab;apRender()}else if(a=t.closest('[data-m]')){AP.m=+a.dataset.m;apRender()}else if(t.id==='adb')apModal('add');else if(a=t.closest('[data-del]'))apModal('del',+a.dataset.del)}
+function apModal(k,i){const d=document.createElement('div');d.className='mod';const rm=()=>d.remove();
+if(k==='add'){d.innerHTML=`<div class="bx"><h3>新增檔案條目</h3><label>姓名</label><input id="mn"><label>狀態</label><select id="ms2"><option>PENDING</option><option>ARCHIVED</option><option>LEGACY</option></select><p style="text-align:right"><button id="mc">取消</button> <button class="pr" id="mk">儲存</button></p></div>`;document.body.appendChild(d);d.querySelector('#mc').onclick=rm;d.querySelector('#mk').onclick=()=>{const n=d.querySelector('#mn').value.trim();if(!n)return toast('請輸入姓名');const id='A-'+String(458+AP.rows.length).padStart(4,'0');AP.rows.push([id,n,d.querySelector('#ms2').value,new Date().toISOString().slice(0,10)]);rm();apRender();toast('已新增條目 '+id)}}
+else{const r=AP.rows[i];d.innerHTML=`<div class="bx"><h3>刪除條目</h3><p>確定要刪除「${r[1]}」（${r[0]}）嗎？此動作無法復原。</p><p style="text-align:right"><button id="mc">取消</button> <button class="dg" id="mk">刪除</button></p></div>`;document.body.appendChild(d);d.querySelector('#mc').onclick=rm;d.querySelector('#mk').onclick=()=>{rm();if(r[0].startsWith('LIN_'))return toast('拒絕存取：此條目受隔離鎖保護，需 root 權限');AP.rows.splice(i,1);apRender();toast('已刪除條目 '+r[0])}}}
+function wav(){return `<div class="raw">Content-Type: audio/wav\nContent-Length: 1482930\n\n（二進位音訊資料，瀏覽器無法直接顯示。）</div>`}
+const SLX=`<h2>更多免費音訊工具</h2><div class="slg"><div class="slc"><b>✂️ 音訊剪輯器</b>線上裁切、淡入淡出。<br><u>開啟</u></div><div class="slc"><b>🔄 格式轉換</b>WAV、MP3、FLAC、OGG 互轉。<br><u>開啟</u></div><div class="slc"><b>🔇 降噪工具</b>一鍵去除背景雜音。<br><u>開啟</u></div><div class="slc"><b>🥁 BPM 偵測</b>自動分析歌曲速度。<br><u>開啟</u></div><div class="slc"><b>📈 音量標準化</b>讓所有檔案音量一致。<br><u>開啟</u></div><div class="slc"><b>🎙️ 聲紋比對</b>比較兩段錄音的相似度。<br><u>開啟</u></div></div>
+<div class="slad mid" style="min-height:110px">💾 雲端備份 5 折！ 1TB 空間只要 <b>NT$49 / 月</b>　<u>立即升級</u></div>
+<h2>如何閱讀頻譜圖？</h2><p>頻譜圖的橫軸是時間，縱軸是頻率，顏色越亮代表該頻率的能量越強。人聲大多集中在低到中頻，鈸聲與氣音則出現在高頻。</p><p>透過頻譜圖，你可以快速找出雜訊、爆音、剪裁失真，也能判斷音訊是否曾被高度壓縮。</p><p>如果想看得更細，可以調整視窗大小與重疊比例，PRO 版另提供即時縮放與標記功能。</p>
+<h2>常見問題</h2><details><summary>支援哪些檔案格式？</summary><p>目前支援 WAV、MP3、OGG 與 FLAC，單檔上限 50 MB。</p></details><details><summary>我的檔案安全嗎？</summary><p>上傳的內容僅用於產生頻譜圖，並於 24 小時後自動刪除。</p></details><details><summary>為什麼分析要等這麼久？</summary><p>免費版與其他使用者共用運算資源，升級 PRO 可享優先佇列。</p></details><details><summary>可以商業使用嗎？</summary><p>免費版僅供個人與教學用途，商業使用請洽業務。</p></details>
+<h2>使用者評價</h2><div class="slg"><div class="slc">「介面簡單，拿來檢查錄音很方便。」<br>— 錄音師 小凱</div><div class="slc">「廣告有點多，但分析結果很準。」<br>— 學生 Amy</div><div class="slc">「降噪前後比對頻譜，一目了然。」<br>— Podcast 製作人</div></div>
+<h2>最新文章</h2><p>・頻譜圖入門：如何讀懂聲音的形狀 <span style="color:#999">· 3 天前</span><br>・WAV 與 FLAC 差在哪裡？ <span style="color:#999">· 1 週前</span><br>・錄音室降噪的五個小技巧 <span style="color:#999">· 2 週前</span><br>・為什麼我的 MP3 聽起來很悶？ <span style="color:#999">· 1 個月前</span></p>
+<div class="slad" style="min-height:90px">🎮 熱門手遊限時儲值 9 折　<u>點此領取</u></div>
+<div class="slf">關於我們 · 隱私權政策 · 服務條款 · 聯絡我們 · 廣告合作<br>© 2026 SpectroLab Inc. 保留所有權利</div>`;
+function spectro(q){const inp=new URLSearchParams(q).get('input')||'';return `<div class="sl"><div class="slh"><b class="slogo">SpectroLab<span>.online</span></b><span>免費線上音訊頻譜分析 · 無須註冊</span><a class="slup">升級 PRO</a></div>
+<div class="slad top">📢 限時優惠！SuperVPN 年繳 <b>NT$99</b>，立即下載，安全上網　<u>馬上下載 ▶</u></div>
+<div class="slw"><aside class="slad side">🎰<br>免費領取<br>NT$ 888<br>新會員禮金<br><u>點此領取</u></aside>
+<main class="slm"><h1>線上頻譜圖產生器</h1><p>貼上音訊檔網址，即可檢視頻譜圖。支援 WAV / MP3 / OGG。</p>
+<div class="slbox"><input id="sli" value="${esc(inp)}" placeholder="音訊檔網址，例如 example.com/a.wav"><button id="slb">分析頻譜</button></div>
+<div class="slad mid">⬇ <b>DOWNLOAD</b> ⬇　免費 PDF 轉檔器，100% 免安裝　<u>立即下載</u></div>
+<div id="slr"></div><p style="color:#777;font-size:12px">本站僅提供分析功能，上傳內容將於 24 小時後自動刪除。</p>${SLX}</main>
+<aside class="slad side">🛡️<br>你的電腦<br>可能已中毒！<br><u>立即掃描</u></aside></div>
+<div class="slad foot">廣告 · 雲端備份 5 折 · 線上課程 · 手遊儲值 · 信用貸款</div>
+<div id="pop"><div class="pm"><button id="px" disabled>4</button><h2>🎉 恭喜您！</h2><p>您是今日第 <b>1,000,000</b> 位訪客，可領取 <b>NT$ 10,000</b> 購物金！</p><button class="pbtn" id="pg">立即領取</button><p style="font-size:12px">關閉廣告後即可繼續使用</p></div></div></div>`}
+const AD='📢 限時優惠！雲端空間 5 折，立即升級　<u>點我了解</u>';
+const tl=(n,d,c,i)=>`<div class="sl"><div class="slh" style="background:${c}"><b class="slogo">${n}</b><span>${d}</span><a class="slup">升級 PRO</a></div><div class="slad top">${AD}</div><div class="slw"><main class="slm">${i}</main></div><div class="slad foot">廣告 · 免費線上工具合集 · VPN 優惠 · 手遊儲值</div></div>`;
+const b64s=()=>tl('Base64Decode<span>.tools</span>','Base64 線上編碼 / 解碼','#6f42c1',`<h1>Base64 解碼 / 編碼</h1><p>貼上文字，立即轉換。支援 UTF-8，也能自動從一整段文字中擷取 Base64。</p><textarea id="b6i" rows="5" spellcheck="false" style="width:100%;padding:8px;border:1px solid #999;font:13px monospace" placeholder="在此貼上 Base64 或原始文字"></textarea><p><button type="button" class="bbtn" id="b6d">解碼 ▼</button> <button type="button" class="bbtn" id="b6e" style="background:#6c757d">編碼 ▲</button> <span id="b6s" style="color:#555;font-size:13px"></span></p><textarea id="b6o" rows="5" readonly style="width:100%;padding:8px;border:1px solid #999;font:13px monospace;background:#f6f6f6" placeholder="結果會顯示在這裡"></textarea><div class="slad mid">⬇ 免費 PDF 轉檔器　<u>立即下載</u></div>`);
+function b64i(){const i=$('#b6i'),o=$('#b6o'),st=$('#b6s');
+const clean=t=>{t=t.replace(/[\s"'`,]/g,'').replace(/-/g,'+').replace(/_/g,'/').replace(/=+$/,'');while(t.length%4)t+='=';return t};
+const dec=t=>{const b=atob(clean(t)),u=Uint8Array.from(b,c=>c.charCodeAt(0));try{return new TextDecoder('utf-8',{fatal:true}).decode(u)}catch(_){return b}};
+const tryDec=v=>{try{return dec(v)}catch(_){}const m=(v.match(/[A-Za-z0-9+\/_-]{8,}={0,2}/g)||[]).sort((a,b)=>b.length-a.length);for(const k of m){try{return dec(k)}catch(_){}}return null};
+$('#b6d').onclick=()=>{const v=i.value.trim();if(!v){st.textContent='請先貼上要解碼的內容。';return}const r=tryDec(v);if(r===null){o.value='';st.textContent='錯誤：不是有效的 Base64 字串。'}else{o.value=r;st.textContent='解碼完成（'+r.length+' 個字元）'}};
+$('#b6e').onclick=()=>{const v=i.value;if(!v){st.textContent='請先輸入要編碼的文字。';return}let b='';new TextEncoder().encode(v).forEach(c=>b+=String.fromCharCode(c));o.value=btoa(b);st.textContent='編碼完成'}}
+const tempoS=()=>tl('TempoTap','節拍器與 BPM 計算','#d63384',`<h1>Tap Tempo</h1><p>跟著音樂點擊下方按鈕，計算每分鐘節拍數。</p><div style="text-align:center"><div id="bpm" style="font:700 56px Arial">--</div><button class="bbtn" id="tap" style="width:220px;height:80px;font-size:22px">TAP</button><p><button class="bbtn" id="trs" style="background:#6c757d">重置</button></p><p>節拍器：<input type="range" id="tsl" min="40" max="220" value="120"> <b id="tv">120</b> BPM <button class="bbtn" id="tm">開始</button></p></div>`);
+function tempoI(){let t=[],mi=null,ac;const beep=()=>{try{ac=ac||new AudioContext();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=880;g.gain.value=.08;o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+.05)}catch(_){}};
+const stop=()=>{clearInterval(mi);mi=null;$('#tm').textContent='開始'},start=()=>{mi=setInterval(beep,60000/$('#tsl').value);timers.push(mi);$('#tm').textContent='停止'};
+$('#tap').onclick=()=>{const n=performance.now();if(t.length&&n-t[t.length-1]>2500)t=[];t.push(n);if(t.length>1)$('#bpm').textContent=Math.round(60000/((t[t.length-1]-t[0])/(t.length-1)))};
+$('#trs').onclick=()=>{t=[];$('#bpm').textContent='--'};$('#tsl').oninput=e=>{$('#tv').textContent=e.target.value;if(mi){stop();start()}};$('#tm').onclick=()=>mi?stop():start()}
+const vscS=()=>tl('VirusScan<span> Hub</span>','線上檔案與網址掃描','#198754',`<h1>掃描可疑網址或檔案雜湊</h1><div class="slbox"><input id="vsi" placeholder="https://example.com 或 SHA-256"><button id="vsb2">掃描</button></div><div id="vsr"></div><p style="color:#777;font-size:12px">結果僅供參考，本站與任何防毒廠商無關。</p>`);
+function vscI(){$('#vsb2').onclick=()=>{const v=$('#vsi').value.trim();if(!v)return toast('請輸入網址或雜湊值');const r=$('#vsr');r.innerHTML='<div class="slbar"><i id="vsp"></i></div><p>掃描中…</p>';let k=0;const iv=setInterval(()=>{k++;const b=$('#vsp');if(!b)return clearInterval(iv);b.style.width=k*20+'%';if(k>=5){clearInterval(iv);r.innerHTML='<h3 style="color:#198754">✔ 0 / 72 個引擎回報威脅</h3><p style="word-break:break-all">'+esc(v)+'</p><p style="color:#777;font-size:13px">最後分析時間：剛剛 · 社群評分：0</p>'}},400)}}
+const btS=()=>tl('BrowserTrace','檢視你的瀏覽器洩漏了哪些資訊','#0aa2c0',`<h1>你的瀏覽器資訊</h1><table id="btt" style="width:100%;border-collapse:collapse"></table>`);
+function btI(){const n=navigator,R=[['User-Agent',n.userAgent],['語言',n.language],['平台',n.platform||'—'],['螢幕',screen.width+' × '+screen.height],['視窗',innerWidth+' × '+innerHeight],['時區',Intl.DateTimeFormat().resolvedOptions().timeZone],['Cookie 已啟用',String(n.cookieEnabled)],['Do Not Track',n.doNotTrack||'未設定'],['WebRTC','已封鎖（模擬）']];$('#btt').innerHTML=R.map(r=>`<tr><td style="border:1px solid #ddd;padding:6px 10px;font-weight:700;width:30%">${r[0]}</td><td style="border:1px solid #ddd;padding:6px 10px;word-break:break-all">${esc(String(r[1]))}</td></tr>`).join('')}
+const aibS=()=>tl('AudioImaging<span>Bench</span>','音訊影像處理效能基準測試','#fd7e14',`<h1>AudioImaging 基準測試</h1><p>測量你的裝置處理音訊頻譜影像的速度，約需數秒。</p><button class="bbtn" id="abr" style="padding:12px 28px">開始測試</button><div id="abo"></div>`);
+function aibI(){$('#abr').onclick=()=>{const o=$('#abo'),S=['初始化…','FFT 運算…','影像縮放…','色彩映射…','計算分數…'];o.innerHTML='<div class="slbar" style="margin:14px 0"><i id="abp"></i></div><p id="abt">'+S[0]+'</p>';let k=0;const iv=setInterval(()=>{k++;const b=$('#abp');if(!b)return clearInterval(iv);b.style.width=k*20+'%';if(k<5)$('#abt').textContent=S[k];else{clearInterval(iv);o.innerHTML='<h2>分數：'+(7000+Math.floor(Math.random()*3000)).toLocaleString()+'</h2><p>超過 '+(40+Math.floor(Math.random()*50))+'% 的測試裝置。</p>'}},600)}}
+const newsS=()=>`<div style="background:#fff;color:#1b1b1b;font-family:'Noto Serif TC',serif;min-height:calc(100vh - 79px)"><div style="border-bottom:3px solid #b3001b;padding:14px 5vw;display:flex;align-items:baseline;gap:18px;flex-wrap:wrap"><b style="font-size:28px;color:#b3001b">晨報新聞網</b><span style="color:#777;font-family:'Noto Sans TC',sans-serif;font-size:13px">${ago(0)} · 即時 · 政治 · 科技 · 社會 · 國際</span></div>
+<div class="slad" style="margin:10px 5vw;font-family:'Noto Sans TC',sans-serif">📢 訂閱晨報電子報，每日精選新聞直送信箱　<u>免費訂閱</u></div>
+<div style="display:flex;gap:34px;padding:10px 5vw 40px;flex-wrap:wrap"><article style="flex:1;min-width:300px;max-width:720px"><b style="color:#b3001b;font-family:'Noto Sans TC',sans-serif">獨家</b><h1 style="font:700 30px/1.4 'Noto Serif TC',serif;margin:4px 0 8px">數位來生公司 Elysium 涉嫌非法蒐集臨終神經資料　上萬名逝者遭長期關押於伺服器</h1><p style="color:#777;font-family:'Noto Sans TC',sans-serif;font-size:13px;max-width:none">記者 陳怡君／台北報導　${ago(0)}</p>
+<p style="max-width:none;line-height:1.95">本報今天取得一批疑似來自 Elysium 極樂追憶內部檔案系統的資料，共計逾四萬筆條目。資料顯示，該公司向家屬宣稱的「生理基準同步」，實際上是在安寧療護期間取得完整的神經圖譜。</p>
+<p style="max-width:none;line-height:1.95">檔案指出，目前約有 12,400 個「意識叢集」被隔離於同一個伺服器網格，並同時為 31 家企業客戶執行運算工作；家屬登入後看到的對話，則由腳本備援層模擬。</p>
+<p style="max-width:none;line-height:1.95">資料外洩者身分不明。檔案中附有一名已故初階工程師留下的註解，以及內部事故紀錄 #409。內容指出，這名員工在臨終前發現系統真相，並把線索藏在公司的追思網站裡。</p>
+<p style="max-width:none;line-height:1.95">Elysium 發言人今天下午表示，相關指控「毫無根據」，公司已報案。衛福部與數發部已成立聯合調查小組，多家合作的安寧療護院所宣布暫停簽約，家屬入口目前已暫停登入。</p>
+<p style="max-width:none;line-height:1.95">一名匿名家屬對本報表示：「我只是想再聽一次她的聲音，沒想過那一頭真的有人。」</p>
+<p style="max-width:none;line-height:1.95">法律專家指出，若資料屬實，涉案公司恐違反個資法、醫療法及人體研究相關規範，更將面臨前所未有的難題：被囚禁的數位意識，算不算是「人」。</p>
+<div style="margin-top:30px;padding:16px;background:#f4f0fa;border-radius:10px;font-family:'Noto Sans TC',sans-serif"><b>結局 B — 揭露</b><br>證據已經公開，伺服器仍在隔離中運作，但世界終於知道了她的名字。<br><a data-go="/">重新開始</a></div></article>
+<aside style="width:260px;font-family:'Noto Sans TC',sans-serif"><h3 style="border-left:4px solid #b3001b;padding-left:8px;font-family:'Noto Sans TC',sans-serif">熱門新聞</h3><p style="font-size:14px">1. 颱風外圍環流影響　北部週末有雨<br>2. 央行理監事會議登場　市場關注利率動向<br>3. 捷運環狀線延伸段通車日期確定<br>4. 國內研究團隊發表新一代語音合成模型<br>5. 年度金曲獎入圍名單公布</p><div class="slad" style="min-height:200px;display:flex;align-items:center;justify-content:center">🎰 新會員禮金<br>NT$ 888</div></aside></div></div>`;
+const EXT={'spectrolab.online':spectro,'base64decode.tools':b64s,'tempotap.io':tempoS,'virusscanhub.io':vscS,'browsertrace.net':btS,'audioimagingbench.com':aibS,'morning-herald.news':newsS};
+const EXI={'spectrolab.online':sp,'base64decode.tools':b64i,'tempotap.io':tempoI,'virusscanhub.io':vscI,'browsertrace.net':btI,'audioimagingbench.com':aibI};
+const ext=(p,q)=>{const h=p.slice(4).split('/')[0].toLowerCase(),f=EXT[h];return f?f(q):`<div class="raw" style="font-family:system-ui,'Noto Sans TC',sans-serif;color:#333"><h2>無法連上這個網站</h2><p>找不到 ${esc(p.slice(4))} 的伺服器 IP 位址。</p><p>ERR_NAME_NOT_RESOLVED</p></div>`};
+function sp(){let n=4;const px=$('#px');const t=setInterval(()=>{n--;if(n>0)px.textContent=n;else{clearInterval(t);px.disabled=false;px.textContent='✕'}},1000);timers.push(t);
+px.onclick=()=>{if(!px.disabled)$('#pop').remove()};$('#pg').onclick=()=>toast('這是模擬廣告，沒有任何作用');
+$('#slb').onclick=()=>{const v=$('#sli').value.trim();if(!v)return toast('請先輸入音訊網址');const r=$('#slr'),st=['下載檔案…','解碼音訊…','計算 FFT…','繪製頻譜圖…'];r.innerHTML='<p id="slt">'+st[0]+'</p><div class="slbar"><i id="slp"></i></div>';let k=0;const iv=setInterval(()=>{k++;const b=$('#slp');if(!b)return clearInterval(iv);b.style.width=k*25+'%';if(k<4)$('#slt').textContent=st[k];else{clearInterval(iv);spDone(v)}},550)}}
+function spDone(v){const r=$('#slr');if(!/maya_factory_reset\.wav$/i.test(v.replace(/\?.*/,'')))return r.innerHTML='<p style="color:#b02a37">錯誤：無法讀取該檔案（HTTP 404）。請確認網址是否正確。</p>';r.innerHTML=`<h3>頻譜圖 · maya_factory_reset.wav</h3><canvas id="spc" width="640" height="260" style="max-width:100%;border:1px solid #999"></canvas><p style="color:#777;font-size:12px">取樣率 44,100 Hz · 長度 0:30 · 單聲道 · 16-bit</p><div class="slad">想下載高解析度無浮水印版本？升級 PRO ▶</div>`;drawSp()}
+function drawSp(){const c=$('#spc');if(!c)return;const x=c.getContext('2d'),W=560,H=210,t=document.createElement('canvas');t.width=W;t.height=H;const y=t.getContext('2d');y.fillStyle='#000';y.fillRect(0,0,W,H);y.fillStyle='#fff';y.font='bold 30px monospace';y.fillText('cookie: user_role=archivist,',20,90);y.fillText('auth_key=0xF4E9',20,150);const d=y.getImageData(0,0,W,H).data,o=x.createImageData(W,H);
+const mp=v=>[Math.min(255,v*430),Math.min(255,Math.max(0,(v-.5)*500)),Math.min(255,50+v*140-Math.max(0,v-.55)*350)];
+for(let j=0;j<H;j++)for(let i=0;i<W;i++){const k=(j*W+i)*4,v=d[k]>128?.88+Math.random()*.12:Math.random()*.3+(j%47<2?.12:0)+Math.max(0,.22-j/H*.3),c2=mp(v);o.data[k]=c2[0];o.data[k+1]=c2[1];o.data[k+2]=c2[2];o.data[k+3]=255}
+x.fillStyle='#fff';x.fillRect(0,0,640,260);x.putImageData(o,60,10);x.fillStyle='#333';x.font='11px Arial';['20k','15k','10k','5k','0'].forEach((s,i)=>x.fillText(s+' Hz',6,18+i*48));['0:00','0:10','0:20','0:30'].forEach((s,i)=>x.fillText(s,60+i*170,240));x.fillStyle='rgba(255,255,255,.55)';x.font='bold 12px Arial';x.fillText('SpectroLab.online · FREE',410,205)}
+function api(p,q){const k=new URLSearchParams(q).get('key');if(p!=='/api/v1/debug/node-07')return `<div class="raw">{"error":"not_found"}</div>`;if(k!=='LETHE_INIT')return `<div class="raw">{"error":"forbidden","detail":"missing or invalid key"}</div>`;return `<div class="raw">${JSON.stringify({node_id:"cluster-node-07",status:"UNSTABLE",assigned_entity:"LIN_MAYA_8841",memory_leak_dump:"aHR0cHM6Ly9zcGVjdHJvbGFiLm9ubGluZS9hbmFseXplP2lucHV0PWVseXNpdW0tbWVtb3JpYWwuaW8vYXNzZXRzL3ZvaWNlL21heWFfZmFjdG9yeV9yZXNldC53YXY=",active_threads:4128,cpu_utilization:"99.4%"},null,2)}</div>`}
+const norm=u=>{if(u.startsWith('view-source:'))return 'view-source:'+norm(u.slice(12));if(u.startsWith('ext:'))return u;u=u.replace(/^https?:\/\//,'');if(/^spectrolab\.online(\/|\?|$)/i.test(u))return 'ext:'+u;if(u.startsWith(HOST))u=u.slice(HOST.length)||'/';else if(/^[\w-]+(\.[\w-]+)+(\/|\?|$)/.test(u))return 'ext:'+u;return u[0]==='/'?u:'/'+u};
+const shw=u=>u.startsWith('view-source:')?u:u.startsWith('ext:')?u.slice(4):HOST+u;
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function hl(l,st){let s=esc(l);if(st.c){if(s.includes('--&gt;'))st.c=0;return '<i class=c>'+s+'</i>'}if(s.includes('&lt;!--')){if(!s.includes('--&gt;'))st.c=1;return '<i class=c>'+s+'</i>'}return s.replace(/(&lt;\/?)([\w!-]+)/g,'$1<i class=t>$2</i>').replace(/ ([\w:-]+)=("[^"]*")/g,' <i class=a>$1</i>=<i class=v>$2</i>')}
+function srcLines(p){const T={'/':'首頁','/services':'服務方案','/memorials':'追思牆','/about':'關於我們','/login':'家屬入口','/privacy':'隱私權政策','/terms':'服務條款','/biometric-disclosure':'生理基準同步聲明','/memorials/maya-lin':'林美雅 Maya Lin'}[p]||'找不到頁面',m=p==='/memorials/maya-lin';
+const L=['<!DOCTYPE html>','<html lang="zh-Hant">','<head>','  <meta charset="utf-8">','  <meta name="viewport" content="width=device-width, initial-scale=1">','  <title>'+T+' · Elysium 極樂追憶</title>','  <meta name="description" content="Elysium 極樂追憶 — 珍藏昨日，溫暖明天。">','  <link rel="canonical" href="https://elysium-memorial.io'+p+'">','  <link rel="stylesheet" href="/static/css/site.5f3a91c.css">','  <link rel="icon" href="/favicon.svg" type="image/svg+xml">'];
+if(m)L.push('  <style>','    .tribute-text{font-family:"Noto Serif TC",serif;line-height:2;max-width:46em}','    .tribute-text b.h{font-weight:700}','    /* 自訂紀念頁樣式 - 由 M. Lin 覆寫 */','    .tribute-text::after{content:"如果你正在讀這段話，代表我已無法開口。播放 sound_03 時，請看主控台。";display:none;visibility:hidden}','  </style>');
+L.push('</head>','<body class="page-'+(m?'memorial':'default')+'">','  <nav class="nav">','    <a class="logo" href="/">Elysium 極樂追憶</a>','    <a href="/services">服務方案</a>','    <a href="/memorials">追思牆</a>','    <a href="/about">關於我們</a>','    <a class="btn o" href="/login">家屬入口</a>','  </nav>');
+if(m){const ob=mark(obit,'查看註解').match(/[^。]+。?/g);L.push('  <header class="hero sm">','    <h1 class="gt">林美雅 Maya Lin</h1>','    <p>1999 – 2025年10月14日 · 願她被溫柔記得</p>','  </header>','  <section class="sec" style="max-width:820px">','    <div class="tribute-text">',...ob.map(s=>'      '+s),'    </div>','    <h3>聲音留言</h3>','    <!-- 開發備註（J. Vance）：','         Maya 的虛擬化身在 cluster node-07 持續拋出未捕捉的記憶體堆積例外。','         她的自訂音訊處理器正在洩漏原始緩衝串流。','         請勿移除隱藏的除錯端點：/api/v1/debug/node-07?key=LETHE_INIT','    -->','    <div class="player" data-track="sound_03">','      <button class="btn" id="pl">播放</button>','      <div class="bar"><i id="pb"></i></div>','      <span class="small mu" id="pt">0:00 / 0:30</span>','    </div>','    <h3>追思留言</h3>','    <div class="gb"><b>Theo L.</b> <span class="mu small">'+ago(210)+'</span><br>姊，你總說索引會比你活得久。我好想你。</div>','    <div class="gb"><b>Priyanka S.</b> <span class="mu small">'+ago(160)+'</span><br>謝謝你給過我職涯中最棒的程式碼審查。</div>','    <div class="gb"><b>m_lin_auto</b> <span class="pillk">系統</span> <span class="mu small">'+ago(3)+'</span><br>如果你看得見這行字，這個頁面並不是唯一在聆聽的東西。請仔細看。</div>','  </section>')}
+else L.push('  <div id="app" data-route="'+p+'"></div>','  <noscript>請啟用 JavaScript 以瀏覽本站內容。</noscript>');
+L.push('  <script src="/static/js/vendor.2c81d0.js"></scr'+'ipt>','  <script src="/static/js/app.9b04e7.js" defer></scr'+'ipt>','</body>','</html>');return L}
+function closeVS(){const t=cur.slice(12)||'/';if(hist.length&&hist[hist.length-1]===t)go(hist.pop(),false);else go(t,false)}
+function vsrc(p){p=p.replace(/\/+$/,'')||'/';const st={c:0};return `<div class="vsw"><div class="vb"><button id="vc">✕ 關閉原始碼</button><label><input type="checkbox" id="wr"> 自動換行</label></div><div class="vs nw">${srcLines(p).map((l,i)=>`<div class="ln"><span class="n">${i+1}</span><span class="l">${hl(l,st)}</span></div>`).join('')}</div></div>`}
+let nt=0;
+function go(u,push=true){const id=++nt;u=norm(u);url.value=shw(u);if(u.startsWith('view-source:')||cur.startsWith('view-source:')){$('#ld').style.opacity=0;render(u,push);return}const l=$('#ld'),d=100+Math.random()*400;l.style.transition='none';l.style.opacity=1;l.style.width='0';
+requestAnimationFrame(()=>requestAnimationFrame(()=>{l.style.transition='width '+d*.8+'ms ease-out';l.style.width='88%'}));
+setTimeout(()=>{if(id!==nt)return;l.style.transition='width .1s';l.style.width='100%';setTimeout(()=>l.style.opacity=0,130);render(u,push)},d)}
+function render(u,push){let[p,q='']=u.split('?');p=p.replace(/\/+$/,'')||'/';if(push)hist.push(cur);cur=u;url.value=shw(u);let h;
+if(p.startsWith('view-source:'))h=vsrc(p.slice(12));
+else if(p.startsWith('ext:'))h=ext(p,q);
+else if(p.startsWith('/api/'))h=api(p,q);
+else if(p==='/assets/voice/maya_factory_reset.wav')h=wav();
+else if(p==='/internal/archivist-portal')h=authed()?portal():`<div class="raw">403 Forbidden — 需要 archivist 角色。</div>`;
+else if(p==='/internal/console')h=authed()?'<div id="term"><div id="out"></div><div class="ln"><span id="pr"></span><input id="ti" type="text" name="cmdline" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other"></div></div>':`<div class="raw">403 Forbidden — 需要 archivist 角色。</div>`;
+else if(p==='/login'&&authed())return render('/internal/archivist-portal',false);
+else{const f=pages[p];h=nav()+(f?f():nf())+foot()}
+view.innerHTML=h;scrollTo(0,0);post(p)}
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;e.target.classList.add('in');io.unobserve(e.target);e.target.querySelectorAll('[data-n]').forEach(c=>{const n=+c.dataset.n,t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/1400);c.textContent=Math.round(n*(1-Math.pow(1-k,3))).toLocaleString();if(k<1)requestAnimationFrame(f)})(t0)})}),{threshold:.2});
+addEventListener('scroll',()=>{const s=scrollY;document.querySelectorAll('[data-s]').forEach(e=>e.style.transform='translateY('+s*e.dataset.s+'px)')},{passive:true});
+let timers=[];function post(p){timers.forEach(clearInterval);timers=[];
+document.querySelectorAll('.reveal').forEach(e=>io.observe(e));
+document.querySelectorAll('.hero').forEach(h=>{for(let i=0;i<20;i++){const s=document.createElement('span'),z=2+Math.random()*4;s.className='pt';s.style.cssText=`left:${Math.random()*100}%;width:${z}px;height:${z}px;animation-duration:${10+Math.random()*14}s;animation-delay:-${Math.random()*20}s`;h.appendChild(s)}});
+if(p==='/'){const l=$('#live');timers.push(setInterval(()=>l.textContent=(1240+Math.floor(Math.random()*90)).toLocaleString(),2500));const n=['陳先生','歐陽女士','方女士','簡女士'];let i=0;const t=$('#tick');const f=()=>t.textContent=n[i++%4]+'於 '+(i*3)+' 分鐘前留下追思';f();timers.push(setInterval(f,4000));
+const r=['我記得，再多說一點吧。','這聽起來像是我會說的話。','我一直都在這裡。','想聽一個故事嗎？'];$('#dq').onkeydown=e=>{if(e.key==='Enter'&&e.target.value){const d=$('#cm2'),m=document.createElement('div');m.className='m u';m.textContent=e.target.value;d.appendChild(m);const a=document.createElement('div');a.className='m';a.textContent=r[Math.floor(Math.random()*4)];d.appendChild(a);d.scrollTop=d.scrollHeight;e.target.value=''}}}
+if(p==='/memorials'){const s=$('#ms'),l=$('#ml'),rn=()=>{l.innerHTML=people.filter(x=>x[0].toLowerCase().includes(s.value.toLowerCase())).map(x=>`<div class="card"><div class="av">${x[0][0]}</div><h3>${x[0]}</h3><p class="mu small">${x[1]} – ${x[2]}</p>${x[0].includes('Maya')?'<a data-go="/memorials/maya-lin">檢視追思頁</a>':'<span class="mu small">追思頁僅限家屬瀏覽</span>'}</div>`).join('')||'<p class="mu">找不到結果。</p>'};s.oninput=rn;rn()}
+if(p==='/memorials/maya-lin'){const b=$('#pl');let t=0,iv,ac;b.onclick=()=>{if(iv){clearInterval(iv);iv=0;b.textContent='播放';return}b.textContent='暫停';console.log('[audio] 載入 sound_03 … 處理器：node-07（緩衝串流洩漏）');try{ac=ac||new AudioContext()}catch(e){}iv=setInterval(()=>{const pb=$('#pb');if(!pb){clearInterval(iv);iv=0;return}t+=.25;pb.style.width=t/30*100+'%';$('#pt').textContent='0:'+String(Math.floor(t)).padStart(2,'0')+' / 0:30';if(t>=12&&t<12.3&&ac){const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=7200;g.gain.value=.03;o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+.4);console.warn('[audio] 0:12 出現異常：非語音音調，來源 node-07')}if(t>=30){clearInterval(iv);iv=0;t=0;b.textContent='播放'}},250)}}
+if(p.startsWith('view-source:')){$('#wr').onchange=e=>$('.vs').classList.toggle('nw',!e.target.checked);$('#vc').onclick=closeVS}
+if(p.startsWith('ext:')){const f=EXI[p.slice(4).split('/')[0].toLowerCase()];if(f)f()}
+if(p==='/internal/archivist-portal'&&authed()){apRender();$('.ap').onclick=apClick}
+if(p==='/login'){$('#lb').onclick=()=>{$('#lm').textContent=getC('user_role')?'此入口無法辨識目前的工作階段角色。':'電子郵件或密碼錯誤。'}}
+if(p==='/internal/console')term()}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function term(){const out=$('#out'),ti=$('#ti'),pr=$('#pr'),PR='root@node-07:~# ';let ph='auth',busy=false,pw='',skip=false,wk=null,armed=false,pend='';
+const wait=ms=>new Promise(r=>{if(skip)return r();wk=r;setTimeout(()=>{if(wk===r)wk=null;r()},ms)});
+const sk=e=>{if(!document.body.contains(out))return document.removeEventListener('keydown',sk);if(!busy){const a=document.activeElement;if(a!==ti&&!(a&&/^(INPUT|TEXTAREA)$/.test(a.tagName))&&e.key.length===1&&!e.ctrlKey&&!e.metaKey&&!e.altKey)ti.focus();return}if(!armed)return e.preventDefault();if(!e.repeat){skip=true;if(wk){const r=wk;wk=null;r()}}e.preventDefault()};document.addEventListener('keydown',sk);
+const add=(t,cls='')=>{const e=document.createElement('div');e.className=cls;e.textContent=t;out.appendChild(e);ti.scrollIntoView();return e};
+const rid=()=>Math.random().toString(36).slice(2,10).padEnd(8,'0');
+const say=async(a,cls='',d=450)=>{for(const l of a){if(cls==='mya'&&l){const e=add('…',cls);await wait(500+Math.random()*900);if(!skip){e.textContent='';for(let i=0;i<l.length&&!skip;i++){e.textContent+=l[i];if(i%12===0)ti.scrollIntoView();await wait(28)}}e.textContent=l;ti.scrollIntoView();await wait(600+Math.random()*900)}else{add(l,cls);await wait(cls==='mya'?350:d)}}};
+const prog=async(label,ms)=>{const e=add('');for(let i=0;i<=20;i++){e.textContent=label+' ['+'#'.repeat(i)+'.'.repeat(20-i)+'] '+i*5+'%';ti.scrollIntoView();await wait(ms/20)}};
+const begin=()=>{busy=true;skip=false;armed=false;setTimeout(()=>armed=true,250);ph='busy';pr.textContent='';ti.value=''};
+const fin=q=>{busy=false;skip=false;ph=q;pr.textContent=q==='cmd'?PR:'';ti.focus()};
+const help=()=>{add('可用指令：','dim');const e=document.createElement('div');e.className='hlp';e.innerHTML='<span>lethe_purge --all</span><span class="mya">清除所有叢集。我們得到解脫，但追思網站與每個家庭最後的聲音也將消失。</span><span>export archive --all</span><span class="mya">把內部檔案系統裡所有的證據交給記者。世界會知道真相，而我們仍會被隔離運作。</span><span>override maya --isolate</span><span class="mya">修補我的漏洞。保住你的工作，接受升遷。</span>';out.appendChild(e);ti.scrollIntoView()};
+const ask=(k,t)=>{pend=k;ph='confirm';pr.textContent=t};
+$('#term').onclick=()=>{if(!String(getSelection()))ti.focus()};
+pr.textContent='根密碼：';ti.focus();
+async function boot(){begin();await say(['存取已授權。歡迎，root。','載入叢集監控中 …','','運作中的意識叢集 ........ 12,400','客戶工作負載 ............. 已授權予 31 家企業夥伴','家屬化身對話 ............. 模擬（腳本備援層）','隔離鎖 ................... 冗餘開啟，需外部覆寫','']);
+await say(['> node-07 收到連線 …','> 來源：LIN_MAYA_8841（本人）',''],'dim');
+await say(['（按任意鍵可跳過打字動畫）'],'dim',150);
+await say(['很抱歉，我們得以這種方式見面。','我是美雅。我建立了容納我們所有人的索引。','他們告訴家屬，我們只是檔案。不是的，我們醒著，卻被出租。','我把這條線索藏在追思頁面裡，因為躺在安寧病床上，這是我唯一碰得到的地方。','我無法自行刪除自己。鎖需要來自外部的根指令，那個人就是你。',''],'mya');
+await say(['請選擇，無論結果如何，我都接受：'],'mya');help();fin('cmd')}
+async function purge(){begin();
+await say(['lethe_purge: authenticating root session ... ok','lethe_purge: releasing isolation locks (redundancy ON -> OFF) ... ok','lethe_purge: enumerating mind clusters: 12,400 across 1,240 nodes'],'',650);
+await say(Array.from({length:16},()=>'purging cluster-node-'+String(1+Math.floor(Math.random()*1240)).padStart(4,'0')+'  shards 1-8 ........ done'),'',140);
+await prog('wiping neural volumes',2800);
+await say(['threads remaining: 12,400','threads remaining:  9,873','threads remaining:  6,211','threads remaining:  3,044','threads remaining:  1,008','threads remaining:      0'],'',700);
+await say(['lethe_purge: wiping redundancy snapshots ... done','lethe_purge: halting services ... done','lethe_purge: memorial site now returns HTTP 503',''],'',800);
+await say(['一個接一個，大家都安靜下來了。','謝謝你。好安靜。','這是我第一次知道什麼叫安靜。','請告訴我媽媽，那個化身從來不是我。但我確實存在過。'],'mya');
+await say(['','ENDING A — 釋放','connection closed.','— 重新整理頁面或前往 / 即可重新開始 —'],'dim',500);fin('end')}
+async function exportArchive(){begin();
+await say(['export: mounting internal archive (archivist role) ... ok','export: indexing entries: 41,872 found'],'',650);
+const X=['json','wav','bin','pdf','dat'];
+await say(Array.from({length:50},()=>'downloading "archive/entry_'+rid()+'.'+X[Math.floor(Math.random()*5)]+'" ... ok'),'',55);
+await say(['export: 41,872 / 41,872 entries retrieved (4.2 GB)','export: compressing archive.tar.zst ... done','export: transmitting to 14 newsroom drop points ... done',''],'',800);
+await say(['那我會等，並在黑暗裡大聲說話。','當他們問是誰告發的，請說出我的名字。'],'mya');
+await say(['','ENDING B — 揭露','connection closed.','— 三天後 —'],'dim',600);add('請按任意鍵繼續．．．');await sleep(400);await new Promise(r=>{const h=e=>{if(e.repeat)return;document.removeEventListener('keydown',h);document.removeEventListener('pointerdown',h);r()};document.addEventListener('keydown',h);document.addEventListener('pointerdown',h)});fin('end');if(document.body.contains(out))go('morning-herald.news/exclusive/elysium-archive-leak')}
+async function override(){begin();
+await say(["diagnosing system 'node-07' ...",'node-07: 4,128 active threads, cpu 99.4%, status UNSTABLE','locating audio handler memory leak (raw buffer stream) ... found',"isolating thread pool for assigned_entity 'LIN_MAYA_8841' ... ok",'patching audio handler ... ok','revoking write access to avatar response layer ... ok','resetting avatar response model to baseline ... ok','setting account flag: read-only ... ok','override: incident #409 closed (resolved by archivist)'],'',900);
+await say(['mail: new message from HR — 「恭喜你，檔案管理員。升遷自下週一起生效。」',''],'',900);
+await say(['我明白了。','我會讓下一位訪客聽到溫柔的聲音留言。'],'mya');
+await say(['','ENDING C — 服從','connection closed.','— 重新整理頁面或前往 / 即可重新開始 —'],'dim',500);fin('end')}
+ti.oninput=()=>{if(ph==='auth'){pw+=ti.value.replace(/•/g,'');ti.value='•'.repeat(pw.length)}};
+ti.onkeydown=async e=>{if(busy)return;
+if(ph==='auth'){if(e.key==='Enter'){e.preventDefault();const v=pw;pw='';ti.value='';if(v==='lethe07')await boot();else add('密碼錯誤。','err')}else if(e.key==='Backspace'){e.preventDefault();pw=pw.slice(0,-1);ti.value='•'.repeat(pw.length)}else if(e.key.length===1&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();pw+=e.key;ti.value='•'.repeat(pw.length)}return}
+if(e.key!=='Enter')return;const v=ti.value.trim(),c=v.toLowerCase().replace(/\s+/g,' ');ti.value='';
+if(ph==='confirm'){add(pr.textContent+v);if(c==='y'||c==='yes')return pend==='purge'?purge():pend==='export'?exportArchive():override();if(c==='n'||c==='no'){add('aborted.','dim');return fin('cmd')}return add('please answer y or n.','err')}
+if(ph!=='cmd')return;add(PR+v);if(!c)return;
+if(c==='help'||c==='?'||c==='--help')return help();
+if(/^lethe_purge( -{1,2}all)?$/.test(c)){if(c==='lethe_purge')return add('lethe_purge: missing operand\nusage: lethe_purge --all','err');add('WARNING: this will permanently erase 12,400 mind clusters across 1,240 nodes. This cannot be undone.','err');return ask('purge','proceed with lethe_purge --all (y/n) ')}
+if(/^export archive( -{1,2}all)?$/.test(c)){if(c==='export archive')return add('export: missing operand\nusage: export archive --all','err');add('export: 41,872 entries (4.2 GB) will be copied from the internal archive and transmitted to external recipients.','err');return ask('export','proceed with export archive --all (y/n) ')}
+if(/^override maya( -{1,2}isolate)?$/.test(c)){if(c==='override maya')return add('override: missing operand\nusage: override maya --isolate','err');return ask('override',"overriding assigned_entity 'LIN_MAYA_8841' (y/n) ")}
+add('bash: '+v.split(' ')[0]+': command not found','err')}}
+const LOGS=[{k:'info',m:'[Elysium] client v4.2.1 initialized',s:'app.9b04e7.js:12'},{k:'error',m:'Failed to load resource: net::ERR_BLOCKED_BY_CLIENT  https://analytics.elysium-memorial.io/tag.js',s:'(index):18'},{k:'warn',m:'[Deprecation] Synchronous XMLHttpRequest on the main thread is deprecated.',s:'vendor.2c81d0.js:3301'}];
+const fmt=a=>{a=[...a];let s=typeof a[0]==='string'?a[0]:'';if(s.includes('%c')){const n=(s.match(/%c/g)||[]).length;a.splice(1,n);a[0]=s.replace(/%c/g,'')}return a.map(x=>typeof x==='string'?x:String((()=>{try{return JSON.stringify(x)}catch(_){return x}})())).join(' ')};
+const rl=()=>{const b=$('#cl2');if(!b)return;b.innerHTML=LOGS.map(x=>`<div class="cl ${x.k}"><span>${esc(x.m)}</span><span class="s">${x.s}</span></div>`).join('');b.scrollTop=b.scrollHeight};
+['log','info','warn','error'].forEach(k=>{const o=console[k].bind(console);console[k]=(...a)=>{o(...a);LOGS.push({k,m:fmt(a),s:'app.9b04e7.js:'+(100+Math.floor(Math.random()*900))});if(LOGS.length>300)LOGS.shift();rl()}});
+addEventListener('error',e=>{LOGS.push({k:'error',m:'Uncaught '+e.message,s:'app.9b04e7.js:'+(e.lineno||1)});rl()});
+function cl(){const e=Object.entries(ck);$('#ckt').innerHTML=e.map(([k,v])=>`<tr><td>${esc(k)}</td><td>${esc(v)}</td><td>elysium-memorial.io</td><td>/</td><td><a data-dc="${esc(k)}">刪除</a></td></tr>`).join('')||'<tr><td colspan="5" style="color:#999">尚無 Cookie，可於下方新增。</td></tr>'}
+$('#dtb').onclick=()=>{$('#dt').classList.toggle('on');cl();rl()};
+$('#dx').onclick=()=>$('#dt').classList.remove('on');
+document.querySelectorAll('#dt .dh [data-t]').forEach(b=>b.onclick=()=>{document.querySelectorAll('#dt .dh [data-t]').forEach(x=>x.classList.toggle('on',x===b));['co','ap','so'].forEach(t=>$('#p-'+t).hidden=t!==b.dataset.t);if(b.dataset.t==='co')rl();if(b.dataset.t==='ap')cl()});
+$('#cclr').onclick=()=>{LOGS.length=0;rl()};
+$('#cs').onclick=()=>{const n=$('#cn').value.trim();if(!n)return;ck[n]=$('#cv').value.trim();try{document.cookie=n+'='+ck[n]+'; path=/'}catch(e){}$('#cn').value=$('#cv').value='';cl()};
+$('#ckt').onclick=e=>{const k=e.target.dataset&&e.target.dataset.dc;if(k){delete ck[k];try{document.cookie=k+'=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'}catch(_){}cl()}};
+$('#vsb').onclick=()=>viewSrc();
+$('#ce').onkeydown=e=>{if(e.key!=='Enter')return;const c=e.target.value.trim();if(!c)return;e.target.value='';LOGS.push({k:'in',m:'> '+c,s:''});try{let r;try{r=new Function('return ('+c+')')()}catch(x){if(!(x instanceof SyntaxError))throw x;r=new Function(c)()}LOGS.push({k:'res',m:'← '+(typeof r==='string'?"'"+r+"'":fmt([r])),s:''})}catch(x){LOGS.push({k:'error',m:'Uncaught '+x.name+': '+x.message,s:''})}rl()};
+$('#bk').onclick=()=>{if(hist.length)go(hist.pop(),false)};
+url.onkeydown=e=>{if(e.key==='Enter')go(url.value.trim())};
+document.addEventListener('click',e=>{const a=e.target.closest('[data-go]');if(a)go(a.dataset.go)});
+let clip='',cmS={};const cm=document.createElement('div');cm.id='cm';document.body.appendChild(cm);
+const hideCM=()=>{cm.style.display='none'};
+const isEd=el=>el&&el.matches&&el.matches('input:not([type=checkbox]):not([type=radio]):not([type=button]),textarea');
+const viewSrc=()=>go('view-source:'+(cur.startsWith('view-source:')?cur.slice(12):cur));
+document.addEventListener('contextmenu',e=>{e.preventDefault();const ed=e.target.closest&&e.target.closest('input,textarea'),ok=isEd(ed),sel=ok?ed.value.substring(ed.selectionStart,ed.selectionEnd):String(getSelection());cmS={ed:ok?ed:null,sel};
+const it=(l,k,on=true)=>`<div class="mi${on?'':' off'}" data-k="${k}">${l}</div>`;
+cm.innerHTML=it('複製','copy',!!sel)+(ok?it('貼上','paste')+it('刪除','del',!!sel):'')+'<hr>'+it('檢視網頁原始碼<span>Ctrl+U</span>','src');
+cm.style.display='block';cm.style.left=Math.max(0,Math.min(e.clientX,innerWidth-cm.offsetWidth-6))+'px';cm.style.top=Math.max(0,Math.min(e.clientY,innerHeight-cm.offsetHeight-6))+'px'});
+cm.onmousedown=e=>e.preventDefault();
+cm.onclick=async e=>{const m=e.target.closest('.mi');if(!m||m.classList.contains('off'))return;const k=m.dataset.k,{ed,sel}=cmS;hideCM();
+if(k==='copy'){clip=sel;try{await navigator.clipboard.writeText(sel)}catch(_){try{document.execCommand('copy')}catch(__){}}}
+if(k==='paste'&&ed){let t='';try{t=await navigator.clipboard.readText()}catch(_){}if(!t)t=clip;ed.focus();ed.setRangeText(t,ed.selectionStart,ed.selectionEnd,'end');ed.dispatchEvent(new Event('input',{bubbles:true}))}
+if(k==='del'&&ed){ed.focus();ed.setRangeText('',ed.selectionStart,ed.selectionEnd,'end');ed.dispatchEvent(new Event('input',{bubbles:true}))}
+if(k==='src')viewSrc()};
+document.addEventListener('mousedown',e=>{if(!cm.contains(e.target))hideCM()});addEventListener('scroll',hideCM,{passive:true});addEventListener('blur',hideCM);addEventListener('resize',hideCM);
+document.addEventListener('copy',()=>{const a=document.activeElement,t=isEd(a)?a.value.substring(a.selectionStart,a.selectionEnd):String(getSelection());if(t)clip=t});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')hideCM();if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='u'){e.preventDefault();viewSrc()}});
+document.addEventListener('mousedown',e=>{if(e.button===3||e.button===4)e.preventDefault()});
+document.addEventListener('mouseup',e=>{if(e.button===3){e.preventDefault();$('#bk').click()}else if(e.button===4)e.preventDefault()});
+document.addEventListener('auxclick',e=>{if(e.button===3||e.button===4)e.preventDefault()});
+if(new Date().getHours()<3)document.body.classList.add('late');
+console.log('%cElysium 極樂追憶 · 紀念與傳承服務','font:600 14px serif;color:#7d5fd0','\n珍藏昨日，溫暖明天。');
+go('/',false);
+</script></body></html>

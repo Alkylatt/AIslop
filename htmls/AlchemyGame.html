@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aetherworks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Atkinson+Hyperlegible:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#10201f;--pn:#183130;--ink:#e9efe4;--mu:#9fb5ad;--br:#e0a93b;--vd:#58c4a8;--rd:#e2674a;--ln:#2a4846;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#e8eee6;--pn:#f8faf5;--ink:#15282a;--mu:#506664;--br:#946500;--vd:#16705e;--rd:#b23a22;--ln:#c5d2c8;color-scheme:light}}
+:root[data-theme="light"]{--bg:#e8eee6;--pn:#f8faf5;--ink:#15282a;--mu:#506664;--br:#946500;--vd:#16705e;--rd:#b23a22;--ln:#c5d2c8;color-scheme:light}
+html{height:100%;overflow:hidden;scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;height:100%;overflow:hidden;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font:16px/1.5 "Atkinson Hyperlegible",system-ui,sans-serif}
+h1,h2{font-family:"Young Serif",Georgia,serif;font-weight:400;margin:0}
+h1{font-size:2.1rem;letter-spacing:.01em}h2{font-size:1.15rem;margin-bottom:.6rem}
+header{max-width:1000px;margin:0 auto;padding:16px 14px 6px;display:flex;flex-wrap:wrap;align-items:end;gap:10px 24px}
+header p{margin:0;color:var(--mu);font-size:.9rem;flex:1 1 220px}
+nav{max-width:1000px;margin:0 auto;padding:6px 14px;display:flex;gap:6px;overflow-x:auto}
+nav button{flex:none}
+main{width:100%;max-width:1000px;margin:0 auto;padding:8px 14px 14px;flex:1;min-height:0;display:flex;flex-direction:column}#view{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}header,nav{flex:none;width:100%}
+button,select{font:inherit;color:var(--ink);background:var(--pn);border:1px solid var(--ln);border-radius:8px;padding:7px 12px;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--br)}button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--br);outline-offset:2px}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.on{background:var(--br);color:#1a1405;border-color:var(--br);font-weight:700}
+button.go{background:var(--vd);color:#06201a;font-weight:700;border-color:var(--vd);padding:9px 22px}
+nav button.on{background:var(--pn);color:var(--br);border-color:var(--br)}
+.grid{flex:1;min-height:0;display:grid;gap:12px;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1.6fr)}.grid>.card{display:flex;flex-direction:column}@media(min-width:760px){.grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr);grid-template-rows:minmax(0,1fr)}}
+.card{background:var(--pn);border:1px solid var(--ln);border-radius:12px;padding:14px;min-height:0;overflow:auto}
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:6px;flex:1 1 0;min-height:60px;overflow:auto;align-content:start}
+.chip{display:flex;flex-direction:column;align-items:center;gap:0;padding:6px 4px;font-size:.82rem;text-align:center;border-left:4px solid var(--c,var(--ln))}
+.chip span{font-size:1.35rem;line-height:1.2}
+.info{font-size:.85rem;color:var(--mu);min-height:3.4em;margin:10px 0 0}
+.vwrap{display:flex;gap:14px;align-items:flex-end}
+.vessel{width:128px;height:190px;flex:none;border:3px solid var(--mu);border-top:none;border-radius:0 0 40px 40px;display:flex;flex-direction:column-reverse;overflow:hidden;position:relative;background:rgba(127,127,127,.08)}
+.vessel i{display:flex;align-items:center;justify-content:center;font-style:normal;min-height:8px;opacity:.9}
+.vessel i.g{opacity:.38}.vessel i.z{opacity:.6}.vessel i b{font-size:.95rem;font-weight:400}
+.vessel.hot::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 30% 100%,rgba(255,255,255,.55) 0 4px,transparent 5px) 0 0/34px 34px;animation:bub 1.6s linear infinite}
+.vessel.pop{animation:pop .5s}
+@keyframes bub{to{background-position:0 -34px}}
+@keyframes pop{0%{box-shadow:0 0 0 0 var(--br);transform:scale(1.08)}100%{box-shadow:0 0 60px 30px transparent;transform:none}}
+@media(prefers-reduced-motion:reduce){.vessel.hot::after,.vessel.pop{animation:none}}
+.ro{font-size:.88rem;color:var(--mu);display:grid;gap:2px}.ro b{color:var(--ink)}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;align-items:center}
+.ctl label{font-size:.85rem;color:var(--mu)}
+input[type=range]{accent-color:var(--br);width:150px}
+.log{margin-top:12px;display:grid;gap:4px;font-size:.92rem;flex:1 1 0;min-height:70px;overflow:auto;align-content:start}
+.log div{padding:5px 9px;border-left:3px solid var(--ln);background:rgba(127,127,127,.07);border-radius:0 6px 6px 0}
+.log .new{border-color:var(--br)}.log .warn{border-color:var(--rd)}.log .ok{border-color:var(--vd)}
+.sites{display:grid;gap:12px;flex:1;min-height:0;overflow:auto;align-content:start}@media(min-width:760px){.sites{grid-template-columns:repeat(3,1fr)}}
+.list{display:grid;gap:8px}.list .it{padding:8px 10px;border:1px solid var(--ln);border-radius:8px}
+.it small,.muted{color:var(--mu)}
+.done{border-color:var(--vd)!important}.done h3::after{content:" ✓";color:var(--vd)}
+h3{margin:0 0 2px;font-size:1rem}
+textarea{width:100%;min-height:110px;background:var(--bg);color:var(--ink);border:1px solid var(--ln);border-radius:8px;padding:8px;font:inherit}
+.guide p,.guide li{max-width:70ch}
+#view>.list,#view>.card{flex:1 1 0;min-height:0;overflow:auto;align-content:start}
+.vw{position:relative;flex:none;padding-top:64px}
+.vessel.cold{border-color:#cfeeff;box-shadow:inset 0 0 22px rgba(200,235,255,.5),0 0 12px rgba(160,215,255,.35)}
+.vessel.cold::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 12% 20%,rgba(255,255,255,.5) 0 2px,transparent 3px),radial-gradient(circle at 80% 35%,rgba(255,255,255,.45) 0 2px,transparent 3px),radial-gradient(circle at 25% 75%,rgba(255,255,255,.4) 0 1.5px,transparent 3px),linear-gradient(180deg,rgba(210,240,255,.22),rgba(210,240,255,.08));animation:frost 4s ease-in-out infinite alternate}
+@keyframes frost{from{opacity:.65}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.vessel.cold::after{animation:none}}
+#tip{position:fixed;z-index:50;display:none;max-width:270px;padding:12px 14px 11px;pointer-events:none;color:#f6f6f0;background:linear-gradient(160deg,#16292a,#0d1717);border:1px solid #e0a93b;border-radius:10px;box-shadow:0 0 0 3px #0d1717,0 0 0 4px rgba(224,169,59,.45),0 10px 28px rgba(0,0,0,.55);font-size:.86rem;line-height:1.4}
+#tip h4{margin:0;font:400 1.1rem "Young Serif",Georgia,serif}
+#tip hr{border:0;height:1px;margin:7px 0;background:linear-gradient(90deg,transparent,rgba(224,169,59,.9),transparent)}
+#tip p{margin:0 0 6px}#tip .at{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:.78rem}
+#tip .fl{color:#8b9a96;font-style:italic;margin:7px 0 0}
+
+.mon{position:relative;overflow:hidden;background:#06140f;border:3px solid #2c3a35;border-radius:12px;box-shadow:inset 0 0 22px rgba(0,255,150,.14),0 0 0 2px #101816,0 4px 10px rgba(0,0,0,.35);padding:8px 12px;font-family:"Share Tech Mono",ui-monospace,Menlo,monospace;color:#7dffc4;text-shadow:0 0 6px rgba(80,255,170,.6);display:grid;gap:5px}
+.mon::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.25) 0 1px,transparent 1px 3px)}
+.mr{display:grid;grid-template-columns:5.5em 1fr 5em;gap:10px;align-items:center;font-size:.92rem}.mr b{text-align:right;font-weight:400}
+.bar{position:relative;height:9px;background:#0b2a1f;border:1px solid #1f5a43}.bar i{display:block;height:100%;transition:width .3s}
+.bar .ph{height:100%;background:linear-gradient(90deg,#ff3b3b,#ff9d3b 25%,#e6e640 45%,#4ade80 50%,#3ba7ff 70%,#8a5bff)}
+.bar u{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1px;background:#fff;box-shadow:0 0 6px #fff}
+.mc{font-size:.78rem;opacity:.8;min-height:1.2em}
+.stage{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:6px;margin-top:10px;padding-bottom:34px;overflow:hidden}
+.thermo{position:relative;justify-self:end;width:2.4em;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.78rem;padding-bottom:4px;--tc:#8fb39a}
+.thermo input{writing-mode:vertical-lr;direction:rtl;height:170px;width:30px;margin:0;accent-color:var(--tc)}
+.thermo b{position:absolute;right:0;top:100%;width:6em;text-align:right;line-height:1.15;font-weight:400;font-size:.74rem;color:var(--tc)}
+.vw .vessel{transform-origin:50% 100%;width:128px;height:190px}
+.vessel.plain{width:100%;height:120px;border-radius:0 0 18px 18px;margin-bottom:8px}
+.c-flask .vessel{border:2px solid rgba(215,238,255,.75);border-top:6px solid rgba(18,32,44,.9);border-radius:4px 4px 62px 62px;background:linear-gradient(100deg,rgba(255,255,255,.16),rgba(255,255,255,.02) 45%,rgba(255,255,255,.1));box-shadow:inset 0 0 14px rgba(255,255,255,.2)}
+.c-flask .vessel::before{content:"";position:absolute;left:10px;top:12px;width:8px;height:58%;border-radius:6px;background:linear-gradient(rgba(255,255,255,.65),transparent);z-index:2;pointer-events:none}
+.c-flask .vessel i{opacity:.78}
+.c-stone .vessel{border:13px solid transparent;border-radius:8px 8px 46px 46px;background:linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,0) 13px) border-box,linear-gradient(rgba(8,14,14,.62),rgba(8,14,14,.62)) padding-box,radial-gradient(circle at 20% 30%,#a29c8b 0 3px,transparent 4px) 0 0/17px 15px,radial-gradient(circle at 70% 60%,#59544a 0 3px,transparent 4px) 0 0/13px 19px,radial-gradient(circle at 40% 80%,#b3ad9c 0 2px,transparent 3px) 0 0/11px 9px,#7a7466 border-box;box-shadow:inset 0 0 0 3px rgba(0,0,0,.28),0 6px 10px rgba(0,0,0,.4)}
+.c-crucible .vessel{border:15px solid transparent;border-radius:4px 4px 32px 32px;background:linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,0) 15px) border-box,linear-gradient(rgba(6,10,12,.68),rgba(6,10,12,.68)) padding-box,linear-gradient(100deg,#2f343a,#cdd5dc 16%,#59616a 32%,#f4f7fa 48%,#454c54 66%,#b4bdc5 84%,#2b3035) border-box;box-shadow:inset 0 0 0 2px rgba(255,255,255,.3),0 6px 12px rgba(0,0,0,.45)}
+.lid{position:absolute;top:54px;left:-6px;right:-6px;height:14px;border-radius:5px;z-index:4;box-shadow:0 3px 5px rgba(0,0,0,.4)}
+.lid::after{content:"";position:absolute;left:50%;top:-9px;width:26px;height:10px;margin-left:-13px;border-radius:6px 6px 0 0;background:inherit;filter:brightness(1.12)}
+.c-flask .lid{background:linear-gradient(#cf9f66,#8d6234)}
+.c-stone .lid{background:radial-gradient(circle at 30% 40%,#a29c8b 0 2px,transparent 3px) 0 0/11px 9px,#7a7466}
+.c-crucible .lid{background:linear-gradient(90deg,#2f343a,#cdd5dc 30%,#59616a 55%,#eef2f5 75%,#3a4046)}
+.lid.in{animation:lidin .35s ease-out both}.lid.out{animation:lidout .3s ease-in both}
+@keyframes lidin{from{opacity:0;transform:translateY(-24px)}to{opacity:1;transform:none}}
+@keyframes lidout{from{opacity:1}to{opacity:0;transform:translateY(-24px)}}
+.stirzone{position:relative;justify-self:start;align-self:end;width:60px;height:236px;z-index:5;pointer-events:none}
+.stick{position:absolute;bottom:30px;left:18px;width:9px;height:230px;border-radius:5px 5px 3px 3px;background:linear-gradient(90deg,#7a4d22,#d39a5c 50%,#7a4d22);transform-origin:50% 100%;transform:rotate(16deg);box-shadow:2px 0 4px rgba(0,0,0,.35)}
+.stick::after{content:"";position:absolute;bottom:0;left:-5px;width:19px;height:32px;border-radius:4px 4px 8px 8px;background:inherit}
+.stage.stirring .stick{animation:stirmove 1.3s ease-in-out}
+.stage.stirring .vessel i{animation:swirl .18s ease-in-out 7 alternate}
+@keyframes stirmove{0%{transform:translateX(0) rotate(16deg)}16%{transform:translateX(-92px) rotate(0)}26%{transform:translateX(-72px) rotate(-6deg)}36%{transform:translateX(-112px) rotate(6deg)}46%{transform:translateX(-72px) rotate(-6deg)}56%{transform:translateX(-112px) rotate(6deg)}66%{transform:translateX(-76px) rotate(-5deg)}76%{transform:translateX(-108px) rotate(5deg)}86%{transform:translateX(-92px) rotate(0)}100%{transform:translateX(0) rotate(16deg)}}
+@keyframes swirl{from{transform:translateX(-3px)}to{transform:translateX(3px)}}
+.vw.mir .vessel{animation:wob .7s ease-in-out infinite alternate}
+.vw.mir .vessel i{animation:lw .55s ease-in-out infinite alternate}
+@keyframes wob{from{transform:skewX(-1.3deg) scaleY(1)}to{transform:skewX(1.3deg) scaleY(1.012)}}
+@keyframes lw{from{transform:translateX(-2px) skewX(-2deg)}to{transform:translateX(2px) skewX(2deg)}}
+.hz{position:absolute;top:26px;width:34px;height:72px;border-radius:50%;background:radial-gradient(ellipse at 50% 80%,rgba(255,170,90,.7),transparent 70%);filter:blur(4px);opacity:0;pointer-events:none;animation:hz 1.8s ease-in infinite;z-index:3}
+.hz.h1{left:6%}.hz.h2{left:30%;animation-delay:.5s}.hz.h3{left:54%;animation-delay:1s}.hz.h4{left:74%;animation-delay:.25s}
+@keyframes hz{0%{opacity:0;transform:translate(0,40px) scale(1)}30%{opacity:.9}60%{transform:translate(9px,0) scale(1.1,1.3)}100%{opacity:0;transform:translate(-9px,-44px) scale(.9,1.7)}}
+.vw.dump .vessel{animation:tipout 1.25s ease-in-out}
+@keyframes tipout{0%{transform:rotate(0)}34%{transform:rotate(80deg)}72%{transform:rotate(80deg)}100%{transform:rotate(0)}}
+.vw.dump .lid,.stage.dumping .stick{opacity:0}
+.vw.drain .vessel i{opacity:0;transition:opacity .35s}
+.part{position:absolute;left:250px;top:222px;width:11px;height:11px;border-radius:50%;opacity:0;z-index:6;animation:fly .75s ease-in forwards;animation-delay:var(--d)}
+@keyframes fly{0%{opacity:1;transform:translate(0,0)}50%{opacity:1;transform:translate(calc(var(--x)*.65),calc(var(--y)*.2))}100%{opacity:0;transform:translate(var(--x),var(--y))}}
+@media(prefers-reduced-motion:reduce){.vw.mir .vessel,.vw.mir .vessel i,.vw.mir .tmask,.stage.stirring .vessel i,.hz{animation:none}.hz{display:none}}
+.tw{display:inline-block}.tw button:disabled{pointer-events:none}
+.tmask{position:absolute;top:64px;left:0;width:128px;height:190px;pointer-events:none;z-index:2;transform-origin:50% 100%}
+.c-flask .tmask{border-radius:4px 4px 62px 62px}.c-stone .tmask{border-radius:8px 8px 46px 46px}.c-crucible .tmask{border-radius:4px 4px 32px 32px}
+.vw.mir .tmask{animation:wob .7s ease-in-out infinite alternate}
+.vw.dump .tmask{animation:tipout 1.25s ease-in-out}
+.log .cur{font-size:1rem}.log .old{opacity:.5;font-size:.86rem}
+.log hr.lg{border:0;height:1px;margin:5px 0;background:linear-gradient(90deg,transparent,var(--mu),transparent)}
+.tr{position:relative;height:170px;width:30px}
+.anc{position:absolute;left:-30px;width:24px;height:22px;padding:0;font-size:.8rem;line-height:1;border-radius:6px}
+button.go.wide{min-width:12em;font-size:1.05rem;padding:10px 28px}
+</style></head><body>
+<header><h1 id="ttl">Aetherworks</h1><p id="sub"></p><select id="lang" aria-label="Language"><option value="zh-TW">繁體中文</option><option value="en">English</option></select></header>
+<nav id="tabs"></nav><main id="view"></main>
+
+<script type="application/json" id="mats">
+[["water","Water","💧","#4aa3df","l",0,1,.2,.5,7,.2,.1,1,.1,0,.4,"Cools, quenches, dissolves things."],
+["fire","Fire","🔥","#ff7a2f","z",0,.01,0,0,7,.1,.2,.5,.8,.1,1,"A burst of heat that lasts one run."],
+["earth","Earth","🪨","#8a6a4a","s",0,2.5,1,.1,7,.1,.1,1,0,0,.1,"Inert, but a good foundation."],
+["air","Air","💨","#cfe3ea","g",0,.001,0,0,7,0,.1,1,.3,0,.2,"Open vessels breathe. Sealed ones only hold what you add."],
+["plant","Plant","🌿","#5cb85c","s",.6,.5,1,0,6,.1,.2,.5,0,0,.3,"Alive, soft and flammable."],
+["metal","Iron","🔩","#9aa7b0","s",0,7,1,0,7,.95,.1,1,0,.1,.3,"Conducts. Rusts and corrodes."],
+["salt","Salt","🧂","#f1efe6","p",0,2.2,0,.8,7,.3,.1,1,0,0,.1,"Dissolves, carries current, speeds rust."],
+["oil","Oil","🛢","#c9a13b","l",.9,.85,.8,0,7,0,.1,.8,.2,.1,.4,"Floats and burns."],
+["crystal","Crystal","💎","#9fe0ff","c",0,2.6,1,0,7,.1,.6,.95,0,0,.2,"A lattice that can hold magic."],
+["aether","Aether","✨","#c59bff","z",0,.001,0,0,7,.5,1,.6,.3,0,.6,"Raw magic. Restless."],
+["steam","Steam","☁️","#e8f0f4","g",0,.0006,0,0,7,.1,0,.5,.9,0,.5,"Hot gas. Sealed in, it pushes."],
+["ash","Ash","🌫","#9b9b97","p",0,.6,0,.3,11,.1,.1,1,0,.1,.1,"Alkaline leftovers of fire."],
+["brine","Brine","🫗","#7fc7d9","l",0,1.2,.3,0,7,.8,.1,.9,.1,0,.3,"Conductive salt water."],
+["charcoal","Charcoal","⬛","#333333","s",.9,.4,1,0,7,.4,.1,.8,0,0,.4,"Burns hot, wants air."],
+["sulfur","Sulfur","🟡","#e6d33a","p",.7,2,0,0,6,0,.2,.6,.3,.3,.6,"Found in volcanic ash. Burns blue."],
+["nitre","Nitre","⚪","#e4e4f0","c",0,2.1,0,.6,7,.2,.1,.7,.2,.1,.8,"Cave crust. Feeds fires."],
+["acid","Acid","🍋","#b5e61d","l",0,1.1,.2,0,2,.7,0,.6,.3,.7,.9,"Eats metal. Bites vessels."],
+["lye","Lye","🧴","#d9d0f2","l",0,1.1,.4,0,13,.6,0,.8,0,.5,.6,"A strong base."],
+["blackpowder","Blackpowder","💥","#555555","p",1,1.7,0,0,7,0,0,.2,1,.2,1,"Very unstable."],
+["rust","Rust","🟫","#b5482a","p",0,3,0,0,7,.1,0,1,0,0,.1,"Metal's slow death."],
+["hydrogen","Hydrogen","🎈","#aee8ff","g",1,.0001,0,0,7,0,0,.5,1,0,.9,"Lightest gas. Burns."],
+["lumen","Lumen Crystal","🔆","#fff59a","c",0,2.6,1,0,7,.6,1,1,0,0,.1,"Glows. Calms restless magic."],
+["spirit","Spirit","🥃","#e9c98d","l",.8,.8,.2,.9,7,.1,.2,.5,.6,.2,.5,"Plant essence. Flammable vapor."],
+["elixir","Volatile Elixir","⚗️","#ff5fd2","l",.3,1,.3,0,6,.5,.9,.1,.9,.3,1,"Restless. Keep it cold and still."],
+["stable","Stable Elixir","🍷","#8af0c0","l",0,1,.3,0,7,.5,.9,1,0,0,.1,"Calm and bright."],
+["ice","Ice","🧊","#bfe9ff","c",0,.92,1,.1,7,0,0,1,0,0,.1,"Frozen water."],
+["smoke","Smoke","🌬","#888888","g",0,.0012,0,0,6,0,0,.8,.2,.4,.1,"Rises. Water scrubs it."],
+["fume","Sulfurous Fume","😶","#d6e86b","g",0,.002,0,.4,3,0,0,.6,.4,.8,.7,"Chokes. Dissolves into acid."],
+["mud","Mud","🟤","#6b4a30","l",0,1.6,1,0,7,.2,0,1,0,0,.1,"Dirty water."],
+["emberbloom","Emberbloom","🌺","#ff4f6a","s",.3,.6,1,0,6,.2,.5,.8,0,0,.4,"A plant that loves heat."]]
+</script>
+
+<script type="application/json" id="rules">
+[{"id":"powder","n":"Grinding powder","i":["charcoal","sulfur","nitre"],"c":{"stir":1},"o":["blackpowder"],"m":"Ground together, the three become blackpowder."},
+{"id":"boom","n":"Detonation","i":["blackpowder"],"t":[200,null],"o":["smoke","fume"],"d":900,"e":"boom"},
+{"id":"boomfire","n":"Spark detonation","i":["blackpowder","fire"],"o":["smoke","fume"],"d":900,"e":"boom"},
+{"id":"unstable","n":"Thermal runaway","i":["elixir"],"x":["lumen"],"t":[40,null],"o":["smoke"],"d":400,"e":"boom"},
+{"id":"shake","n":"Shock detonation","i":["elixir"],"x":["lumen"],"c":{"stir":1},"o":["smoke"],"d":400,"e":"boom"},
+{"id":"stabilize","n":"Stabilization","i":["elixir","lumen"],"k":["lumen"],"o":["stable"],"m":"Lumen soaks up the elixir's restlessness. It settles."},
+{"id":"douse","n":"Quenching","i":["fire","water"],"o":["steam"],"m":"The fire hisses out in a burst of steam."},
+{"id":"boil","n":"Boiling","i":["water"],"t":[100,null],"o":["steam"],"m":"Water boils into steam."},
+{"id":"condense","n":"Condensation","i":["steam"],"t":[null,99],"o":["water"],"m":"Steam cools back into water."},
+{"id":"freeze","n":"Freezing","i":["water"],"t":[null,0],"o":["ice"],"m":"Water freezes solid."},
+{"id":"melt","n":"Melting","i":["ice"],"t":[1,null],"o":["water"],"m":"Ice melts."},
+{"id":"freezemix","n":"Freezing mixture","i":["salt","ice"],"o":["brine"],"d":-30,"m":"Salt melts ice and steals heat doing it."},
+{"id":"dissolve","n":"Dissolving","i":["salt","water"],"t":[null,99],"o":["brine"],"m":"Salt dissolves into conductive brine."},
+{"id":"saltback","n":"Evaporation","i":["brine"],"t":[100,null],"c":{"nochg":1},"o":["salt","steam"],"m":"Boiling brine leaves its salt behind."},
+{"id":"lumen","n":"Pressure refining","i":["crystal","aether"],"c":{"pw":1},"o":["lumen"],"m":"Steam pressure drives aether into the crystal lattice. It glows."},
+{"id":"overp","n":"Overpressure","i":["steam"],"c":{"seal":1,"ge":["steam",5]},"e":"break","o":[]},
+{"id":"electro","n":"Electrolysis","i":["brine"],"c":{"chg":1},"o":["hydrogen","lye"],"m":"Current splits the brine. Gas bubbles up, lye remains."},
+{"id":"acidmetal","n":"Corrosion","i":["acid","metal"],"o":["hydrogen","salt"],"d":20,"m":"Acid devours iron and breathes out hydrogen."},
+{"id":"neutral","n":"Neutralization","i":["acid","#base"],"o":["salt","water"],"d":30,"m":"Acid and base cancel into salt and water."},
+{"id":"eatvessel","n":"Vessel corrosion","i":["acid"],"c":{"cont":"metal"},"o":[],"e":"break"},
+{"id":"lye","n":"Making lye","i":["ash","water"],"o":["lye"],"m":"Ash leaches into harsh lye."},
+{"id":"burnsulfur","n":"Brimstone","i":["sulfur","air"],"t":[115,null],"o":["fume"],"d":90,"m":"Sulfur burns blue and gives off a choking fume."},
+{"id":"acidmake","n":"Acid from fume","i":["fume","water"],"t":[null,99],"o":["acid"],"m":"Fume dissolves into water and makes acid."},
+{"id":"charcoal","n":"Charring","i":["plant"],"x":["air"],"t":[200,null],"c":{"seal":1},"o":["charcoal","smoke"],"m":"With no air, plant chars into charcoal."},
+{"id":"burnplant","n":"Combustion","i":["plant","air"],"t":[200,null],"o":["ash","smoke"],"d":80,"m":"The plant burns to ash."},
+{"id":"burncoal","n":"Charcoal fire","i":["charcoal","air"],"t":[250,null],"o":["ash","smoke"],"d":120,"m":"Charcoal burns hot and clean."},
+{"id":"burnoil","n":"Oil flame","i":["oil","air"],"t":[150,null],"o":["smoke"],"d":150,"m":"Oil burns with a sooty flame."},
+{"id":"crack","n":"Cracking","i":["oil"],"x":["air"],"c":{"seal":1},"t":[350,null],"o":["charcoal","hydrogen"],"m":"Sealed oil breaks into carbon and hydrogen."},
+{"id":"emberbloom","n":"Heat-hardy seed","i":["plant","sulfur","earth"],"k":["earth"],"t":[60,150],"o":["emberbloom"],"m":"Sulfur toughens the plant into an emberbloom."},
+{"id":"wilt","n":"Wilting","i":["plant"],"t":[70,199],"o":["ash"],"m":"The plant withers in the heat."},
+{"id":"bloomgrow","n":"Emberbloom growth","i":["emberbloom","water"],"k":["emberbloom"],"t":[30,200],"o":["emberbloom"],"m":"The emberbloom drinks and spreads."},
+{"id":"grow","n":"Growth","i":["plant","earth","water"],"k":["earth"],"t":[10,60],"c":{"seal":0},"o":["plant","plant"],"m":"The plant drinks and grows."},
+{"id":"ferment","n":"Fermentation","i":["plant","water"],"x":["air","earth"],"t":[20,45],"c":{"seal":1},"o":["spirit"],"m":"Sealed away from air, the plant ferments into spirit."},
+{"id":"elixir","n":"Elixir","i":["spirit","aether"],"o":["elixir"],"m":"Spirit takes on aether. It shimmers and trembles."},
+{"id":"mud","n":"Mud","i":["earth","water"],"t":[1,99],"o":["mud"],"m":"Earth and water slump into mud."},
+{"id":"drymud","n":"Drying","i":["mud"],"t":[100,null],"o":["earth","steam"],"m":"Heat dries the mud back to earth."},
+{"id":"rust","n":"Rusting","i":["metal","water","air"],"c":{"cat":"salt"},"o":["rust"],"m":"With salt as a catalyst, the iron rusts quickly."},
+{"id":"steamiron","n":"Iron cracks steam","i":["steam","metal"],"t":[500,null],"o":["hydrogen","rust"],"m":"White-hot iron strips oxygen from steam."},
+{"id":"hpop","n":"Hydrogen pop","i":["hydrogen","air"],"t":[200,null],"o":["water"],"d":300,"e":"pop","m":"Hydrogen pops into water."},
+{"id":"scrub","n":"Scrubbing","i":["smoke","water"],"o":["water"],"m":"Water scrubs the smoke clean."},
+{"id":"spiritboil","n":"Spirit vapor","i":["spirit"],"t":[78,null],"c":{"seal":0},"o":[],"m":"Spirit boils off as vapor."},
+{"id":"ignite","n":"Ignition","i":["#flam","fire"],"o":["smoke"],"d":100,"m":"Fire catches on something flammable."}]
+</script>
+
+<script>
+const $=s=>document.querySelector(s),J=id=>JSON.parse(document.getElementById(id).textContent.replace(/([\[,])(\s*)\.(\d)/g,'$10.$3'));
+const KEYS=['id','n','i','c','s','f','d','v','o','a','cd','m','b','x','tx','r','h'],MAT={};
+J('mats').forEach(r=>{const o={};KEYS.forEach((k,i)=>o[k]=r[i]);MAT[o.id]=o});
+const RULES=J('rules'),RN=Object.fromEntries(RULES.map(r=>[r.id,r]));
+const CONT={flask:{n:'Glass flask',max:400,metal:0},stone:{n:'Stoneware pot',max:800,metal:0},crucible:{n:'Iron crucible',max:1500,metal:1}};
+const HEAT=[-80,-40,0,60,120,250,500,900];
+const STN={l:'liquid',s:'solid',g:'gas',p:'powder',c:'crystal',z:'plasma'};
+const BASE=['water','fire','earth','air','plant','metal','salt','oil','crystal','aether'];
+const SITE0={stream:{n:'The Stream',ic:'🏞',env:15,m:{water:8,acid:3},d:'Poisoned by acid runoff.'},soil:{n:'Volcanic soil',ic:'🌋',env:90,m:{earth:6},d:'Warm ground, about 90°C.'},lamp:{n:'Lantern post',ic:'🏮',env:18,m:{},d:'Empty and dark.'}};
+const fresh=()=>({disc:{r:{},m:Object.fromEntries(BASE.map(b=>[b,1])),st:{}},setups:{},notes:'',sites:JSON.parse(JSON.stringify(SITE0)),wx:'clear',v:{m:{},cont:'flask',heat:2,seal:0,stir:0,chg:0},log:[],tab:'bench',mv:1});
+let S;try{S=JSON.parse(localStorage.getItem('aetherworks.v1'))}catch(e){}S=S||fresh();S.lang=S.lang||'zh-TW';if(!S.mv){const mg=v=>{v.heat=v.chill?1:(v.heat||0)+2;delete v.chill};mg(S.v);Object.values(S.setups||{}).forEach(mg);S.mv=1}let hist=[],last='water',inb=0;
+const save=()=>{try{localStorage.setItem('aetherworks.v1',JSON.stringify(S))}catch(e){}};
+// ---- engine ----
+const A=(v,id)=>id=='air'&&!v.seal?9:(v.m[id]||0);
+const tg=(m,s)=>s[0]!='#'?m.id==s:({'#flam':m.f>=.5,'#base':m.a>=10.5,'#acid':m.a<=3.5,'#cond':m.cd>=.3}[s]);
+const pick=(v,s)=>Object.keys(MAT).find(id=>A(v,id)>0&&tg(MAT[id],s));
+const has=(v,s)=>!!pick(v,s);
+const cnt=(v,s)=>Object.keys(MAT).reduce((n,id)=>n+(tg(MAT[id],s)?(v.m[id]||0):0),0);
+const tot=v=>Object.values(v.m).reduce((a,b)=>a+b,0);
+const tmp=(v,env)=>env+HEAT[v.heat??2]+(v.m.fire>0?400:0)+(v.br||0);
+const ph=v=>{let s=0,n=0;for(const id in v.m)if(MAT[id].s=='l'){s+=MAT[id].a*v.m[id];n+=v.m[id]}return n?s/n:null};
+function why(v,r,t){
+ if(!r.i.every(s=>has(v,s)))return 'inp';
+ if(r.x&&r.x.some(s=>has(v,s)))return 'blk';
+ if(r.t){if(r.t[0]!=null&&t<r.t[0])return 'cold';if(r.t[1]!=null&&t>r.t[1])return 'hot'}
+ const c=r.c||{};
+ if(c.seal===1&&!v.seal)return 'seal';if(c.seal===0&&v.seal)return 'open';
+ if(c.stir&&!v.stir)return 'stir';if(c.chg&&!v.chg)return 'chg';if(c.nochg&&v.chg)return 'blk';
+ if(c.pw&&!(v.seal&&(v.m.steam||0)>=2))return 'pw';
+ if(c.cat&&!has(v,c.cat))return 'cat';
+ if(c.ge&&cnt(v,c.ge[0])<c.ge[1])return 'ge';
+ if(c.cont&&!(CONT[v.cont]&&CONT[v.cont][c.cont]))return 'cont';
+ return 0}
+function run(v,env){
+ const o={fired:[],log:[],broke:0,boom:0,hints:[],vent:[]},before=Object.keys(v.m);v.br=0;
+ const C=CONT[v.cont];
+ if(C&&tmp(v,env)>C.max){v.m={};o.broke=1;o.log.push(L('crack',L('c.'+v.cont)));return o}
+ for(let n=0;n<40;n++){
+  const t=tmp(v,env),r=RULES.find(r=>!why(v,r,t));if(!r)break;
+  r.i.forEach(s=>{if(r.k&&r.k.includes(s))return;const id=pick(v,s);if(id=='air'&&!v.seal)return;if(--v.m[id]<=0)delete v.m[id]});
+  (r.o||[]).forEach(id=>{if(tot(v)<16)v.m[id]=(v.m[id]||0)+1});
+  v.br+=r.d||0;o.fired.push(r.id);if(r.m)o.log.push(r.m);
+  if(r.e=='boom'){v.m={};o.boom=1;if(v.seal)o.broke=1;o.log.push(L(v.seal?'boomS':'boomO'));break}
+  if(r.e=='pop'&&v.seal){v.m={};o.broke=1;o.log.push(L('popS'));break}
+  if(r.e=='break'){v.m={};o.broke=1;o.log.push(L(r.id=='overp'?'overp':'eat'));break}
+ }
+ delete v.m.fire;
+ if(!v.seal)Object.keys(v.m).forEach(id=>{if(MAT[id].s=='g'&&id!='air'){o.vent.push(id);delete v.m[id]}});
+ if(o.vent.length)o.log.push(L('vent',o.vent.map(i=>MAT[i].n).join(L('sep')))+(o.vent.includes('fume')?L('tox'):''));
+ before.forEach(id=>S.disc.st[id]=1);
+ if(!o.fired.length&&before.length){
+  if(before.some(id=>MAT[id].b<.3&&true)&&tmp(v,env)>=30)o.hints.push(L('unst'));
+  const t=tmp(v,env),seen=new Set();RULES.forEach(r=>{const w=why(v,r,t);if(w&&w!='inp'&&HT(w)&&!seen.has(w)&&seen.size<2){seen.add(w);o.hints.push(HT(w))}});
+  if(!o.hints.length)o.hints.push(L('nohit'))}
+ o.fired.forEach(id=>{(RN[id].o||[]).forEach(m=>S.disc.st[m]=1)});
+ return o}
+function absorb(o,pre){
+ o.fired.forEach(id=>{const r=RN[id];if(!S.disc.r[id]){S.disc.r[id]=1;say('new',L('disc',r.n));beep(660)}
+  (r.o||[]).forEach(m=>{if(!S.disc.m[m]){S.disc.m[m]=1;say('new',MAT[m].i+' '+L('newmat',MAT[m].n))}})});
+ o.log.forEach(t=>say(o.boom||o.broke?'warn':'ok',pre+t));o.hints.forEach(t=>say('warn',pre+t));
+ if(o.boom)beep(90,.4);if(S.disc.m.ash&&!S.disc.m.sulfur){S.disc.m.sulfur=1;say('new','🟡 '+L('sulf'))}
+ if(S.disc.m.brine&&!S.disc.m.nitre){S.disc.m.nitre=1;say('new','⚪ '+L('nit'))}
+ save()}
+const say=(k,t)=>{S.log.unshift({k,t,r:inb?S.rn:-1});S.log=S.log.slice(0,14)};
+function beep(f,d=.12){try{const a=beep.c=beep.c||new AudioContext(),o=a.createOscillator(),g=a.createGain();o.frequency.value=f;o.type=f<200?'sawtooth':'sine';g.gain.value=.06;o.connect(g);g.connect(a.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+d+.1);o.stop(a.currentTime+d+.1)}catch(e){}}
+function runSite(k,rain){if(!inb){S.rn=(S.rn||0)+1;inb=1}const s=S.sites[k];if(S.wx=='rain'&&rain)s.m.water=Math.min(14,(s.m.water||0)+2);
+ const v={m:s.m,heat:2,seal:0,stir:0,chg:0},o=run(v,s.env);s.m=v.m;absorb(o,sn(k)+': ');}
+const GOALS=[
+{id:'stream',n:'Purify the poisoned stream',d:'Pour a remedy into the Stream until it is near neutral and no acid is left.',ck:()=>{const s=S.sites.stream,p=ph(s);return !s.m.acid&&!s.m.fume&&p!=null&&p>=6&&p<=8.5&&(s.m.water||0)>=3}},
+{id:'lamp',n:'A light that survives rain',d:'Make something that glows, pour it on the Lantern post, then run it under rain.',ck:()=>S.sites.lamp.m.lumen>=1&&S.wx=='rain'},
+{id:'soil',n:'Grow in volcanic soil',d:'Plain plants wither at 90°C. Breed one that thrives there and plant it.',ck:()=>S.sites.soil.m.emberbloom>=2},
+{id:'elixir',n:'Stabilize an explosive elixir',d:'Make the restless elixir and keep it from detonating.',ck:()=>S.disc.m.stable},
+{id:'engine',n:'Steam-driven refining',d:'Use sealed steam pressure to transform a crystal.',ck:()=>S.disc.m.lumen},
+{id:'powder',n:'Grind a charge',d:'Combine three ground ingredients into something that wants to go bang.',ck:()=>S.disc.m.blackpowder}];
+// ---- ui ----
+const STR={en:{
+title:'Aetherworks',sub:'Mix, heat, seal and stir. Watch what happens, then use what you learn.',
+'tab.bench':'Bench','tab.world':'World','tab.codex':'Codex','tab.goals':'Goals','tab.guide':'Guide',
+shelf:'Shelf',unkn:'{0} unknown',unk:'Properties unknown. Use it in a run to study it.',cont:'Container',
+'st.l':'liquid','st.s':'solid','st.g':'gas','st.p':'powder','st.c':'crystal','st.z':'plasma',
+'p.f':'flammable','p.d':'density','p.v':'viscosity','p.o':'soluble','p.cd':'conductive','p.m':'magic','p.b':'stable','p.x':'volatile','p.tx':'toxic','p.r':'reactive',
+heat:'Heat',hn0:'Deep freeze',hn1:'Chilled',hn2:'Room temp',hn3:'Low flame',hn4:'Medium flame',hn5:'High flame',hn6:'Furnace',hn7:'Forge',
+'c.flask':'Glass flask','c.stone':'Stoneware pot','c.crucible':'Iron crucible',
+chill:'🧊 Chill',seal:'🔒 Seal',stir:'🥄 Stir',chg:'⚡ Charge','lk.steam':'Discover steam first','lk.gas':'Discover a gas first','lk.brine':'Discover brine first',
+run:'Run',undo:'Undo',empty:'Empty',save:'Save setup',load:'Load setup…',pour:'Pour into world:',
+tip0:'Tap materials to add them, then press Run. Try water, then heat.',
+temp:'Temperature',press:'Pressure','pr.crit':'critical','pr.drv':'driving','pr.low':'low','pr.open':'open',qty:'{0}× {1}',nothing:'Nothing inside',sep:', ',emptyv:'empty',
+'wx.clear':'☀️ Clear','wx.rain':'🌧 Rain',time:'Let time pass',wxnote:'Rain adds water to every site. Gases escape upward.',amb:'Ambient {0}°C.',reset:'Reset',
+worldnote:'Pour from the Bench tab. The world runs the same rules as your vessel, but open to the air.',
+'cx.mat':'Materials','cx.rx':'Reactions','cx.notes':'Notes','cx.ph':'Your hypotheses and your own goals…','cx.ns':'Not yet studied.','cx.none':'Nothing yet. Run an experiment.',
+needs:'Needs: ','n.seal':'sealed','n.open':'open','n.stir':'stirred','n.chg':'charged','n.pw':'steam pressure','n.cat':'catalyst: {0}','n.cont':'metal vessel','n.wo':'without {0}',gone:'(nothing left)',any:'any {0}',
+'sel.base':'base','sel.flam':'flammable','sel.acid':'acid','sel.cond':'conductor',
+'g.own':'Your own goal','g.ownd':'Invent one in the Notes box of the Codex. Nothing here is mandatory.',
+disc:'Discovery: {0}.',newmat:'New material: {0}.',goal:'Goal complete: {0}',first:'Add something first.',full:'The vessel is full.',saved:'Saved setup “{0}”.',loaded:'Loaded “{0}”.',nopour:'Nothing to pour.',
+heatstay:'Heat stays on the bench; the site keeps its own temperature.',poured:'Poured into {0}.',nameit:'Name this setup',
+sulf:'Gathered sulfur from the volcanic ash heaps.',nit:'Scraped nitre from a cave wall, where salt crusts form.',
+crack:'The {0} cracks under the heat. Its contents are lost.',boomS:'💥 The sealed vessel bursts!',boomO:'💥 A flash and a roar. The contents are gone.',popS:'💥 Gas detonates inside the sealed vessel!',overp:'Overpressure! The vessel bursts.',eat:'The acid eats through the vessel wall.',
+vent:'Gas rose and drifted away: {0}.',tox:' ⚠ Toxic fume leaked.',unst:'This mixture seems unstable.',nohit:'Nothing here reacts under these conditions. Try a new ingredient.',
+anchor:'Reset to room temperature (20°C)','tt.seal':'Closes the vessel with a lid. Gas can’t escape, so steam builds up pressure, and no fresh air gets in. Needed for pressure refining, fermenting and charring. Too much pressure bursts the vessel.','tt.stir':'Stirs the contents when you press Run. Grinds powders together and mixes things thoroughly, but a shaken unstable mixture may detonate.','tt.chg':'Passes a magical current through the mix. Needs something conductive, like brine, and can split it into new substances.','h.cold':'Heat may change this.','h.hot':'Something here may be too hot. Cooling could help.','h.seal':'Sealing the vessel seems to matter.','h.open':'This one wants open air.','h.pw':'A sealed vessel of hot steam might supply the force.','h.stir':'Stirring could matter.','h.chg':'A spark of charge might help.','h.cat':'A catalyst might help.','h.blk':'Something in the mix is getting in the way.',
+guide:`<div class="card guide"><h2>How it works</h2><p>Every material is a bundle of properties: state, flammability, density, viscosity, solubility, pH, conductivity, magic, stability, volatility, toxicity and reactivity. Rules read those properties plus the vessel's conditions (temperature, seal, stirring, charge, catalysts, container) and fire one at a time. Each output can trigger the next rule, so chains cascade. Rules live in a JSON block and use selectors like <i>#base</i> or <i>#flam</i>, so adding content means adding a row.</p><h2 style="margin-top:14px">Five chains to try</h2><ol><li>Steam power: seal a flask with 2–4 water, a crystal and aether. Heat it past boiling. The steam pressure refines the crystal into lumen.</li><li>Calm the elixir: ferment plant and water sealed at room temperature, add aether, keep it cold and unstirred, then add lumen.</li><li>Clean the stream: burn plant to ash, then pour ash in. Too much lye overshoots, so watch the pH.</li><li>Blackpowder: seal and heat a plant into charcoal, gather sulfur and nitre, then stir all three. Keep it cool.</li><li>Emberbloom: heat plant, sulfur and earth gently (60–150°C) for a plant that thrives in volcanic soil.</li></ol><h2 style="margin-top:14px">Roadmap</h2><p class="muted">Biomes with their own ambient conditions, creatures that avoid hazards, storms and seasons, belts and valves for machines, shareable setup codes, and multi-stage alchemy such as transmutation and enchantment altars.</p></div>`},
+'zh-TW':{
+title:'以太工坊',sub:'混合、加熱、密封、攪拌。觀察結果，再運用所學。',
+'tab.bench':'工作台','tab.world':'世界','tab.codex':'圖鑑','tab.goals':'目標','tab.guide':'指南',
+shelf:'材料架',unkn:'{0} 種未知',unk:'屬性未知。放進實驗中執行即可研究。',cont:'容器',
+'st.l':'液體','st.s':'固體','st.g':'氣體','st.p':'粉末','st.c':'結晶','st.z':'電漿',
+'p.f':'可燃性','p.d':'密度','p.v':'黏度','p.o':'溶解度','p.cd':'導電性','p.m':'魔力','p.b':'穩定性','p.x':'揮發性','p.tx':'毒性','p.r':'反應性',
+heat:'加熱',hn0:'深度冷凍',hn1:'冰鎮',hn2:'室溫',hn3:'小火',hn4:'中火',hn5:'大火',hn6:'爐火',hn7:'鍛造',
+'c.flask':'玻璃燒瓶','c.stone':'陶罐','c.crucible':'鐵坩堝',
+chill:'🧊 冷卻',seal:'🔒 密封',stir:'🥄 攪拌',chg:'⚡ 通電','lk.steam':'需先發現蒸氣','lk.gas':'需先發現一種氣體','lk.brine':'需先發現鹽水',
+run:'執行',undo:'復原',empty:'清空',save:'儲存配置',load:'載入配置…',pour:'倒入世界：',
+tip0:'點選材料加入容器，再按「執行」。先試試水，再加熱。',
+temp:'溫度',press:'壓力','pr.crit':'危險','pr.drv':'驅動中','pr.low':'偏低','pr.open':'開放',qty:'{0}× {1}',nothing:'空無一物',sep:'、',emptyv:'空',
+'wx.clear':'☀️ 晴天','wx.rain':'🌧 下雨',time:'讓時間流逝',wxnote:'下雨會替每個地點加水。氣體會向上逸散。',amb:'環境溫度 {0}°C。',reset:'重置',
+worldnote:'請從工作台分頁倒入。世界遵循與容器相同的規則，但完全暴露在空氣中。',
+'cx.mat':'材料','cx.rx':'反應','cx.notes':'筆記','cx.ph':'寫下你的假設與自訂目標…','cx.ns':'尚未研究。','cx.none':'目前沒有。去做個實驗吧。',
+needs:'條件：','n.seal':'密封','n.open':'開放','n.stir':'攪拌','n.chg':'通電','n.pw':'蒸氣壓力','n.cat':'催化劑：{0}','n.cont':'金屬容器','n.wo':'不含{0}',gone:'（無剩餘）',any:'任何{0}',
+'sel.base':'鹼性物質','sel.flam':'可燃物','sel.acid':'酸性物質','sel.cond':'導電物',
+'g.own':'自訂目標','g.ownd':'在圖鑑的筆記欄寫下你自己的目標。這裡沒有任何事是必須的。',
+disc:'發現：{0}。',newmat:'新材料：{0}。',goal:'完成目標：{0}',first:'請先放入材料。',full:'容器滿了。',saved:'已儲存配置「{0}」。',loaded:'已載入「{0}」。',nopour:'沒有可倒的東西。',
+heatstay:'加熱設定留在工作台；該地點保持自身溫度。',poured:'已倒入{0}。',nameit:'為此配置命名',
+sulf:'在火山灰堆中採得硫磺。',nit:'從洞穴岩壁上刮下硝石，鹽結晶常在那裡形成。',
+crack:'{0}在高溫下破裂，內容物全部流失。',boomS:'💥 密封的容器炸開了！',boomO:'💥 一道閃光與巨響，內容物消失殆盡。',popS:'💥 氣體在密封容器內引爆！',overp:'壓力過高！容器炸裂。',eat:'酸液腐蝕穿了容器壁。',
+vent:'氣體向上飄散而去：{0}。',tox:' ⚠ 有毒煙霧外洩。',unst:'這個混合物似乎不穩定。',nohit:'在目前的條件下，這裡的東西沒有反應。試試新的材料吧。',
+anchor:'重設為室溫（20°C）','tt.seal':'以蓋子封住容器。氣體無法逸散，蒸氣會累積壓力，也不會有新鮮空氣進入。壓力精煉、發酵與炭化都需要密封，但壓力過大會讓容器炸裂。','tt.stir':'按下「執行」時攪拌內容物。能把粉末磨合、讓材料充分混合，但受震動的不穩定混合物可能會引爆。','tt.chg':'讓魔力電流通過混合物。需要鹽水這類導電物質，並可能將其分解成新的物質。','h.cold':'加熱或許會改變結果。','h.hot':'這裡可能太熱了，冷卻或許有幫助。','h.seal':'密封容器似乎很重要。','h.open':'這個反應需要開放的空氣。','h.pw':'密封容器中的熾熱蒸氣或許能提供力量。','h.stir':'攪拌也許有影響。','h.chg':'一點電荷或許有幫助。','h.cat':'也許需要催化劑。','h.blk':'混合物中有東西正在妨礙反應。',
+guide:`<div class="card guide"><h2>運作方式</h2><p>每種材料都是一組屬性：狀態、可燃性、密度、黏度、溶解度、酸鹼值、導電性、魔力、穩定性、揮發性、毒性與反應性。規則會讀取這些屬性，以及容器的條件（溫度、密封、攪拌、通電、催化劑、容器種類），並逐條觸發。每個產物都可能引發下一條規則，因此反應會連鎖發生。規則存放在 JSON 區塊中，使用 <i>#base</i>、<i>#flam</i> 之類的選擇器，要新增內容只需新增一列。</p><h2 style="margin-top:14px">五條可嘗試的連鎖</h2><ol><li>蒸氣動力：在燒瓶中放入 2–4 份水、一顆水晶與以太並密封，加熱到沸騰以上。蒸氣壓力會把水晶精煉成流明水晶。</li><li>安撫靈藥：將植物與水在室溫下密封發酵，加入以太，保持低溫且不要攪拌，再加入流明水晶。</li><li>淨化溪流：把植物燒成灰燼，再把灰燼倒進溪流。鹼液過多會矯枉過正，要留意 pH 值。</li><li>黑火藥：密封加熱植物得到木炭，採集硫磺與硝石，再把三者攪拌在一起。請保持低溫。</li><li>燼花：以溫和的火力（60–150°C）加熱植物、硫磺與泥土，得到能在火山土中生長的植物。</li></ol><h2 style="margin-top:14px">未來藍圖</h2><p class="muted">擁有各自環境條件的生態區、會躲避危險的生物、風暴與季節、機器用的傳送帶與閥門、可分享的配置代碼，以及轉化與附魔祭壇等多階段煉金術。</p></div>`}};
+const ZM={water:['水','能降溫、澆熄火焰，也能溶解許多物質。','每位學徒都先學會：水會記住它碰過的一切。'],fire:['火','一陣爆發的熱，只持續一次執行。','老煉金師把它當客人，從不當僕人。'],earth:['泥土','不起反應，卻是穩固的基礎。','耐心、沉重，對你的理論無動於衷。'],air:['空氣','敞開的容器會呼吸；密封的容器只有你放進去的空氣。','實驗室最老的房客，離開時從不付租金。'],plant:['植物','有生命、柔軟，而且易燃。','它朝著窗戶生長，背對帳本。'],metal:['鐵','導電，會生鏽，也會被腐蝕。','工作台上第一個誠實的材料：它會明白告訴你自己怎麼壞掉。'],salt:['鹽','可溶解、能導電，還會加速生鏽。','曾有整支軍隊以它為薪餉。'],oil:['油','浮在水面，而且會燃燒。','一條緩緩流動、來自遠古陽光的河。'],crystal:['水晶','能容納魔力的晶格。','它在聆聽，說點值得留下的話吧。'],aether:['以太','原始的魔力，躁動不安。','沒有人能把它用同樣的方式裝瓶兩次。'],steam:['蒸氣','熾熱的氣體，密封時會產生推力。','急匆匆的水。'],ash:['灰燼','火焰留下的鹼性殘渣。','火焰收筆時寫下的最後一行字。'],brine:['鹽水','能導電的鹽水。','杯中的一小片海，仍帶著電流。'],charcoal:['木炭','燃燒溫度高，需要空氣。','一棵同意安靜發熱的樹。'],sulfur:['硫磺','藏在火山灰堆中，燃燒時呈藍色火焰。','聞起來像火山藏匿祕密的地方。'],nitre:['硝石','洞穴岩壁上的結晶，能助燃。','由洞穴採集者刮下，從不解釋原因。'],acid:['酸液','會腐蝕鐵，也會侵蝕容器。','它對所有鐵製的東西都有意見。'],lye:['鹼液','強鹼。','肥皂那位嚴厲的祖母。'],blackpowder:['黑火藥','極不穩定。','三樣平凡的東西磨在一起，便失去了耐心。'],rust:['鐵鏽','金屬緩慢的終局。','每把刀劍的最後一份草稿。'],hydrogen:['氫氣','最輕的氣體，會燃燒。','它是最早到的，也正要離開。'],lumen:['流明水晶','會發光，能安撫躁動的魔力。','學會留在原地的一輪小太陽。'],spirit:['烈酒精華','植物的精華，蒸氣易燃。','植物被封存時所做的夢。'],elixir:['不穩定靈藥','躁動不安。請保持低溫、靜置。','它在低鳴，別跟著哼。'],stable:['穩定靈藥','平靜而明亮。','第一瓶肯安靜坐著讓人畫像的靈藥。'],ice:['冰','凍結的水。','刻意被按下暫停的時間。'],smoke:['煙','向上升，可被水洗淨。','火焰的筆跡，隨著你閱讀而淡去。'],fume:['硫磺毒煙','刺鼻嗆人，溶於水會變成酸。','這裡的空氣懷恨在心。'],mud:['泥漿','髒水。','泥土暫時忘了自己的形狀。'],emberbloom:['燼花','喜愛高溫的植物。','在別的植物不敢綻放之處盛開。']};
+const ZR={powder:['研磨成粉','三者磨在一起，變成黑火藥。'],boom:['爆炸'],boomfire:['火花引爆'],unstable:['熱失控'],shake:['震動引爆'],stabilize:['穩定化','流明吸收了靈藥的躁動，它平靜了下來。'],douse:['澆熄','火焰嘶地熄滅，噴出一陣蒸氣。'],boil:['沸騰','水沸騰成為蒸氣。'],condense:['凝結','蒸氣冷卻後變回水。'],freeze:['結冰','水凍結成固體。'],melt:['融化','冰融化了。'],freezemix:['冷凍混合物','鹽融化冰，並在過程中吸走熱量。'],dissolve:['溶解','鹽溶解成導電的鹽水。'],saltback:['蒸發','沸騰的鹽水留下了鹽。'],lumen:['壓力精煉','蒸氣壓力把以太壓進水晶晶格，它亮了起來。'],overp:['超壓'],electro:['電解','電流分解了鹽水。氣泡升起，留下鹼液。'],acidmetal:['腐蝕','酸液吞噬了鐵，並吐出氫氣。'],neutral:['中和','酸與鹼相互抵消，變成鹽和水。'],eatvessel:['容器腐蝕'],lye:['製造鹼液','灰燼被浸出成刺激性的鹼液。'],burnsulfur:['硫磺燃燒','硫磺燃起藍色火焰，放出嗆人的毒煙。'],acidmake:['毒煙成酸','毒煙溶入水中，生成酸液。'],charcoal:['燒炭','缺氧環境下，植物炭化成木炭。'],burnplant:['燃燒','植物燒成了灰燼。'],burncoal:['木炭燃燒','木炭燃燒得又熱又乾淨。'],burnoil:['油焰','油燃燒，冒出黑煙。'],crack:['裂解','密封的油裂解為碳與氫氣。'],emberbloom:['耐熱種子','硫磺讓植物變得強韌，成了燼花。'],wilt:['枯萎','植物在高溫下枯萎了。'],bloomgrow:['燼花生長','燼花吸飽水分，蔓延開來。'],grow:['生長','植物吸水後長大了。'],ferment:['發酵','隔絕空氣後，植物發酵成烈酒精華。'],elixir:['靈藥','精華吸收了以太，閃閃發光並微微顫動。'],mud:['泥漿','泥土與水塌成了泥漿。'],drymud:['乾燥','高溫把泥漿烘回泥土。'],rust:['生鏽','有鹽作催化劑，鐵很快就生鏽了。'],steamiron:['熾鐵裂解蒸氣','白熱的鐵從蒸氣中奪走氧。'],hpop:['氫氣爆鳴','氫氣啪地一聲化為水。'],scrub:['洗滌','水把煙洗乾淨了。'],spiritboil:['酒精蒸氣','烈酒精華沸騰成蒸氣。'],ignite:['點燃','火焰點燃了易燃物。']};
+const ZG={stream:['淨化受污染的溪流','把解方倒進溪流，直到它接近中性且不再含酸。'],lamp:['雨中不滅的光','做出會發光的東西，倒在燈柱上，再讓它在雨中運行。'],soil:['在火山土中種植','普通植物在 90°C 會枯萎。培育一種能在此生長的植物並種下它。'],elixir:['穩定爆炸性靈藥','做出躁動的靈藥，並讓它不會爆炸。'],engine:['蒸氣驅動精煉','利用密封的蒸氣壓力來轉化一顆水晶。'],powder:['研磨火藥','把三種磨細的材料結合成一觸即發的東西。']};
+const ZS={stream:['溪流','遭酸性逕流毒害。'],soil:['火山土','溫熱的土地，約 90°C。'],lamp:['燈柱','空蕩而昏暗。']};
+const FL={water:'Every apprentice learns first that water remembers whatever it has touched.',fire:'The old masters kept it as a guest, never as a servant.',earth:'Patient, heavy, and unimpressed by your theories.',air:'The lab’s oldest tenant. It leaves without paying.',plant:'It grows toward the window and away from the ledger.',metal:'The bench’s first honest material: it tells you exactly how it fails.',salt:'Once, whole armies were paid in it.',oil:'A slow river of old sunlight.',crystal:'It listens. Say something worth keeping.',aether:'Nobody has bottled it twice the same way.',steam:'Water in a hurry.',ash:'What fire writes when it is finished.',brine:'The sea in a thimble, still carrying the current.',charcoal:'A tree that agreed to be quiet and hot.',sulfur:'It smells like the place the volcano keeps its secrets.',nitre:'Scraped from caves by people who never explained why.',acid:'It has opinions about everything made of iron.',lye:'Soap’s stern grandmother.',blackpowder:'Three humble things, ground together, lose their patience.',rust:'Every blade’s final draft.',hydrogen:'It was here first, and it is leaving.',lumen:'A small sunrise that learned to stay put.',spirit:'What the plant dreamed while it was sealed away.',elixir:'It hums. Do not hum back.',stable:'The first elixir that ever sat still for a portrait.',ice:'Time, held still on purpose.',smoke:'Fire’s handwriting, fading as you read.',fume:'The air here holds a grudge.',mud:'The earth, briefly forgetting its shape.',emberbloom:'It blooms where nothing else dares to unfold.'};
+const L=(k,...a)=>{let s=(STR[S.lang]||{})[k];if(s==null)s=STR.en[k];if(s==null)s=k;a.forEach((x,i)=>{s=s.split('{'+i+'}').join(x)});return s};
+const HT=w=>({cold:1,hot:1,seal:1,open:1,pw:1,stir:1,chg:1,cat:1,blk:1})[w]&&L('h.'+w);
+const zh=()=>S.lang=='zh-TW';
+const sn=k=>zh()?ZS[k][0]:SITE0[k].n,sd=k=>zh()?ZS[k][1]:SITE0[k].d,gn=(g,i)=>zh()?ZG[g.id][i]:(i?g.d:g.n);
+function applyLang(){
+ for(const id in MAT){const m=MAT[id],e=m._e||(m._e={n:m.n,h:m.h});m.n=zh()?ZM[id][0]:e.n;m.h=zh()?ZM[id][1]:e.h}
+ RULES.forEach(r=>{const e=r._e||(r._e={n:r.n,m:r.m});r.n=zh()?ZR[r.id][0]:e.n;r.m=zh()?ZR[r.id][1]:e.m});
+ document.documentElement.lang=zh()?'zh-Hant-TW':'en';document.title=L('title');$('#ttl').textContent=L('title');$('#sub').textContent=L('sub');$('#lang').value=S.lang}
+const TABS=['bench','world','codex','goals','guide'];
+const nm=s=>s[0]=='#'?L('any',L('sel.'+s.slice(1))):MAT[s].n;
+const fmt=x=>x==null?'':(+x).toFixed(x<.1&&x>0?3:2).replace(/\.?0+$/,'');
+const propList=m=>[L('st.'+m.s),'pH '+m.a].concat(['f','d','v','o','cd','m','b','x','tx','r'].map(k=>L('p.'+k)+' '+fmt(m[k])));
+const props=m=>propList(m).join(' · ');
+const layers=v=>Object.keys(v.m).sort((a,b)=>MAT[b].d-MAT[a].d).map(id=>`<i class="${MAT[id].s}" style="flex:${v.m[id]};background:${MAT[id].c}" data-mat="${id}"><b>${MAT[id].i}</b></i>`).join('')||`<i style="flex:1;color:var(--mu);font-size:.8rem;opacity:1">${L('emptyv')}</i>`;
+const contents=v=>Object.keys(v.m).map(i=>L('qty',v.m[i],MAT[i].n)).join(L('sep'))||L('nothing');
+const lerp=(a,b,k)=>a+(b-a)*k,cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+function tcol(T){let h,sa,l;if(T<=20){const k=cl((T+60)/80);h=lerp(200,140,k);sa=lerp(90,22,k);l=lerp(72,58,k)}else{const k=cl((T-20)/920),m=cl(k*3);h=lerp(140,24,m);sa=lerp(22,100,m);l=lerp(58,55,k)}return `hsl(${h|0},${sa|0}%,${l|0}%)`}
+function tmask(t){let bg='transparent',gl='none';
+ if(t<20){const a=cl((20-t)/80)*.5;bg=`linear-gradient(180deg,rgba(200,238,255,${a}),rgba(100,170,255,${a*.9}))`;gl=`0 0 ${8+a*30}px rgba(140,205,255,${a})`}
+ else if(t>60){const a=cl((t-60)/860)*.6+.06;bg=`linear-gradient(0deg,rgba(255,80,20,${a*.85}),rgba(255,170,60,${a*.4}))`;gl=`0 0 ${10+a*40}px rgba(255,120,40,${a})`}
+ return `<div class="tmask" style="background:${bg};box-shadow:${gl}"></div>`}
+function vessel(v,env){const t=tmp(v,env),mir=t>=120;
+ return `<div class="vw ${mir?'mir':''}" id="vw">${mir?'<span class="hz h1"></span><span class="hz h2"></span><span class="hz h3"></span><span class="hz h4"></span>':''}<div class="vessel ${t>=100?'hot':''} ${t<=0?'cold':''}" id="ves">${layers(v)}</div>${tmask(t)}${v.seal?'<div class="lid" id="lid"></div>':''}</div>`}
+function monitor(v){const T=tmp(v,20),p=ph(v),st=v.m.steam||0,tp=Math.max(0,Math.min(1,(T+60)/1060)),pp=v.seal?Math.max(.06,Math.min(1,st/5)):0;
+ const row=(lb,val,bar)=>`<div class="mr"><span>${lb}</span><div class="bar">${bar}</div><b>${val}</b></div>`;
+ return `<div class="mon" id="mon">${row(L('temp'),Math.round(T)+'°C',`<i style="width:${tp*100}%;background:hsl(${210-210*tp},90%,55%)"></i>`)}${row('pH',p==null?'–':p.toFixed(1),`<div class="ph"></div>${p==null?'':`<u style="left:${p/14*100}%"></u>`}`)}${row(L('press'),L(v.seal?(st>=5?'pr.crit':st>=2?'pr.drv':'pr.low'):'pr.open'),`<i style="width:${pp*100}%;background:${st>=5?'#ff5a4a':st>=2?'#ffd24a':'#5dffb0'}"></i>`)}<div class="mc">${contents(v)}</div></div>`}
+function shelf(){const ids=Object.keys(MAT).filter(i=>S.disc.m[i]),un=Object.keys(MAT).length-ids.length;
+ return ids.map(i=>`<button class="chip" data-a="add" data-id="${i}" data-mat="${i}" style="--c:${MAT[i].c}"><span>${MAT[i].i}</span>${MAT[i].n}</button>`).join('')+(un?`<button class="chip" disabled><span>?</span>${L('unkn',un)}</button>`:'')}
+const info=()=>{const m=MAT[last];return `<b>${m.i} ${m.n}.</b> ${m.h}<br>${S.disc.st[last]?props(m):L('unk')}`};
+const logHTML=()=>{if(!S.log.length)return `<div>${L('tip0')}</div>`;const bi=S.log.map(l=>l.r).lastIndexOf(S.rn),c=bi<0?S.log:S.log.slice(0,bi+1),o=bi<0?[]:S.log.slice(bi+1),f=(l,x)=>`<div class="${l.k} ${x}">${l.t}</div>`;return c.map(l=>f(l,'cur')).join('')+(c.length&&o.length?'<hr class="lg">':'')+o.map(l=>f(l,'old')).join('')};
+function bench(){const v=S.v,mn=S.disc.m.steam?0:2;if(v.heat<mn)v.heat=mn;
+ const u=(k,ok,h)=>`<span class="tw" data-tool="${k}" data-lock="${ok?'':h}"><button data-a="tog" data-k="${k}" class="${v[k]?'on':''}" ${ok?'':'disabled'}>${L(k)}</button></span>`;
+ return `<div class="grid"><section class="card"><h2>${L('shelf')}</h2><div class="shelf">${shelf()}</div><p class="info" id="info">${info()}</p></section>
+<section class="card"><h2>${L('tab.bench')}</h2>${monitor(v)}
+<div class="stage c-${v.cont}" id="stage"><div class="thermo" style="--tc:${tcol(20+HEAT[v.heat])}"><span>🔥</span><div class="tr"><input type="range" min="${mn}" max="7" value="${v.heat}" id="heat" aria-label="${L('heat')}" title="${mn?L('lk.steam'):''}"><button class="anc ${v.heat==2?'on':''}" data-a="anchor" style="bottom:${(8+(2-mn)/(7-mn)*154-11).toFixed(1)}px" title="${L('anchor')}" aria-label="${L('anchor')}">⚓</button></div><span>❄️</span><b id="hl">${L('hn'+v.heat)}</b></div><div id="vwslot">${vessel(v,20)}</div><div class="stirzone">${v.stir?'<div class="stick"></div>':''}</div></div>
+<div class="ctl" style="justify-content:center"><select data-a="cont" aria-label="${L('cont')}">${Object.keys(CONT).map(k=>`<option value="${k}" ${v.cont==k?'selected':''}>${L('c.'+k)}</option>`).join('')}</select>${u('seal',S.disc.m.steam||S.disc.m.smoke,'lk.gas')}${u('stir',1,'')}${u('chg',S.disc.m.brine,'lk.brine')}</div>
+<div class="ctl" style="justify-content:center"><button class="go wide" data-a="run">${L('run')}</button><button data-a="undo">${L('undo')}</button><button data-a="empty">${L('empty')}</button></div>
+<div class="ctl" style="justify-content:center"><button data-a="savesetup">${L('save')}</button><select data-a="loadsetup" aria-label="${L('load')}"><option value="">${L('load')}</option>${Object.keys(S.setups).map(k=>`<option>${k}</option>`).join('')}</select></div>
+<div class="ctl" style="justify-content:center"><label>${L('pour')}</label>${Object.keys(SITE0).map(k=>`<button data-a="pour" data-k="${k}">${SITE0[k].ic} ${sn(k)}</button>`).join('')}</div>
+<div class="log" aria-live="polite">${logHTML()}</div></section></div>`}
+function world(){return `<div class="ctl" style="margin:0 0 12px"><button data-a="wx" data-k="clear" class="${S.wx=='clear'?'on':''}">${L('wx.clear')}</button><button data-a="wx" data-k="rain" class="${S.wx=='rain'?'on':''}">${L('wx.rain')}</button><button class="go" data-a="time">${L('time')}</button><span class="muted">${L('wxnote')}</span></div>
+<div class="sites">${Object.keys(SITE0).map(k=>{const s=S.sites[k],p=ph(s);return `<section class="card"><h2>${SITE0[k].ic} ${sn(k)}</h2><p class="muted">${sd(k)} ${L('amb',s.env)}</p><div class="vessel plain ${s.env>=100?'hot':''}">${layers(s)}</div><div class="ro"><span>${L('temp')} <b>${s.env}°C</b></span><span>pH <b>${p==null?'–':p.toFixed(1)}</b></span><span>${contents(s)}</span></div><div class="ctl"><button data-a="srun" data-k="${k}">${L('run')}</button><button data-a="sreset" data-k="${k}">${L('reset')}</button></div></section>`}).join('')}</div>
+<p class="muted">${L('worldnote')}</p>`}
+function codex(){const dm=Object.keys(MAT).filter(i=>S.disc.m[i]),dr=RULES.filter(r=>S.disc.r[r.id]);
+ return `<div class="grid"><section class="card"><h2>${L('cx.mat')} ${dm.length}/${Object.keys(MAT).length}</h2><div class="list">${dm.map(i=>`<div class="it"><h3>${MAT[i].i} ${MAT[i].n}</h3><small>${MAT[i].h}<br>${S.disc.st[i]?props(MAT[i]):L('cx.ns')}</small></div>`).join('')}</div></section>
+<section class="card"><h2>${L('cx.rx')} ${dr.length}/${RULES.length}</h2><div class="list">${dr.map(r=>{const c=r.c||{},need=[r.t&&(r.t[0]!=null?'≥'+r.t[0]+'°C':'')+(r.t[1]!=null?' ≤'+r.t[1]+'°C':''),c.seal===1&&L('n.seal'),c.seal===0&&L('n.open'),c.stir&&L('n.stir'),c.chg&&L('n.chg'),c.pw&&L('n.pw'),c.cat&&L('n.cat',nm(c.cat)),c.cont&&L('n.cont'),r.x&&L('n.wo',r.x.map(nm).join('/'))].filter(Boolean).join(L('sep'));
+ return `<div class="it"><h3>${r.n}</h3><small>${r.i.map(nm).join(' + ')} → ${(r.o||[]).map(nm).join(' + ')||L('gone')}${need?'<br>'+L('needs')+need:''}</small></div>`}).join('')||`<div class="muted">${L('cx.none')}</div>`}</div>
+<h2 style="margin-top:16px">${L('cx.notes')}</h2><textarea id="nt" placeholder="${L('cx.ph')}"></textarea></section></div>`}
+function goals(){return `<div class="list">${GOALS.map(g=>`<div class="it ${g.ck()?'done':''}"><h3>${gn(g,0)}</h3><small>${gn(g,1)}</small></div>`).join('')}<div class="it"><h3>${L('g.own')}</h3><small>${L('g.ownd')}</small></div></div>`}
+const VIEWS={bench,world,codex,goals,guide:()=>L('guide')};
+function R(){$('#tabs').innerHTML=TABS.map(k=>`<button data-a="tab" data-k="${k}" class="${S.tab==k?'on':''}">${L('tab.'+k)}</button>`).join('');
+ $('#view').innerHTML=VIEWS[S.tab]();if(S.tab=='codex')$('#nt').value=S.notes;
+ GOALS.forEach(g=>{if(!S.done)S.done={};if(!S.done[g.id]&&g.ck()){S.done[g.id]=1;say('new',L('goal',gn(g,0)));beep(880,.3)}})}
+let busy=0;
+const push=()=>{hist.push(JSON.stringify(S.v));if(hist.length>40)hist.shift()};
+function partial(){const v=S.v;$('#vwslot').innerHTML=vessel(v,20);$('#mon').outerHTML=monitor(v);$('#hl').textContent=L('hn'+v.heat);$('.thermo').style.setProperty('--tc',tcol(20+HEAT[v.heat]));save()}
+function doRun(){const v=S.v;
+ const fin=()=>{push();S.rn=(S.rn||0)+1;inb=1;absorb(run(v,20),'');busy=0;R();inb=0;const e=$('#ves');if(e)e.classList.add('pop')};
+ if(v.stir){busy=1;$('#stage').classList.add('stirring');setTimeout(fin,1300)}else fin()}
+function doEmpty(){const v=S.v,vw=$('#vw'),ids=Object.keys(v.m);if(!ids.length||!vw)return;busy=1;push();vw.classList.add('dump');$('#stage').classList.add('dumping');
+ for(let i=0;i<14;i++){const p=document.createElement('span');p.className='part';p.style.background=MAT[ids[i%ids.length]].c;p.style.setProperty('--x',(40+(i*37)%90)+'px');p.style.setProperty('--y',(20+(i*23)%50)+'px');p.style.setProperty('--d',(.42+(i%7)*.06)+'s');vw.appendChild(p)}
+ setTimeout(()=>vw.classList.add('drain'),520);
+ setTimeout(()=>{v.m={};busy=0;save();R()},1260)}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.tagName=='SELECT'||busy)return;const a=b.dataset.a,k=b.dataset.k,v=S.v;
+ if(a=='tab'){S.tab=k}
+ else if(a=='add'){last=b.dataset.id;push();if(tot(v)<14)v.m[last]=(v.m[last]||0)+1;else say('warn',L('full'))}
+ else if(a=='tog'){
+  if(k=='seal'&&v.seal&&$('#lid')){busy=1;$('#lid').classList.add('out');setTimeout(()=>{push();v.seal=0;busy=0;save();R()},300);return}
+  push();v[k]=v[k]?0:1;if(k=='seal'&&v.seal){save();R();const l=$('#lid');if(l)l.classList.add('in');return}}
+ else if(a=='run'){if(!tot(v)){say('warn',L('first'))}else{doRun();return}}
+ else if(a=='undo'){if(hist.length)S.v=JSON.parse(hist.pop())}
+ else if(a=='empty'){if(tot(v)){doEmpty();return}}
+ else if(a=='savesetup'){const n=(prompt(L('nameit'))||'').replace(/[<>&"]/g,'').trim();if(n){S.setups[n]=JSON.parse(JSON.stringify(v));say('ok',L('saved',n))}}
+ else if(a=='pour'){if(!tot(v)){say('warn',L('nopour'))}else{const s=S.sites[k];Object.keys(v.m).forEach(i=>s.m[i]=Math.min(14,(s.m[i]||0)+v.m[i]));if(v.heat!=2)say('warn',L('heatstay'));push();v.m={};say('ok',L('poured',sn(k)));runSite(k,0)}}
+ else if(a=='wx'){S.wx=k}
+ else if(a=='time'){Object.keys(SITE0).forEach(x=>runSite(x,1))}
+ else if(a=='srun'){runSite(k,1)}
+ else if(a=='sreset'){S.sites[k]=JSON.parse(JSON.stringify(SITE0[k]))}
+ else if(a=='anchor'){push();v.heat=2}
+ save();R();inb=0});
+document.addEventListener('change',e=>{const t=e.target;
+ if(t.id=='lang'){S.lang=t.value;S.log=[];applyLang();save();R()}
+ else if(t.dataset.a=='cont'){push();S.v.cont=t.value;save();R()}
+ else if(t.dataset.a=='loadsetup'&&t.value){push();S.v=JSON.parse(JSON.stringify(S.setups[t.value]));say('ok',L('loaded',t.value));save();R()}});
+document.addEventListener('input',e=>{if(e.target.id=='heat'){S.v.heat=+e.target.value;partial()}
+ if(e.target.id=='nt'){S.notes=e.target.value;save()}});
+// tooltip
+const tip=document.createElement('div');tip.id='tip';document.body.appendChild(tip);
+const lite=h=>{const n=parseInt(h.slice(1),16),f=c=>Math.round(c+(255-c)*.4);return `rgb(${f(n>>16)},${f(n>>8&255)},${f(n&255)})`};
+function tipAt(x,y){const w=tip.offsetWidth,h=tip.offsetHeight;let l=x+16,t=y+18;if(l+w>innerWidth-8)l=x-w-16;if(t+h>innerHeight-8)t=y-h-18;tip.style.left=Math.max(8,l)+'px';tip.style.top=Math.max(8,t)+'px'}
+function tipOn(id,x,y){const m=MAT[id];tip.innerHTML=`<h4 style="color:${lite(m.c)}">${m.i} ${m.n}</h4><hr><p>${m.h}</p><div class="at">${S.disc.st[id]?propList(m).map(s=>`<span>${s}</span>`).join(''):`<span>${L('unk')}</span>`}</div><p class="fl">${zh()?ZM[id][2]:FL[id]}</p>`;tip.style.display='block';tipAt(x,y)}
+const tipOff=()=>{tip.style.display='none'};
+function tipTool(el,x,y){const k=el.dataset.tool;tip.innerHTML=`<h4 style="color:#e0a93b">${L(k)}</h4><hr><p>${L('tt.'+k)}</p>${el.dataset.lock?`<p class="fl">🔒 ${L(el.dataset.lock)}</p>`:''}`;tip.style.display='block';tipAt(x,y)}
+const TS='[data-mat],[data-tool]',tipShow=(t,x,y)=>t.dataset.tool?tipTool(t,x,y):tipOn(t.dataset.mat,x,y);
+document.addEventListener('mouseover',e=>{const t=e.target.closest(TS);t?tipShow(t,e.clientX,e.clientY):tipOff()});
+document.addEventListener('mousemove',e=>{const t=e.target.closest(TS);if(t){tip.style.display=='block'?tipAt(e.clientX,e.clientY):tipShow(t,e.clientX,e.clientY)}});
+document.addEventListener('click',tipOff);
+document.addEventListener('focusin',e=>{const t=e.target.closest&&e.target.closest(TS);if(t){const r=t.getBoundingClientRect();tipShow(t,r.left,r.bottom)}});
+document.addEventListener('focusout',tipOff);
+applyLang();R();
+</script></body></html>

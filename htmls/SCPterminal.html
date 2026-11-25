@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MERIDIAN-OS · Site Terminal</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#0b1210;--p:#111c18;--p2:#16251f;--fg:#bfe8d4;--dim:#6f9a88;--ac:#3ddc97;--bd:#1f3a2f;--red:#ff4d4d;--amb:#ffb02e}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#e9efec;--p:#f7faf8;--p2:#dde7e2;--fg:#17302a;--dim:#587368;--ac:#0b7a50;--bd:#b5c9bf;--red:#c4161c;--amb:#a65f00}}
+:root[data-theme="dark"]{--bg:#0b1210}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:14px/1.45 ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column}
+button,input,select,textarea{font:inherit;color:var(--fg);background:var(--p2);border:1px solid var(--bd);padding:6px 10px;border-radius:3px}
+button{cursor:pointer}button:hover{border-color:var(--ac);color:var(--ac)}
+button.pri{background:var(--ac);color:var(--bg);border-color:var(--ac)}
+textarea{width:100%;min-height:90px}input,select{max-width:100%}
+h2,h3{margin:0 0 10px;letter-spacing:.08em;text-transform:uppercase;font-size:15px;color:var(--ac)}
+#top{display:flex;gap:12px;align-items:center;padding:8px 12px;background:var(--p);border-bottom:1px solid var(--bd);flex-wrap:wrap}
+#top b{color:var(--ac)}#top .sp{flex:1}
+#alert{display:none;padding:8px 12px;background:var(--red);color:#fff;font-weight:bold;text-align:center;animation:bl 1s infinite}
+@keyframes bl{50%{opacity:.6}}
+#main{flex:1;display:flex;min-height:0}
+nav{width:150px;background:var(--p);border-right:1px solid var(--bd);padding:8px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+nav button{text-align:left}nav button.on{background:var(--ac);color:var(--bg)}
+#view{flex:1;padding:14px;overflow:auto}
+.card{background:var(--p);border:1px solid var(--bd);padding:10px;margin-bottom:10px;border-radius:3px}
+.dim{color:var(--dim)}.red{color:var(--red)}.amb{color:var(--amb)}
+.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}.tabs button.on{border-color:var(--ac);color:var(--ac)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.tag{display:inline-block;padding:0 6px;border:1px solid var(--bd);border-radius:2px;font-size:12px}
+.redact{background:var(--fg);color:var(--fg);user-select:none;padding:0 3px}
+canvas{width:100%;background:#000;border:1px solid var(--bd);display:block}
+table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid var(--bd);padding:4px 6px;text-align:left}
+#login{max-width:420px;margin:8vh auto;padding:20px}
+@media(max-width:600px){nav{width:100%;flex-direction:row;border-right:0;border-bottom:1px solid var(--bd)}#main{flex-direction:column}}
+</style></head><body>
+<div id="alert"></div><div id="top"></div><div id="main"><nav id="nav"></nav><div id="view"></div></div>
+<script>
+const KEY='meridian_os_v1';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const now=()=>new Date().toLocaleString('en-GB',{hour12:false});
+const LV=['','Level 1 · Auxiliary','Level 2 · Staff','Level 3 · Researcher','Level 4 · Senior','Level 5 · Site Director'];
+const def={
+users:[{id:'D-1001',name:'Mara Voss',lv:5,bal:900},{id:'R-2207',name:'Dr. Eli Okafor',lv:4,bal:420},{id:'R-3150',name:'Dr. Hana Sato',lv:3,bal:310},{id:'S-4412',name:'Tomas Reyes',lv:2,bal:150},{id:'A-5090',name:'Jin Park',lv:1,bal:80}],
+bulletin:[{by:'Mara Voss',t:'Welcome to MERIDIAN-OS v9.2. Terminal activity is logged.',at:'—'},{by:'Facilities',t:'Cafeteria B closed for sanitation until 14:00.',at:'—'}],
+tickets:[{id:1,by:'S-4412',cat:'Infrastructure',t:'Corridor C-12 lights flicker every ~40 min.',st:'Open',at:'—'}],
+dms:[],alert:null,tx:[],
+archive:[
+{id:'A-017',name:'The Weeping Lantern',cls:'Contained',lv:2,desc:'A brass lantern that emits no light but produces audible sobbing when carried through doorways.',proc:'Stored in Vault 3-B, wrapped in acoustic felt. Handlers rotate every 4 hours.',addl:'Interview logs show the sobbing matches the voice of a deceased staff member. Do not circulate.',addlLv:4},
+{id:'A-044',name:'Tide Archive',cls:'Contained',lv:3,desc:'A 40-ton cistern that refills with seawater on the anniversary of any maritime disaster worldwide.',proc:'Sealed in Wet Lab 7. Samples are never to leave site.',addl:'Salinity matches the specific disaster. Water from the 1912 event retains temperature of 2°C.',addlLv:4},
+{id:'A-091',name:'Mr. Quiet',cls:'Keter',lv:4,desc:'Humanoid entity that nullifies sound within 6 m. Hostile when observed directly.',proc:'Observed by camera only. Cell 9-K is lined with lead and mirrors. Never enter alone.',addl:'Breach drill every 14 days. Termination was attempted twice; both attempts failed.',addlLv:5},
+{id:'A-120',name:'Spare Hours',cls:'Safe',lv:1,desc:'A wall clock that runs 7 minutes ahead and cannot be reset.',proc:'Mounted in Break Room 2. Harmless, though staff report better sleep nearby.',addl:'None on file.',addlLv:1},
+{id:'A-203',name:'The Understudy',cls:'Euclid',lv:5,desc:'[DIRECTOR EYES ONLY] Entity that assumes the role of a missing staff member.',proc:'See Directive Ω-12. Roll-call every shift mandatory.',addl:'Headcount discrepancy detected on 3 occasions.',addlLv:5}],
+log:[]};
+let S,me=null,app='msg',sub='bull',term='standard',openDoc=null,editing=false,query='';
+function load(){try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}if(!S)S=JSON.parse(JSON.stringify(def))}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+load();
+const user=id=>S.users.find(u=>u.id===id);
+const nm=id=>(user(id)||{name:id}).name;
+function logit(a){S.log.push(now()+' '+(me?me.id:'?')+' '+a);S.log=S.log.slice(-200);save()}
+
+function shell(){
+ $('#top').innerHTML=me?`<b>MERIDIAN-OS</b><span class="dim">TERM ${term.toUpperCase()}</span><span class="sp"></span><span>${esc(me.name)} <span class="tag">${LV[me.lv]}</span></span><span>₡${me.bal}</span><span class="dim" id="clk"></span><button onclick="logout()">Logout</button>`:'<b>MERIDIAN-OS</b><span class="sp"></span><span class="dim" id="clk"></span>';
+ const a=$('#alert');if(S.alert){a.style.display='block';a.textContent='⚠ EMERGENCY: '+S.alert.t+' — '+S.alert.by}else a.style.display='none';
+ $('#nav').style.display=me?'':'none';
+ if(me){const items=[['msg','Messages'],['arc','Archive'],['wal','Wallet']];
+  if(term==='camera')items.push(['cam','Surveillance']);if(term==='ct')items.push(['ct','CT Scanner']);
+  if(me.lv>=4)items.push(['aud','Audit Log']);
+  $('#nav').innerHTML=items.map(i=>`<button class="${app===i[0]?'on':''}" onclick="go('${i[0]}')">${i[1]}</button>`).join('');}
+}
+function go(a){app=a;stopAnim();openDoc=null;editing=false;render()}
+function render(){shell();if(!me)return loginView();({msg,arc,wal,cam,ct,aud})[app]();}
+setInterval(()=>{const c=$('#clk');if(c)c.textContent=now()},1000);
+
+function loginView(){
+ $('#view').innerHTML=`<div class="card" id="login"><h2>Terminal Authentication</h2><p class="dim">Authorized personnel only. Biometric badge required.</p>
+ <div class="row"><select id="lu">${S.users.map(u=>`<option value="${u.id}">${u.id} · ${esc(u.name)} (L${u.lv})</option>`).join('')}</select></div>
+ <div class="row"><select id="lt"><option value="standard">Standard terminal</option><option value="camera">Surveillance terminal</option><option value="ct">CT scanner terminal</option></select></div>
+ <button class="pri" onclick="login()">Authenticate</button><p class="dim" style="font-size:12px">Demo: choose any badge. Higher levels unlock more records.</p></div>`}
+function login(){me=user($('#lu').value);term=$('#lt').value;app='msg';sub='bull';logit('LOGIN '+term);render()}
+function logout(){logit('LOGOUT');stopAnim();me=null;render()}
+
+/* MESSAGES */
+function msg(){
+ const tabs=[['bull','Bulletin'],['dm','Direct'],['tk','Tickets'],['em','Emergency']];
+ let h=`<div class="tabs">${tabs.map(t=>`<button class="${sub===t[0]?'on':''}" onclick="sub='${t[0]}';render()">${t[1]}</button>`).join('')}</div>`;
+ if(sub==='bull')h+=`<div class="row"><input id="bt" placeholder="Post to bulletin…" style="flex:1"><button onclick="postB()">Post</button></div>`+S.bulletin.slice().reverse().map(b=>`<div class="card"><b>${esc(b.by)}</b> <span class="dim">${b.at}</span><br>${esc(b.t)}</div>`).join('');
+ if(sub==='dm'){const others=S.users.filter(u=>u.id!==me.id);const peer=window.peer||others[0].id;
+  const th=S.dms.filter(d=>(d.f===me.id&&d.to===peer)||(d.f===peer&&d.to===me.id));
+  h+=`<div class="row"><select onchange="window.peer=this.value;render()">${others.map(u=>`<option value="${u.id}" ${u.id===peer?'selected':''}>${esc(u.name)}</option>`).join('')}</select></div>`+
+  `<div class="card">${th.map(d=>`<div><span class="${d.f===me.id?'':'amb'}">${d.f===me.id?'You':esc(nm(d.f))}</span> <span class="dim">${d.at}</span>: ${esc(d.t)}</div>`).join('')||'<span class="dim">No messages yet.</span>'}</div>
+  <div class="row"><input id="dt" style="flex:1" placeholder="Message…" onkeydown="if(event.key==='Enter')sendDM('${peer}')"><button onclick="sendDM('${peer}')">Send</button></div>`}
+ if(sub==='tk')h+=`<div class="card"><h3>Report malfunction</h3><div class="row"><select id="tc"><option>Infrastructure</option><option>Power / HVAC</option><option>Containment hardware</option><option>IT / Terminal</option><option>Other</option></select></div><textarea id="tt" placeholder="Describe the issue and location…"></textarea><div class="row"><button class="pri" onclick="postT()">Submit ticket</button></div></div>`+
+  S.tickets.slice().reverse().map(t=>`<div class="card"><b>#${t.id}</b> <span class="tag">${t.cat}</span> <span class="tag ${t.st==='Open'?'amb':''}">${t.st}</span> <span class="dim">${esc(nm(t.by))} · ${t.at}</span><br>${esc(t.t)}${me.lv>=3&&t.st!=='Resolved'?` <button onclick="resT(${t.id})">Resolve</button>`:''}</div>`).join('');
+ if(sub==='em'){h+=`<div class="card"><h3>Emergency broadcast</h3>`+(me.lv>=4?`<div class="row"><input id="et" style="flex:1" placeholder="Announcement…"><button class="pri" onclick="postE()">Broadcast</button></div>`:'<p class="dim">Level 4+ required to broadcast.</p>')+
+  (S.alert?`<p class="red">ACTIVE: ${esc(S.alert.t)}</p>${me.lv>=4?'<button onclick="clearE()">Clear alert</button>':''}`:'<p class="dim">No active emergency.</p>')+`</div>`}
+ $('#view').innerHTML=h}
+function postB(){const t=$('#bt').value.trim();if(!t)return;S.bulletin.push({by:me.name,t,at:now()});logit('BULLETIN');save();render()}
+function sendDM(to){const el=$('#dt'),t=el.value.trim();if(!t)return;S.dms.push({f:me.id,to,t,at:now()});save();render()}
+function postT(){const t=$('#tt').value.trim();if(!t)return;S.tickets.push({id:S.tickets.length+1,by:me.id,cat:$('#tc').value,t,st:'Open',at:now()});logit('TICKET');save();render()}
+function resT(i){S.tickets.find(t=>t.id===i).st='Resolved';save();render()}
+function postE(){const t=$('#et').value.trim();if(!t)return;S.alert={t,by:me.name};logit('ALERT '+t);save();render()}
+function clearE(){S.alert=null;logit('ALERT CLEARED');save();render()}
+
+/* ARCHIVE */
+function arc(){
+ if(openDoc){const d=S.archive.find(x=>x.id===openDoc),ok=me.lv>=d.lv;
+  const red=(txt,lv)=>me.lv>=lv?esc(txt):`<span class="redact">${'█'.repeat(Math.min(60,txt.length/2|0))}</span> <span class="dim">[L${lv} required]</span>`;
+  let h=`<button onclick="openDoc=null;editing=false;render()">← Back</button><div class="card" style="margin-top:10px"><h2>${d.id} · ${esc(d.name)}</h2><span class="tag ${d.cls==='Keter'?'red':''}">${d.cls}</span> <span class="tag">Clearance L${d.lv}</span>`;
+  if(!ok)h+=`<p class="red">ACCESS DENIED — insufficient clearance. Attempt logged.</p>`;
+  else if(editing)h+=`<h3>Description</h3><textarea id="e1">${esc(d.desc)}</textarea><h3>Containment procedures</h3><textarea id="e2">${esc(d.proc)}</textarea><h3>Addendum</h3><textarea id="e3">${esc(d.addl)}</textarea><div class="row"><button class="pri" onclick="saveDoc('${d.id}')">Save revision</button><button onclick="editing=false;render()">Cancel</button></div>`;
+  else h+=`<h3>Description</h3><p>${esc(d.desc)}</p><h3>Containment procedures</h3><p>${esc(d.proc)}</p><h3>Addendum</h3><p>${red(d.addl,d.addlLv)}</p>${me.lv>=3&&me.lv>=d.lv?'<button onclick="editing=true;render()">Edit record</button>':'<span class="dim">Editing requires Level 3+ and record clearance.</span>'}`;
+  $('#view').innerHTML=h+'</div>';return}
+ const q=query.toLowerCase();
+ const list=S.archive.filter(d=>!q||(d.id+d.name+d.cls+d.desc).toLowerCase().includes(q));
+ $('#view').innerHTML=`<h2>Archive Database</h2><div class="row"><input id="q" value="${esc(query)}" placeholder="Query ID, name, class, keyword…" style="flex:1" oninput="query=this.value;arcList()"></div><div id="al"></div>`;arcList()}
+function arcList(){const q=query.toLowerCase();
+ $('#al').innerHTML='<table><tr><th>ID</th><th>Designation</th><th>Class</th><th>Clr</th></tr>'+S.archive.filter(d=>!q||(d.id+d.name+d.cls+d.desc).toLowerCase().includes(q)).map(d=>`<tr style="cursor:pointer" onclick="openDoc='${d.id}';logit('OPEN ${d.id}');render()"><td>${d.id}</td><td>${me.lv>=d.lv?esc(d.name):'<span class="redact">██████</span>'}</td><td>${d.cls}</td><td class="${me.lv>=d.lv?'':'red'}">L${d.lv}</td></tr>`).join('')+'</table>'}
+function saveDoc(id){const d=S.archive.find(x=>x.id===id);d.desc=$('#e1').value;d.proc=$('#e2').value;d.addl=$('#e3').value;logit('EDIT '+id);editing=false;save();render()}
+
+/* WALLET */
+const SHOP=[['Coffee',5],['Ration pack',12],['Protein bar',4],['Tea',3],['Hot meal (Cafeteria A)',15],['Toiletry kit',9],['Sleep aid (non-pharma)',7],['Notebook & pen',6]];
+function wal(){
+ const mine=S.tx.filter(t=>t.f===me.id||t.to===me.id).slice(-8).reverse();
+ $('#view').innerHTML=`<h2>Facility Credit</h2><div class="card"><div style="font-size:28px;color:var(--ac)">₡ ${me.bal}</div><span class="dim">Account ${me.id}</span></div>
+ <div class="grid"><div class="card"><h3>Commissary</h3>${SHOP.map((s,i)=>`<div class="row"><span style="flex:1">${s[0]}</span><span>₡${s[1]}</span><button onclick="buy(${i})">Buy</button></div>`).join('')}</div>
+ <div class="card"><h3>Transfer</h3><div class="row"><select id="tu">${S.users.filter(u=>u.id!==me.id).map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join('')}</select><input id="ta" type="number" min="1" placeholder="₡" style="width:80px"><button onclick="xfer()">Send</button></div><p id="wm" class="dim"></p>
+ <h3>Recent</h3>${mine.map(t=>`<div class="dim">${t.at} ${esc(t.n)} ${t.f===me.id?'-':'+'}${t.a}</div>`).join('')||'<span class="dim">No transactions.</span>'}</div></div>`}
+function buy(i){const s=SHOP[i];if(me.bal<s[1]){alert('Insufficient funds');return}me.bal-=s[1];S.tx.push({f:me.id,to:'STORE',a:s[1],n:s[0],at:now()});save();render()}
+function xfer(){const a=+$('#ta').value,t=user($('#tu').value);if(!(a>0)||a>me.bal){$('#wm').textContent='Invalid amount or insufficient funds.';return}me.bal-=a;t.bal+=a;S.tx.push({f:me.id,to:t.id,a,n:'Transfer '+t.name,at:now()});save();render()}
+
+/* AUDIT */
+function aud(){$('#view').innerHTML='<h2>Audit Log</h2><div class="card">'+(S.log.slice().reverse().map(l=>`<div class="dim">${esc(l)}</div>`).join('')||'No entries.')+'</div><button onclick="if(confirm(\'Reset all facility data?\')){localStorage.removeItem(KEY);load();me=null;render()}">Factory reset data</button>'}
+
+/* ANIMATION */
+let raf=0;function stopAnim(){cancelAnimationFrame(raf)}
+const CAMS=['C-12 Corridor','Vault 3-B','Cell 9-K','Wet Lab 7','Break Room 2','Loading Dock'];
+let camSel=-1;
+function cam(){
+ if(me.lv<2){$('#view').innerHTML='<h2>Surveillance</h2><p class="red">Level 2+ required.</p>';return}
+ $('#view').innerHTML=`<h2>Surveillance Feed</h2><div class="grid" id="cg">${CAMS.map((c,i)=>`<div class="card" style="padding:4px"><canvas width="240" height="150" data-i="${i}"></canvas><div class="row" style="margin:4px"><span>CAM ${i+1} · ${c}</span><span class="red">● REC</span></div></div>`).join('')}</div>`;
+ const cvs=[...document.querySelectorAll('canvas')];let t=0;
+ stopAnim();
+ (function loop(){t++;cvs.forEach(c=>{const i=+c.dataset.i,x=c.getContext('2d'),w=240,h=150;
+  x.fillStyle='#07120d';x.fillRect(0,0,w,h);
+  x.strokeStyle='#14382a';x.beginPath();x.moveTo(0,h*.6);x.lineTo(w,h*.6);x.moveTo(w/2,0);x.lineTo(w/2,h*.6);x.stroke();
+  const px=w/2+Math.sin(t/40+i*2)*70,py=h*.62+Math.cos(t/55+i)*10;
+  x.fillStyle='#3ddc97';x.globalAlpha=i===2?.2+.8*(t%120<4):.8;x.fillRect(px-5,py-22,10,22);x.beginPath();x.arc(px,py-27,5,0,7);x.fill();x.globalAlpha=1;
+  for(let k=0;k<60;k++){x.fillStyle=`rgba(180,255,220,${Math.random()*.15})`;x.fillRect(Math.random()*w,Math.random()*h,2,1)}
+  x.fillStyle='#bfe8d4';x.font='10px monospace';x.fillText(new Date().toLocaleTimeString('en-GB')+' CAM'+(i+1),6,12)});
+  raf=requestAnimationFrame(loop)})()}
+
+function ct(){
+ if(me.lv<3){$('#view').innerHTML='<h2>CT Scanner</h2><p class="red">Level 3+ required to operate.</p>';return}
+ $('#view').innerHTML=`<h2>CT Scanner Console</h2><div class="card"><div class="row"><select id="sp"><option>Specimen: A-017 housing</option><option>Specimen: Tide sample #4</option><option>Specimen: Unknown container</option></select><button class="pri" onclick="runCT()">Start scan</button></div>
+ <canvas id="cc" width="320" height="320" style="max-width:320px"></canvas><div class="row" style="margin-top:8px">Slice <input type="range" id="sl" min="0" max="39" value="20" oninput="drawCT()" style="flex:1"><span id="sn"></span></div><p id="cs" class="dim">Ready.</p></div>`;window.ctReady=false;drawCT()}
+function runCT(){let p=0;window.ctReady=false;const iv=setInterval(()=>{p+=5;$('#cs')&&($('#cs').textContent='Scanning… '+p+'%');if(p>=100){clearInterval(iv);window.ctReady=true;window.ctSeed=Math.random()*10;$('#cs').innerHTML='Scan complete. <span class="amb">Density anomaly flagged at slices 14–26.</span>';drawCT()}},150)}
+function drawCT(){const c=$('#cc');if(!c)return;const x=c.getContext('2d'),s=+$('#sl').value;$('#sn').textContent=(s+1)+'/40';
+ x.fillStyle='#000';x.fillRect(0,0,320,320);if(!window.ctReady)return;
+ const r=100-Math.abs(s-20)*1.2;x.strokeStyle='#ddd';x.lineWidth=6;x.beginPath();x.ellipse(160,160,r+30,r+20,0,0,7);x.stroke();
+ x.fillStyle='rgba(200,200,200,.25)';x.fill();
+ if(s>=14&&s<=26){x.fillStyle='rgba(255,255,255,.8)';x.beginPath();x.arc(160+Math.sin(s+ctSeed)*30,160+Math.cos(s*2)*20,14-Math.abs(s-20),0,7);x.fill();x.strokeStyle='#ffb02e';x.lineWidth=1;x.strokeRect(120,120,80,80)}
+ for(let k=0;k<500;k++){x.fillStyle=`rgba(255,255,255,${Math.random()*.12})`;x.fillRect(Math.random()*320,Math.random()*320,1,1)}}
+
+render();
+</script></body></html>

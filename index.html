@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Js Games</title>
+
+	<style>
+		body {
+			background-color: black;
+			font-family: 'Share Tech', sans-serif;
+			user-select: none;
+			
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+		}
+
+		/* menu text style */
+		a { /* game name */
+			color: white;
+			text-decoration: none;
+			min-width: 200px;
+			line-height: 64px;
+			font-size: 26px;
+		}
+		p { /* TAGS tag */
+			font-size: 24px;
+			margin-top: 20px;
+			border-left: 2px solid #333;
+			padding-left: 1em;
+		}
+
+
+		/* menu container div */
+		div#menu {
+			position: relative;
+			display: flex;
+			flex-direction: column;
+			
+			width: 50%;
+			min-width: 800px;
+			max-width: 1200px;
+			
+			margin-top: 1em;
+			margin-bottom: 1em;
+			overflow-y: auto;
+		}
+		/* row div */
+		div#menu > div {
+			display: flex;
+			justify-content: space-between;
+			flex-direction: row;
+			
+			padding: 0.25em 2.5em;
+			height: 64px;
+			text-align: left;
+			overflow-x: hidden;
+		}
+		div#menu > div:hover {
+			background-color: #333;
+		}
+
+		/* label style */
+		p.TAG { /* General Tag Style */
+			border: 1px white solid;
+			border-radius: 5px;
+			line-height: 1em;
+			height: 1em;
+			padding: 0.25em 1.5em;
+			margin: auto 1em;
+			text-align: center;
+		}
+		p.TAGS0 { /* game */
+			color: rgb(102, 255, 97);
+		}
+		p.TAGS1 { /* tool */
+			color: rgb(97, 255, 234);
+		}
+		p.TAGS2 { /* other */
+			color: rgb(100, 100, 100);
+		}
+		p.TAGS3 {
+			color: rgb(47, 253, 47);
+		}
+
+		div.hide {
+			display: none !important;
+		}
+
+		/* filter */
+		#filter_list {
+			margin: 2em;
+		
+			color: white;
+			display: flex;
+			flex-direction: row;
+		}
+		#filter_list > div {
+			border: 1px solid white;
+			font-size: 28px;
+			padding: 8px 16px;
+			margin: 0 8px;
+		}
+		#filter_list > div.active {
+			background-color: white;
+			color: black;
+		}
+		#filter_list > div.hover {
+			background-color: rgba(255,255,255,0.5);
+			color: black;
+		}
+
+
+		#button_terminal {
+			position: fixed;
+			right: 32px;
+			bottom: 32px;
+
+			line-height: 100px;
+			text-align: center;
+			font-size: 70px;
+			color: white;
+
+			width: 100px;
+			height: 100px;
+
+			border: white solid 2px;
+			border-radius: 50px;
+
+			transition: 0.2s;
+		}
+		#button_terminal:hover {
+			color: black;
+			background-color: white;
+			transform: scale(1.1);
+
+			cursor: pointer;
+		}
+
+
+		@media (max-width: 600px) {
+			#button_terminal {
+				display: none;
+			}
+		}
+	</style>
+	
+    <!-- import font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="filter_list"></div>
+    <div id="menu">
+        <!-- games links will be added here by script -->
+    </div>
+</body>
+</html>
+
+<script>
+// TAGS: 0-3
+const TAGS = [
+	"Game",
+	"Tool",
+	"Other"
+]
+const TAG_GAME = 0;
+const TAG_TOOL = 1;
+const TAG_OTHER = 2;
+
+// update game list here
+const GAMES = [
+    // Display name, Folder name, TAGS_Code, Description
+    ["Sprite Animation Viewer", "RabbitAnimationSpriteViewer.html", TAG_TOOL, ""],
+	["SCP Text Adventure", "SCPtextAdventureGame.html", TAG_GAME, ""],
+	["Tetris 3D", "Tetris3D.html", TAG_GAME, ""],
+	["ARG website", "ARGwebsite.html", TAG_GAME, ""],
+	["Mania Rhythm Game", "RhythmGameMania.html", TAG_GAME, ""],
+	["FPS Range", "FPSshootingRange.html", TAG_GAME, ""],
+	["SCP Keycard Generator", "SCPkeycardGenerator.html", TAG_GAME, ""],
+	["Trader Game", "TraderGame.html", TAG_GAME, ""],
+	["Typesetter Tool", "TypesetterTool.html", TAG_TOOL, ""],
+	["SCP Terminal", "SCPterminal.html", TAG_OTHER, ""],
+	["SCP Explorer 3D", "SCPexplorer3D.html", TAG_OTHER, ""],
+	["Air Hockey", "AirHockey.html", TAG_GAME, ""],
+	["Chess 3D", "Chess3D.html", TAG_GAME, ""],
+	["Tea Shop", "TeaShopGame.html", TAG_GAME, ""],
+	["SCP Paper Please", "PaperPleaseClone.html", TAG_GAME, ""],
+	["Alchemy", "AlchemyGame.html", TAG_GAME, ""],
+	["Caravan", "CaravanGame.html", TAG_GAME, ""],
+	["Bullet Hell", "TouhouClone.html", TAG_GAME, ""],
+	["Balatro Clone", "BalatroClone.html", TAG_GAME, ""],
+	["BPM Tapper", "BPMtapper.html", TAG_TOOL, ""],
+	["Firearm Playground", "FirearmPlayground.html", TAG_GAME, ""],
+	["OSI Model", "OSImodel.html", TAG_OTHER, ""],
+	["Periodic Table", "PeriodicTable.html", TAG_OTHER, ""]
+	// ["displayName", "htmlName", TAG_GAME, ""]
+];
+
+const MENU = document.getElementById("menu");
+const FILTER_LIST = document.getElementById("filter_list");
+
+for(let i=0;i < TAGS.length;i++) {
+    let newButton = document.createElement("div");
+    FILTER_LIST.appendChild(newButton);
+    newButton.id = "filter_"+i;
+    newButton.innerText = TAGS[i];
+}
+
+let FilterBtns = [];
+FilterBtns.push(document.getElementById("filter_0"));
+FilterBtns.push(document.getElementById("filter_1"));
+FilterBtns.push(document.getElementById("filter_2"));
+FilterBtns.push(document.getElementById("filter_3"));
+// listeners
+for(let TAGS=0;TAGS < TAGS.length;TAGS++) {
+    FilterBtns[TAGS].addEventListener('click', function() {
+        filter(TAGS[TAGS]);
+    });
+}
+
+let current_filter = null; // current filtering tag
+
+
+GAMES.forEach(game => {
+    let div = document.createElement("div");
+    let anchor = document.createElement("a");
+    let p = document.createElement("p");
+    MENU.appendChild(div);
+    div.appendChild(anchor);
+    div.appendChild(p);
+
+    anchor.innerHTML = game[0];
+    anchor.href = "htmls/" + game[1];
+
+	p.classList.add("TAG");
+    switch(game[2]) {
+        case 0:
+            p.innerHTML = TAGS[0];
+            p.classList.add("TAGS0");
+            break;
+        case 1:
+            p.innerHTML = TAGS[1];
+            p.classList.add("TAGS1");
+            break;
+        case 2:
+            p.innerHTML = TAGS[2];
+            p.classList.add("TAGS2");
+            break;
+        case 3:
+            p.innerHTML = TAGS[3];
+            p.classList.add("TAGS3");
+            break;
+    }
+});
+
+
+function filter(allow_TAGS) {
+    updateFilter(allow_TAGS);
+    let childDivs = MENU.getElementsByTagName("div");
+
+    // no filter, show all
+    if(current_filter == null) {
+        for (let i = 0; i < childDivs.length; i++) {
+            childDivs[i].classList = "";
+        }
+        return;
+    }
+
+    // show only if tag == allow_TAGS
+    for (let i = 0; i < childDivs.length; i++) {
+        let tag = childDivs[i].getElementsByTagName("p")[0].innerHTML;
+
+        if(tag == current_filter)
+            childDivs[i].classList = "";
+        else
+            childDivs[i].classList = "hide";
+    }
+}
+
+
+function updateFilter(tag) {
+    for(let i=0;i < FilterBtns.length;i++)
+        FilterBtns[i].classList = "";
+
+    if(tag != current_filter) // if current_filter already == tag, then reset current_filter
+        for(let i=0;i < TAGS.length;i++) {
+            if(tag == TAGS[i]) {
+                current_filter = tag;
+                FilterBtns[i].classList = "active";
+                return;
+            }
+        }
+    current_filter = null;
+}
+</script>

@@ -1,0 +1,4038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chrome Tetris</title>
+<style>
+  :root {
+    --bg: #07080d;
+    --panel: rgba(13, 15, 24, 0.74);
+    --panel-border: rgba(130, 150, 210, 0.16);
+    --text: #dbe1f2;
+    --muted: #7f89a8;
+    --accent: #5fd4ff;
+    --accent-2: #b36bff;
+    --danger: #ff5c70;
+    --font: "Segoe UI", "Helvetica Neue", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  *, *::before, *::after { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+  }
+  #stage { position: fixed; inset: 0; }
+  #stage canvas { display: block; }
+
+  /* ---------- HUD panels ---------- */
+  .panel {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 20px);
+    width: 208px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+  }
+  .hud-left  { left: 22px; }
+  .hud-right { right: 22px; width: 168px; }
+  .block {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    pointer-events: auto;
+  }
+  .block h2 {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+  .block-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .block-header h2 { margin: 0; }
+  .toolbar { display: flex; gap: 6px; }
+  .icon-btn {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--panel-border);
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .icon-btn:hover { background: rgba(255,255,255,0.1); }
+  .icon-btn:focus-visible, .btn:focus-visible, .touch-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  canvas.piece-preview { display: block; width: 96px; height: 64px; margin: 0 auto; }
+  #next-queue { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+  #stats-list { margin: 0; display: grid; grid-template-columns: 1fr auto; row-gap: 7px; column-gap: 10px; }
+  #stats-list dt { color: var(--muted); font-size: 12px; align-self: center; }
+  #stats-list dd { margin: 0; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+  #stats-list dd.primary { font-size: 22px; color: var(--accent); }
+
+  /* ---------- popups ---------- */
+  #popup-layer {
+    position: fixed; left: 0; right: 0; top: 24%; z-index: 7;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    pointer-events: none;
+  }
+  .popup {
+    font-size: 30px; font-weight: 800; letter-spacing: 0.03em;
+    color: #fff;
+    text-shadow: 0 0 18px rgba(95, 212, 255, 0.9), 0 0 42px rgba(95, 212, 255, 0.5);
+    animation: popup-rise 1.5s cubic-bezier(.2,.7,.2,1) forwards;
+    white-space: nowrap;
+  }
+  .popup.small { font-size: 17px; color: #ffd36b; text-shadow: 0 0 14px rgba(255, 190, 70, 0.7); }
+  .popup.big {
+    font-size: 46px;
+    color: #fff3c9;
+    text-shadow: 0 0 22px rgba(255, 170, 60, 1), 0 0 60px rgba(255, 90, 40, 0.8);
+    animation-duration: 2.1s;
+  }
+  .popup.tspin { text-shadow: 0 0 22px rgba(190, 110, 255, 1), 0 0 60px rgba(150, 70, 255, 0.8); color: #f0dcff; }
+  .popup.perfect {
+    background: linear-gradient(90deg, #ff7a7a, #ffd36b, #7dffa8, #6fd6ff, #c48bff);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent; text-shadow: none;
+    filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.85));
+  }
+  @keyframes popup-rise {
+    0%   { opacity: 0; transform: translateY(14px) scale(0.7); }
+    12%  { opacity: 1; transform: translateY(0) scale(1.12); }
+    22%  { transform: translateY(0) scale(1); }
+    75%  { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-34px) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) { .popup { animation-duration: 0.01s; opacity: 1; } }
+
+  /* ---------- overlay & settings ---------- */
+  #overlay, #settings-panel {
+    position: fixed; inset: 0;
+    display: grid; place-items: center;
+    background: rgba(4, 5, 9, 0.62);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+  }
+  #settings-panel { z-index: 20; }
+  .card {
+    width: min(420px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    overflow: auto;
+    background: rgba(14, 16, 26, 0.94);
+    border: 1px solid var(--panel-border);
+    border-radius: 14px;
+    padding: 26px 26px 22px;
+    text-align: center;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  }
+  .card h1 { margin: 0 0 8px; font-size: 30px; letter-spacing: 0.02em; }
+  .card p { margin: 0 0 16px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+  .card .help { font-size: 12.5px; line-height: 1.8; color: #98a2c2; text-align: left; margin: 0 0 20px; padding: 12px 14px; background: rgba(255,255,255,0.03); border-radius: 8px; white-space: pre-line; }
+  .btn {
+    padding: 11px 26px;
+    font: inherit; font-weight: 700;
+    border: 0; border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #07080d; cursor: pointer;
+  }
+  .btn.secondary { background: rgba(255,255,255,0.08); color: var(--text); font-weight: 600; margin-left: 8px; }
+  .settings-row { display: grid; grid-template-columns: 1fr 120px 56px; gap: 10px; align-items: center; margin-bottom: 12px; text-align: left; font-size: 13px; }
+  .settings-row output { text-align: right; font-variant-numeric: tabular-nums; color: var(--accent); }
+  .tab-bar { display: flex; gap: 6px; justify-content: center; margin: 0 0 18px; }
+  .tab-btn {
+    padding: 8px 16px; font: 600 13px var(--font); color: var(--muted);
+    background: rgba(255,255,255,0.04); border: 1px solid var(--panel-border); border-radius: 8px; cursor: pointer;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--text); background: rgba(95, 212, 255, 0.14); border-color: rgba(95, 212, 255, 0.5); }
+  .tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tab-panel { min-height: 330px; }
+  .settings-row input[type=range] { width: 100%; accent-color: var(--accent); }
+  .settings-row input[type=checkbox] { justify-self: start; width: 20px; height: 20px; accent-color: var(--accent); }
+  .settings-actions { margin-top: 18px; }
+
+  /* ---------- touch controls ---------- */
+  #touch-controls {
+    position: fixed; left: 0; right: 0;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+    display: none; justify-content: space-between; align-items: flex-end;
+    padding: 0 12px; pointer-events: none; gap: 8px;
+  }
+  .touch-group { display: grid; gap: 8px; pointer-events: none; }
+  .touch-group.left  { grid-template-columns: repeat(3, 54px); }
+  .touch-group.right { grid-template-columns: repeat(3, 54px); }
+  .touch-btn {
+    height: 54px; border-radius: 14px;
+    border: 1px solid var(--panel-border);
+    background: rgba(24, 28, 44, 0.78);
+    color: var(--text); font: 700 16px var(--font);
+    pointer-events: auto; touch-action: none;
+  }
+  .touch-btn:active { background: rgba(95, 212, 255, 0.28); }
+  .touch-btn.wide { grid-column: span 2; }
+  @media (pointer: coarse) { #touch-controls { display: flex; } }
+
+  /* ---------- portrait / compact layout ---------- */
+  @media (orientation: portrait) {
+    .panel { top: calc(env(safe-area-inset-top, 0px) + 8px); }
+    .hud-left { left: 8px; right: 92px; width: auto; flex-direction: row; gap: 8px; align-items: flex-start; }
+    .hud-right { right: 8px; width: 78px; }
+    .block { padding: 7px 9px; border-radius: 8px; }
+    .block h2 { font-size: 10px; margin-bottom: 4px; }
+    canvas.piece-preview { width: 60px; height: 40px; }
+    #stats-list { grid-template-columns: auto auto; row-gap: 3px; column-gap: 8px; }
+    #stats-list dt { font-size: 10px; }
+    #stats-list dd { font-size: 12px; }
+    #stats-list dd.primary { font-size: 14px; }
+    .stats-block { flex: 1; min-width: 0; }
+    #next-queue .piece-preview:nth-child(n+4) { display: none; }
+    .icon-btn { width: 24px; height: 24px; font-size: 12px; }
+    .popup { font-size: 22px; }
+    .popup.big { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="popup-layer"></div>
+
+<aside class="panel hud-left">
+  <div class="block hold-block">
+    <h2 data-i18n="hud.hold"></h2>
+    <canvas id="hold-canvas" class="piece-preview"></canvas>
+  </div>
+  <div class="block stats-block"><dl id="stats-list"></dl></div>
+</aside>
+
+<aside class="panel hud-right">
+  <div class="block">
+    <div class="block-header">
+      <h2 data-i18n="hud.next"></h2>
+      <div class="toolbar">
+        <button id="btn-pause" class="icon-btn" data-i18n-title="button.pause" type="button">❚❚</button>
+        <button id="btn-settings" class="icon-btn" data-i18n-title="button.settings" type="button">⚙</button>
+      </div>
+    </div>
+    <div id="next-queue"></div>
+  </div>
+</aside>
+
+<section id="overlay" hidden>
+  <div class="card">
+    <h1 id="overlay-title"></h1>
+    <p id="overlay-message"></p>
+    <div class="help" id="overlay-help"></div>
+    <button id="overlay-button" class="btn" type="button"></button>
+  </div>
+</section>
+
+<section id="settings-panel" hidden>
+  <div class="card">
+    <h1 data-i18n="settings.title"></h1>
+    <div id="settings-tabs" class="tab-bar" role="tablist"></div>
+    <div id="settings-fields"></div>
+    <div class="settings-actions">
+      <button id="settings-reset" class="btn secondary" type="button" data-i18n="settings.reset"></button>
+      <button id="settings-close" class="btn" type="button" data-i18n="settings.close"></button>
+    </div>
+  </div>
+</section>
+
+<div id="touch-controls"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/BokehShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/AfterimageShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/MaskPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/BokehPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/AfterimagePass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/objects/Reflector.js"></script>
+
+<script>
+'use strict';
+(function () {
+
+/* =====================================================================
+ * SECTION 1 — UTILITIES
+ * Small, dependency-free helpers shared by every module.
+ * ===================================================================== */
+
+/**
+ * Recursively freezes an object so configuration cannot be mutated by accident.
+ * @param {Object} target - The object (and nested objects) to freeze.
+ * @returns {Object} The same object, now deeply frozen.
+ */
+function deepFreeze(target) {
+  Object.values(target).forEach((value) => {
+    if (value && typeof value === 'object') deepFreeze(value);
+  });
+  return Object.freeze(target);
+}
+
+/**
+ * Restricts a number to the inclusive range [min, max].
+ * @param {number} value - Input value.
+ * @param {number} min - Lower bound.
+ * @param {number} max - Upper bound.
+ * @returns {number} The clamped value.
+ */
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+/**
+ * Linearly interpolates between two numbers.
+ * @param {number} from - Start value.
+ * @param {number} to - End value.
+ * @param {number} amount - Interpolation factor (0..1).
+ * @returns {number} Interpolated value.
+ */
+function lerp(from, to, amount) {
+  return from + (to - from) * amount;
+}
+
+/**
+ * Returns a random float in [min, max).
+ * @param {number} min - Lower bound.
+ * @param {number} max - Upper bound (exclusive).
+ * @returns {number} Random value.
+ */
+function randomRange(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+/**
+ * Shuffles an array in place using the Fisher-Yates algorithm.
+ * @param {Array} items - Array to shuffle (mutated).
+ * @param {function(): number} random - Random source returning [0,1).
+ * @returns {Array} The same array, shuffled.
+ */
+function shuffleInPlace(items, random) {
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+  return items;
+}
+
+/**
+ * Converts a numeric hex color (0xRRGGBB) to a CSS "#rrggbb" string.
+ * @param {number} hex - Color as a number.
+ * @returns {string} CSS color string.
+ */
+function hexToCss(hex) {
+  return '#' + hex.toString(16).padStart(6, '0');
+}
+
+/**
+ * Cheap smooth pseudo-noise in [-1, 1] built from summed sine waves.
+ * @param {number} time - Sample position.
+ * @param {number} seed - Per-channel offset so channels decorrelate.
+ * @returns {number} Noise value.
+ */
+function smoothNoise(time, seed) {
+  return (Math.sin(time + seed) + 0.5 * Math.sin(time * 2.3 + seed * 1.7) + 0.25 * Math.sin(time * 4.1 + seed * 0.6)) / 1.75;
+}
+
+/* =====================================================================
+ * SECTION 2 — CONFIG
+ * Every tunable value lives here (key binds, DAS/ARR, soft drop speed,
+ * graphics and effect parameters).
+ * ===================================================================== */
+
+const CONFIG = deepFreeze({
+  board: { columns: 10, visibleRows: 20, hiddenRows: 3, spawnRow: 1 },
+
+  input: {
+    /** Keyboard bindings as KeyboardEvent.code values. */
+    keybinds: {
+      moveLeft: ['ArrowLeft'],
+      moveRight: ['ArrowRight'],
+      softDrop: ['ArrowDown'],
+      rotateClockwise: ['ArrowUp'],
+      rotateCounterClockwise: ['KeyZ'],
+      rotate180: ['KeyA'],
+      hold: ['KeyC'],
+      hardDrop: ['KeyB', 'Space'],
+      pause: ['KeyP', 'Escape'],
+      restart: ['KeyR'],
+      start: ['Enter'],
+    },
+    dasFrames: 10,            // Delayed Auto Shift: frames to wait before auto-repeat begins
+    arrFrames: 2,             // Auto Repeat Rate: frames between repeats (0 = instant to wall)
+    softDropRepeatFrames: 1,  // Frames between soft-drop steps while held; 0 = instant (piece drops straight to the floor without locking)
+  },
+
+  gameplay: {
+    logicFps: 60,
+    maxLogicStepsPerFrame: 5,
+    lockDelayFrames: 30,
+    maxLockResets: 15,
+    linesPerLevel: 10,
+    gravityBaseSeconds: 0.8,
+    gravityDecrementPerLevel: 0.007,
+    minGravityFramesPerCell: 1 / 20,
+    nextQueueSize: 5,
+    scoring: {
+      lineClear: [0, 100, 300, 500, 800],
+      tSpin: [400, 800, 1200, 1600],
+      tSpinMini: [100, 200, 400],
+      softDropPerCell: 1,
+      hardDropPerCell: 2,
+      comboPerStep: 50,
+      backToBackMultiplier: 1.5,
+      perfectClearQuadMultiplier: 2.5, // a perfect clear scores this many times a quad clear (replaces the normal line-clear score)
+    },
+  },
+
+  pieceColors: { I: 0x27e6ff, O: 0xffd21f, T: 0xb44dff, S: 0x3dff7a, Z: 0xff3b4f, J: 0x3d6bff, L: 0xff8a1f },
+
+  /** Defaults for the options exposed in the settings panel (visual options only). */
+  userSettings: {
+    motionBlurStrength: 0.45,
+    depthOfFieldStrength: 1,
+    bloomStrength: 1,
+    cameraShakeStrength: 1,
+    rainAmount: 1,
+  },
+
+  audio: {
+    masterVolume: 0.8,
+    rainVolume: 0.5,            // default ambient rain volume (0..1); also a slider in the settings panel
+    effectsVolume: 0.8,         // default volume of line-clear sounds (0..1); also a slider in the settings panel
+    baseFrequencyHz: 330,       // pitch of a single-line clear at combo 0
+    /** Pitch offset in semitones per clear type: single < double < triple < quad < T-spin double < T-spin triple. */
+    clearSemitones: { single: 0, double: 2, triple: 4, quad: 6, tSpinSingle: 5, tSpinDouble: 8, tSpinTriple: 10, perfectClear: 13 }, // perfect clear is the highest
+    /** Relative loudness of the one-shot sound effects (0..1). */
+    sfxGains: { rotate: 0.16, hold: 0.28, lock: 0.4, hardDrop: 0.65, gameOver: 0.45 },
+    comboSemitonesPerStep: 1,   // extra semitones added to every line clear for each combo step
+    maxComboSemitones: 12,      // cap so very long combos stay pleasant
+    chordOffsetsSemitones: [0, 4, 7, 12], // the Nth chime of a multi-line clear is offset by the Nth value
+    noteSpacingSeconds: 0.06,
+    reverbSeconds: 1.6,
+    reverbAmount: 0.25,
+    rain: { updateIntervalSeconds: 0.1, calmHiss: 0.1, stormHiss: 0.4, calmBrightnessHz: 5000, stormBrightnessHz: 10000, calmBody: 0.04, stormBody: 0.45, windMax: 0.5 },
+    lightning: { crackGain: 0.9, zapGain: 0.25 }, // lightning sound loudness (also scaled by the rain volume)
+  },
+
+  graphics: {
+    fieldOfViewDegrees: 36,
+    cameraPitchDegrees: 8,
+    cameraTargetHeight: 9.6,
+    framing: {
+      landscape: { height: 25, width: 14 },
+      portrait: { height: 29, width: 13.5 },
+    },
+    pixelRatio: { max: 1.75, min: 0.75 },
+    antiAliasingLevels: [0, 2, 4, 8],          // MSAA sample counts selectable in settings (capped by what the GPU supports)
+    antiAliasingDefaultIndex: 2,              // default level: index into the list above
+    shadowQualityLevels: [0, 512, 1024, 2048], // shadow map sizes selectable in settings (0 = shadows off)
+    shadowQualityDefaultIndex: 2,             // default level: index into the list above
+    reflections: { enabled: true, textureSize: 768 }, // enabled = default of the in-game Reflections switch; turn off for a big speed-up on low-end machines
+    smoothPieceMovement: true,   // false = pieces snap instantly to their grid cell (precise, no easing)
+    pieceSmoothingPerSecond: 38, // easing speed when smoothing is on (higher = snappier)
+    cell: { size: 0.94, depth: 0.8, bevel: 0.08, metalness: 1, roughness: 0.24, clearcoat: 0.5, envMapIntensity: 1.5 },
+    bloom: { strength: 0.55, radius: 0.65, threshold: 0.8 },
+    depthOfField: { aperture: 0.0016, maxBlur: 0.012 },
+    finalGrade: { exposure: 1.15, vignette: 0.55, grain: 0.03, baseChromaticAberration: 0.0008 },
+    flashLightMaxIntensity: 6,
+    adaptiveQuality: { enabled: true, lowFpsThreshold: 52, sampleSeconds: 1.5, pixelRatioStep: 0.15 },
+  },
+
+  effects: {
+    particleCapacity: 4500,
+    shake: {
+      decayPerSecond: 1.7, maxOffset: 0.9, maxRotationRadians: 0.035, frequency: 22,
+      lock: 0.05, hardDropBase: 0.1, hardDropPerCell: 0.012, hardDropMax: 0.38,
+      lineClearPerLine: 0.1, quad: 0.9, tSpin: 0.8, gameOver: 0.6,
+    },
+    impulseDecayPerSecond: { bloom: 1.6, flash: 3.2, chromaticAberration: 2.2, whiteout: 0.9 },
+    rain: {
+      maxDrops: 1100, speedMin: 24, speedMax: 38, lengthMin: 0.6, lengthMax: 1.4,
+      slant: 2.5, areaHalfWidth: 22, zMin: -16, zMax: 12, topY: 46, floorY: -0.5, splashChance: 0.25,
+    },
+    sparkleIntervalSeconds: 0.12,
+    /** Cinematic nuclear explosion triggered by a perfect clear (all clear). */
+    nuclear: {
+      durationSeconds: 4.5,
+      slowMotion: { scale: 0.3, holdSeconds: 0.55, rampSeconds: 1.0 }, // visual slow-motion; the game itself keeps its normal speed
+      whiteout: 1, flash: 2.2, bloom: 3, chromaticAberration: 0.02,
+      fireball: { radius: 15, seconds: 1.6, y: 5 },
+      groundRing: { maxScale: 75, seconds: 1.8 },
+      domeRing: { maxScale: 60, seconds: 1.4 },
+      stem: { startSeconds: 0.25, endSeconds: 2.8, particlesPerSecond: 260, radius: 1.6, riseSpeedMin: 13, riseSpeedMax: 19 },
+      cap: { startSeconds: 0.9, endSeconds: 3.4, particlesPerSecond: 320, riseHeight: 17, startRadius: 2.5, endRadius: 12 },
+      debrisCount: 320,
+    },
+    /** Combo-driven storm: intensity rises from 0 (light drizzle) to 1 (hurricane) as consecutive line clears build up. */
+    storm: {
+      chainForMaxStorm: 7,          // consecutive piece drops that each clear >= 1 line to reach a full hurricane
+      riseRatePerSecond: 1.2,       // how fast the storm builds after a clear
+      fallRatePerSecond: 0.35,      // how fast it calms once the combo breaks
+      calmDropFraction: 0.1,        // fraction of raindrops visible at 0 combo
+      speedMultiplierMax: 1.9,
+      slantMax: 24,                 // horizontal wind speed at full storm
+      lengthMultiplierMax: 2,
+      thicknessMultiplierMax: 2.4,
+      opacityMin: 0.4,
+      opacityMax: 0.85,
+      splashChanceMax: 0.6,
+      gustFrequency: 0.8,
+      gustStrength: 0.4,
+      cameraBuffetStartLevel: 0.5,  // storm level where wind starts rattling the camera
+      cameraBuffetMaxTrauma: 0.5,
+      mistStartLevel: 0.4,          // storm level where wind-blown spray appears
+      mistParticlesPerSecondAtMax: 140,
+      lightning: { startLevel: 0.45, intervalSecondsAtStart: 7, intervalSecondsAtMax: 1.4, flash: 0.9, bloom: 0.6, shake: 0.3 },
+    },
+    lineClear: { particlesPerCell: 7, speedMin: 3, speedMax: 11, gravity: -16 },
+    explosion: {
+      particleCount: 420, speedMin: 6, speedMax: 28, ringDurations: [0.9, 1.25],
+      ringMaxScale: 24, flash: 1, bloom: 1.3, chromaticAberration: 0.012, secondaryBursts: 3,
+      palettes: {
+        quad: [0xffe38a, 0xffa43b, 0xff5a2a, 0xffffff],
+        tSpin: [0xe3b8ff, 0xb44dff, 0x7a3bff, 0xffffff],
+      },
+    },
+  },
+});
+
+/* =====================================================================
+ * SECTION 3 — STRING TABLE
+ * All displayed text lives here so wording can be tuned or translated.
+ * Add a new locale by adding another key to STRINGS and calling setLocale().
+ * ===================================================================== */
+
+const STRINGS = {
+  en: {
+    'game.title': 'Chrome Tetris',
+    'hud.hold': 'Hold',
+    'hud.next': 'Next',
+    'hud.score': 'Score',
+    'hud.level': 'Level',
+    'hud.lines': 'Lines',
+    'hud.time': 'Time',
+    'hud.linesPerMinute': 'Lines / min',
+    'hud.piecesPerSecond': 'Pieces / sec',
+    'hud.tSpins': 'T-Spins (D/T)',
+    'hud.quads': 'Quads',
+    'hud.perfectClears': 'Perfect Clears',
+    'overlay.startTitle': 'Ready?',
+    'overlay.startMessage': 'Stack the metal. Clear four lines, or land a T-Spin double or triple, for an explosion.',
+    'overlay.pausedTitle': 'Paused',
+    'overlay.pausedMessage': 'Take a breath. Your stack is safe.',
+    'overlay.gameOverTitle': 'Game over',
+    'overlay.gameOverMessage': 'Final score {score} with {lines} lines.',
+    'overlay.help': '← →  Move\n↓  Soft drop\n↑  Rotate clockwise      Z  Rotate counter-clockwise      A  Rotate 180°\nC  Hold / swap\nSpace or B  Hard drop\nP or Esc  Pause      R  Restart',
+    'button.start': 'Start game',
+    'button.resume': 'Resume',
+    'button.restart': 'Play again',
+    'button.pause': 'Pause',
+    'button.settings': 'Settings',
+    'clear.single': 'Single',
+    'clear.double': 'Double',
+    'clear.triple': 'Triple',
+    'clear.quad': 'QUAD!',
+    'tspin.zero': 'T-Spin',
+    'tspin.single': 'T-Spin Single',
+    'tspin.double': 'T-SPIN DOUBLE!',
+    'tspin.triple': 'T-SPIN TRIPLE!',
+    'tspinMini.zero': 'T-Spin Mini',
+    'tspinMini.single': 'T-Spin Mini Single',
+    'tspinMini.double': 'T-Spin Mini Double',
+    'popup.backToBack': 'Back-to-back',
+    'popup.perfectClear': 'PERFECT CLEAR!',
+    'popup.combo': 'Combo ×{count}',
+    'popup.levelUp': 'Level {level}',
+    'settings.title': 'Settings',
+    'settings.motionBlur': 'Motion blur',
+    'settings.depthOfField': 'Depth of field',
+    'settings.bloom': 'Bloom glow',
+    'settings.cameraShake': 'Camera shake',
+    'settings.rain': 'Rain intensity',
+    'settings.smoothMovement': 'Smooth piece movement',
+    'settings.on': 'On',
+    'settings.off': 'Off',
+    'settings.rainVolume': 'Rain sound volume',
+    'settings.effectsVolume': 'Sound effects volume',
+    'settings.das': 'DAS (frames)',
+    'settings.arr': 'ARR (frames)',
+    'settings.softDrop': 'Soft drop repeat (frames)',
+    'settings.instant': 'Instant',
+    'settings.tab.graphics': 'Graphics',
+    'settings.tab.gameplay': 'Gameplay',
+    'settings.tab.audio': 'Audio',
+    'settings.reflections': 'Reflections',
+    'settings.antiAliasing': 'Anti-aliasing',
+    'settings.shadowQuality': 'Shadow quality',
+    'settings.quality.off': 'Off',
+    'settings.quality.low': 'Low',
+    'settings.quality.medium': 'Medium',
+    'settings.quality.high': 'High',
+    'settings.aa.x2': '2x',
+    'settings.aa.x4': '4x',
+    'settings.aa.x8': '8x',
+    'settings.reset': 'Restore defaults',
+    'settings.close': 'Done',
+    'touch.left': '◀',
+    'touch.right': '▶',
+    'touch.down': '▼',
+    'touch.rotateClockwise': '⟳',
+    'touch.rotateCounterClockwise': '⟲',
+    'touch.rotate180': '180°',
+    'touch.hold': 'Hold',
+    'touch.hardDrop': 'Drop',
+    'error.noWebGl': 'WebGL is not available, so the game cannot start. Try a different browser or enable hardware acceleration.',
+    'error.noThree': 'The 3D library failed to load. Check your connection and reload the page.',
+  },
+};
+
+let activeLocale = 'en';
+
+/**
+ * Switches the active locale used by t().
+ * @param {string} locale - Key of STRINGS (for example "en").
+ * @returns {void}
+ */
+function setLocale(locale) {
+  if (STRINGS[locale]) activeLocale = locale;
+}
+
+/**
+ * Looks up a displayed string and substitutes {placeholders}.
+ * @param {string} key - String table key.
+ * @param {Object<string, string|number>} [params] - Values for {placeholder} tokens.
+ * @returns {string} Localized text, or the key itself if missing.
+ */
+function t(key, params) {
+  const table = STRINGS[activeLocale] || STRINGS.en;
+  let text = table[key];
+  if (text === undefined) text = STRINGS.en[key];
+  if (text === undefined) return key;
+  if (params) text = text.replace(/\{(\w+)\}/g, (match, name) => (name in params ? params[name] : match));
+  return text;
+}
+
+/* =====================================================================
+ * SECTION 4 — RUNTIME SETTINGS (user-adjustable, persisted)
+ * ===================================================================== */
+
+const SETTINGS_STORAGE_KEY = 'chromeTetris.settings.v1';
+
+/**
+ * Describes each slider shown in the settings panel.
+ * @type {Array<{key:string,tab:string,labelKey:string,min:number,max:number,step:number,decimals:number,type?:string,zeroLabelKey?:string,optionKeys?:string[]}>}
+ */
+const SETTINGS_FIELDS = [
+  { key: 'motionBlurStrength', tab: 'graphics', labelKey: 'settings.motionBlur', min: 0, max: 0.9, step: 0.05, decimals: 2 },
+  { key: 'depthOfFieldStrength', tab: 'graphics', labelKey: 'settings.depthOfField', min: 0, max: 3, step: 0.1, decimals: 1 },
+  { key: 'bloomStrength', tab: 'graphics', labelKey: 'settings.bloom', min: 0, max: 2, step: 0.05, decimals: 2 },
+  { key: 'cameraShakeStrength', tab: 'graphics', labelKey: 'settings.cameraShake', min: 0, max: 2, step: 0.1, decimals: 1 },
+  { key: 'rainAmount', tab: 'graphics', labelKey: 'settings.rain', min: 0, max: 1, step: 0.05, decimals: 2 },
+  { key: 'dasFrames', tab: 'gameplay', labelKey: 'settings.das', min: 0, max: 30, step: 1, decimals: 0 },
+  { key: 'arrFrames', tab: 'gameplay', labelKey: 'settings.arr', min: 0, max: 10, step: 1, decimals: 0 },
+  { key: 'softDropRepeatFrames', tab: 'gameplay', labelKey: 'settings.softDrop', min: 0, max: 10, step: 1, decimals: 0, zeroLabelKey: 'settings.instant' },
+  { key: 'smoothPieceMovement', tab: 'graphics', labelKey: 'settings.smoothMovement', type: 'toggle', min: 0, max: 1, step: 1, decimals: 0 },
+  { key: 'reflectionsEnabled', tab: 'graphics', labelKey: 'settings.reflections', type: 'toggle', min: 0, max: 1, step: 1, decimals: 0 },
+  { key: 'antiAliasingLevel', tab: 'graphics', labelKey: 'settings.antiAliasing', min: 0, max: 3, step: 1, decimals: 0, optionKeys: ['settings.quality.off', 'settings.aa.x2', 'settings.aa.x4', 'settings.aa.x8'] },
+  { key: 'shadowQuality', tab: 'graphics', labelKey: 'settings.shadowQuality', min: 0, max: 3, step: 1, decimals: 0, optionKeys: ['settings.quality.off', 'settings.quality.low', 'settings.quality.medium', 'settings.quality.high'] },
+  { key: 'rainVolume', tab: 'audio', labelKey: 'settings.rainVolume', min: 0, max: 1, step: 0.05, decimals: 2 },
+  { key: 'effectsVolume', tab: 'audio', labelKey: 'settings.effectsVolume', min: 0, max: 1, step: 0.05, decimals: 2 },
+];
+
+/**
+ * Builds the default mutable settings object from CONFIG.
+ * @returns {Object<string, number>} Fresh settings with default values.
+ */
+function createDefaultSettings() {
+  return {
+    ...CONFIG.userSettings,
+    dasFrames: CONFIG.input.dasFrames,
+    arrFrames: CONFIG.input.arrFrames,
+    softDropRepeatFrames: CONFIG.input.softDropRepeatFrames,
+    smoothPieceMovement: CONFIG.graphics.smoothPieceMovement ? 1 : 0,
+    rainVolume: CONFIG.audio.rainVolume,
+    effectsVolume: CONFIG.audio.effectsVolume,
+    reflectionsEnabled: CONFIG.graphics.reflections.enabled ? 1 : 0,
+    antiAliasingLevel: CONFIG.graphics.antiAliasingDefaultIndex,
+    shadowQuality: CONFIG.graphics.shadowQualityDefaultIndex,
+  };
+}
+
+/**
+ * Loads persisted settings (if any) on top of the defaults. Storage failures are ignored.
+ * @returns {Object<string, number>} Settings object, always valid.
+ */
+function loadSettings() {
+  const settings = createDefaultSettings();
+  try {
+    const stored = JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) || '{}');
+    SETTINGS_FIELDS.forEach((field) => {
+      if (typeof stored[field.key] === 'number') settings[field.key] = clamp(stored[field.key], field.min, field.max);
+    });
+  } catch (error) { /* storage unavailable: defaults are fine */ }
+  return settings;
+}
+
+/**
+ * Persists settings to localStorage. Failures are ignored.
+ * @param {Object<string, number>} settings - Settings to save.
+ * @returns {void}
+ */
+function saveSettings(settings) {
+  try { localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings)); } catch (error) { /* ignore */ }
+}
+
+/* =====================================================================
+ * SECTION 5 — GAME LOGIC (no rendering code below until SECTION 8)
+ * ===================================================================== */
+// ==== LOGIC BEGIN
+
+const PIECE_TYPES = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
+
+/** Spawn shapes (rotation 0) as [x, y] cells inside a square bounding box (y grows downward). */
+const BASE_SHAPES = {
+  I: { size: 4, cells: [[0, 1], [1, 1], [2, 1], [3, 1]] },
+  O: { size: 2, cells: [[0, 0], [1, 0], [0, 1], [1, 1]] },
+  T: { size: 3, cells: [[1, 0], [0, 1], [1, 1], [2, 1]] },
+  S: { size: 3, cells: [[1, 0], [2, 0], [0, 1], [1, 1]] },
+  Z: { size: 3, cells: [[0, 0], [1, 0], [1, 1], [2, 1]] },
+  J: { size: 3, cells: [[0, 0], [0, 1], [1, 1], [2, 1]] },
+  L: { size: 3, cells: [[2, 0], [0, 1], [1, 1], [2, 1]] },
+};
+
+/** SRS wall-kick offsets as [dx, dy] with y pointing UP (converted to grid space when built). */
+const SRS_KICKS_JLSTZ = {
+  '0>1': [[0, 0], [-1, 0], [-1, 1], [0, -2], [-1, -2]],
+  '1>0': [[0, 0], [1, 0], [1, -1], [0, 2], [1, 2]],
+  '1>2': [[0, 0], [1, 0], [1, -1], [0, 2], [1, 2]],
+  '2>1': [[0, 0], [-1, 0], [-1, 1], [0, -2], [-1, -2]],
+  '2>3': [[0, 0], [1, 0], [1, 1], [0, -2], [1, -2]],
+  '3>2': [[0, 0], [-1, 0], [-1, -1], [0, 2], [-1, 2]],
+  '3>0': [[0, 0], [-1, 0], [-1, -1], [0, 2], [-1, 2]],
+  '0>3': [[0, 0], [1, 0], [1, 1], [0, -2], [1, -2]],
+};
+/** 180-degree rotation kicks (y up). Horizontal-first for flat states, vertical-first for upright states. */
+const SRS_KICKS_180 = {
+  '0>2': [[0, 0], [1, 0], [2, 0], [1, 1], [2, 1], [-1, 0], [-2, 0], [-1, 1], [-2, 1], [0, -1], [3, 0], [-3, 0]],
+  '2>0': [[0, 0], [-1, 0], [-2, 0], [-1, -1], [-2, -1], [1, 0], [2, 0], [1, -1], [2, -1], [0, 1], [-3, 0], [3, 0]],
+  '1>3': [[0, 0], [0, 2], [0, 1], [1, 0], [-1, 0], [1, 2], [-1, 2], [0, -1]],
+  '3>1': [[0, 0], [0, 2], [0, 1], [-1, 0], [1, 0], [-1, 2], [1, 2], [0, -1]],
+};
+const SRS_KICKS_I = {
+  '0>1': [[0, 0], [-2, 0], [1, 0], [-2, -1], [1, 2]],
+  '1>0': [[0, 0], [2, 0], [-1, 0], [2, 1], [-1, -2]],
+  '1>2': [[0, 0], [-1, 0], [2, 0], [-1, 2], [2, -1]],
+  '2>1': [[0, 0], [1, 0], [-2, 0], [1, -2], [-2, 1]],
+  '2>3': [[0, 0], [2, 0], [-1, 0], [2, 1], [-1, -2]],
+  '3>2': [[0, 0], [-2, 0], [1, 0], [-2, -1], [1, 2]],
+  '3>0': [[0, 0], [1, 0], [-2, 0], [1, -2], [-2, 1]],
+  '0>3': [[0, 0], [-1, 0], [2, 0], [-1, 2], [2, -1]],
+};
+
+/**
+ * Converts a kick table from "y up" to grid space ("y down").
+ * @param {Object<string, number[][]>} table - Kick table with y pointing up.
+ * @returns {Object<string, number[][]>} Kick table with y pointing down.
+ */
+function toGridSpaceKicks(table) {
+  const converted = {};
+  Object.keys(table).forEach((key) => { converted[key] = table[key].map(([dx, dy]) => [dx, -dy]); });
+  return converted;
+}
+
+/**
+ * Builds the four rotation states of every piece by rotating its base shape clockwise.
+ * @returns {Object<string, {size:number, rotations:number[][][], kicks:Object}>} Piece definitions by type.
+ */
+function buildPieceDefinitions() {
+  const jlstzKicks = toGridSpaceKicks(SRS_KICKS_JLSTZ);
+  const iKicks = toGridSpaceKicks(SRS_KICKS_I);
+  const kicks180 = toGridSpaceKicks(SRS_KICKS_180);
+  const definitions = {};
+  PIECE_TYPES.forEach((type) => {
+    const { size, cells } = BASE_SHAPES[type];
+    const rotations = [cells];
+    for (let i = 1; i < 4; i++) {
+      rotations.push(rotations[i - 1].map(([x, y]) => [size - 1 - y, x]));
+    }
+    const baseKicks = type === 'I' ? iKicks : jlstzKicks;
+    definitions[type] = { size, rotations, kicks: type === 'O' ? {} : { ...baseKicks, ...kicks180 } };
+  });
+  return definitions;
+}
+
+const PIECE_DEFINITIONS = buildPieceDefinitions();
+
+/**
+ * Returns the absolute grid cells occupied by a piece.
+ * @param {{type:string, rotation:number, x:number, y:number}} piece - The piece.
+ * @returns {Array<{x:number, y:number}>} Four grid cells.
+ */
+function getPieceCells(piece) {
+  return PIECE_DEFINITIONS[piece.type].rotations[piece.rotation].map(([cx, cy]) => ({ x: piece.x + cx, y: piece.y + cy }));
+}
+
+/** Minimal publish/subscribe helper that decouples game logic from views. */
+class EventEmitter {
+  /** Creates an emitter with no listeners. @returns {EventEmitter} */
+  constructor() { this.listeners = new Map(); }
+
+  /**
+   * Registers a listener.
+   * @param {string} eventName - Event to listen for.
+   * @param {function(Object): void} handler - Callback receiving the payload.
+   * @returns {function(): void} Function that removes the listener.
+   */
+  on(eventName, handler) {
+    if (!this.listeners.has(eventName)) this.listeners.set(eventName, []);
+    this.listeners.get(eventName).push(handler);
+    return () => this.listeners.set(eventName, this.listeners.get(eventName).filter((h) => h !== handler));
+  }
+
+  /**
+   * Calls every listener registered for an event.
+   * @param {string} eventName - Event name.
+   * @param {Object} [payload] - Data passed to listeners.
+   * @returns {void}
+   */
+  emit(eventName, payload) {
+    const handlers = this.listeners.get(eventName);
+    if (handlers) handlers.forEach((handler) => handler(payload));
+  }
+}
+
+/** The playfield grid. Cells hold a piece type string or null. */
+class Board {
+  /**
+   * Creates an empty board.
+   * @param {number} columns - Number of columns.
+   * @param {number} rows - Total rows including hidden spawn rows.
+   */
+  constructor(columns, rows) {
+    this.columns = columns;
+    this.rows = rows;
+    this.version = 0; // increments on every mutation so views know when to rebuild
+    this.cells = Board.createGrid(columns, rows);
+  }
+
+  /**
+   * Creates an empty grid.
+   * @param {number} columns - Column count.
+   * @param {number} rows - Row count.
+   * @returns {Array<Array<string|null>>} 2D array filled with null.
+   */
+  static createGrid(columns, rows) {
+    return Array.from({ length: rows }, () => new Array(columns).fill(null));
+  }
+
+  /** Empties the board. @returns {void} */
+  reset() {
+    this.cells = Board.createGrid(this.columns, this.rows);
+    this.version++;
+  }
+
+  /**
+   * Tests whether a cell is outside the board or already filled.
+   * @param {number} x - Column.
+   * @param {number} y - Row.
+   * @returns {boolean} True when the cell cannot be occupied.
+   */
+  isBlocked(x, y) {
+    return x < 0 || x >= this.columns || y < 0 || y >= this.rows || this.cells[y][x] !== null;
+  }
+
+  /**
+   * Tests whether any of the given cells is blocked.
+   * @param {Array<{x:number,y:number}>} cells - Cells to test.
+   * @returns {boolean} True if there is a collision.
+   */
+  collides(cells) {
+    return cells.some((cell) => this.isBlocked(cell.x, cell.y));
+  }
+
+  /**
+   * Writes a piece's cells into the grid.
+   * @param {Array<{x:number,y:number}>} cells - Cells to fill.
+   * @param {string} type - Piece type stored in the cells.
+   * @returns {void}
+   */
+  lockCells(cells, type) {
+    cells.forEach((cell) => { this.cells[cell.y][cell.x] = type; });
+    this.version++;
+  }
+
+  /** Tests whether the whole board is empty (used for perfect-clear detection). @returns {boolean} True when no cell is filled. */
+  isEmpty() {
+    return this.cells.every((row) => row.every((cell) => cell === null));
+  }
+
+  /** Finds all completed rows. @returns {number[]} Row indices, ascending. */
+  findFullRows() {
+    const rows = [];
+    this.cells.forEach((row, index) => { if (row.every((cell) => cell !== null)) rows.push(index); });
+    return rows;
+  }
+
+  /**
+   * Removes rows and shifts everything above downward.
+   * @param {number[]} rowIndices - Rows to delete.
+   * @returns {void}
+   */
+  removeRows(rowIndices) {
+    const removed = new Set(rowIndices);
+    const kept = this.cells.filter((row, index) => !removed.has(index));
+    while (kept.length < this.rows) kept.unshift(new Array(this.columns).fill(null));
+    this.cells = kept;
+    this.version++;
+  }
+}
+
+/** Produces pieces using the fair 7-bag randomizer. */
+class PieceGenerator {
+  /**
+   * Creates a generator.
+   * @param {function(): number} [random] - Random source returning [0,1).
+   */
+  constructor(random = Math.random) {
+    this.random = random;
+    this.queue = [];
+  }
+
+  /** Clears the queue. @returns {void} */
+  reset() { this.queue = []; }
+
+  /**
+   * Makes sure the queue holds at least a number of pieces.
+   * @param {number} minimumLength - Required queue length.
+   * @returns {void}
+   */
+  refill(minimumLength) {
+    while (this.queue.length < minimumLength) {
+      this.queue.push(...shuffleInPlace([...PIECE_TYPES], this.random));
+    }
+  }
+
+  /** Removes and returns the next piece type. @returns {string} Piece type. */
+  next() {
+    this.refill(1);
+    return this.queue.shift();
+  }
+
+  /**
+   * Looks ahead without consuming.
+   * @param {number} count - How many upcoming pieces to return.
+   * @returns {string[]} Upcoming piece types.
+   */
+  peek(count) {
+    this.refill(count);
+    return this.queue.slice(0, count);
+  }
+}
+
+/**
+ * The rules engine: movement, SRS rotation, hold, gravity, locking,
+ * line clears, T-spin detection and scoring. It knows nothing about rendering
+ * and communicates through events:
+ * started, pieceSpawned, pieceMoved, pieceRotated, pieceHeld, hardDropped,
+ * pieceLocked, linesCleared, levelUp, gameOver, paused.
+ */
+class GameEngine extends EventEmitter {
+  /**
+   * Creates an idle engine.
+   * @param {Object} config - The CONFIG object.
+   */
+  constructor(config) {
+    super();
+    this.config = config;
+    this.board = new Board(config.board.columns, config.board.hiddenRows + config.board.visibleRows);
+    this.generator = new PieceGenerator();
+    this.state = 'idle'; // idle | playing | paused | gameover
+    this.resetRun();
+  }
+
+  /** Resets all per-game state. @returns {void} */
+  resetRun() {
+    this.board.reset();
+    this.generator.reset();
+    this.piece = null;
+    this.pieceSerial = 0;
+    this.holdType = null;
+    this.holdUsed = false;
+    this.gravityAccumulator = 0;
+    this.lockTimer = 0;
+    this.lockResets = 0;
+    this.lowestRow = 0;
+    this.lastMoveWasRotation = false;
+    this.lastKickIndex = 0;
+    this.frames = 0;
+    this.stats = { score: 0, level: 1, lines: 0, tSpins: 0, quads: 0, perfectClears: 0, pieces: 0, combo: -1, backToBack: false };
+  }
+
+  /** Starts a fresh game. @returns {void} */
+  start() {
+    this.resetRun();
+    this.state = 'playing';
+    this.emit('started', {});
+    this.spawnPiece(this.generator.next(), false);
+  }
+
+  /** Toggles between playing and paused; ignored in other states. @returns {void} */
+  togglePause() {
+    if (this.state === 'playing') this.state = 'paused';
+    else if (this.state === 'paused') this.state = 'playing';
+    else return;
+    this.emit('paused', { paused: this.state === 'paused' });
+  }
+
+  /**
+   * Computes how many logic frames gravity takes to move a piece one row.
+   * @returns {number} Frames per row (can be below 1 for very high speeds).
+   */
+  getGravityFramesPerCell() {
+    const { gravityBaseSeconds, gravityDecrementPerLevel, logicFps, minGravityFramesPerCell } = this.config.gameplay;
+    const level = this.stats.level;
+    const seconds = Math.pow(gravityBaseSeconds - (level - 1) * gravityDecrementPerLevel, level - 1);
+    return Math.max(seconds * logicFps, minGravityFramesPerCell);
+  }
+
+  /**
+   * Advances the simulation by one logic frame.
+   * @param {string[]} actions - Actions the input layer produced for this frame.
+   * @returns {void}
+   */
+  tick(actions) {
+    if (this.state !== 'playing') return;
+    this.frames++;
+    actions.forEach((action) => { if (this.piece) this.applyAction(action); });
+    if (!this.piece) return;
+
+    this.gravityAccumulator += 1 / this.getGravityFramesPerCell();
+    while (this.gravityAccumulator >= 1) {
+      this.gravityAccumulator -= 1;
+      if (!this.tryMove(0, 1, true)) { this.gravityAccumulator = 0; break; }
+    }
+
+    if (this.isGrounded()) {
+      this.lockTimer++;
+      if (this.lockTimer >= this.config.gameplay.lockDelayFrames) this.lockActivePiece();
+    } else {
+      this.lockTimer = 0;
+    }
+  }
+
+  /**
+   * Executes one gameplay action.
+   * @param {string} action - moveLeft, moveRight, softDrop, rotateClockwise, rotateCounterClockwise, hold or hardDrop.
+   * @returns {void}
+   */
+  applyAction(action) {
+    switch (action) {
+      case 'moveLeft': this.tryMove(-1, 0, false); break;
+      case 'moveRight': this.tryMove(1, 0, false); break;
+      case 'softDrop':
+        if (this.tryMove(0, 1, false)) this.stats.score += this.config.gameplay.scoring.softDropPerCell;
+        break;
+      case 'softDropInstant': this.softDropToFloor(); break;
+      case 'rotateClockwise': this.tryRotate(1); break;
+      case 'rotateCounterClockwise': this.tryRotate(-1); break;
+      case 'rotate180': this.tryRotate(2); break;
+      case 'hold': this.holdPiece(); break;
+      case 'hardDrop': this.hardDrop(); break;
+      default: break;
+    }
+  }
+
+  /**
+   * Attempts to translate the active piece.
+   * @param {number} dx - Columns to move.
+   * @param {number} dy - Rows to move (positive is down).
+   * @param {boolean} isGravity - True when caused by gravity (does not reset lock delay).
+   * @returns {boolean} True if the piece moved.
+   */
+  tryMove(dx, dy, isGravity) {
+    if (!this.piece) return false;
+    const moved = { ...this.piece, x: this.piece.x + dx, y: this.piece.y + dy };
+    if (this.board.collides(getPieceCells(moved))) return false;
+    this.piece = moved;
+    this.lastMoveWasRotation = false;
+    if (this.piece.y > this.lowestRow) { this.lowestRow = this.piece.y; this.lockResets = 0; }
+    if (!isGravity) this.registerPieceAdjustment();
+    this.emit('pieceMoved', { dx, dy, isGravity });
+    return true;
+  }
+
+  /**
+   * Attempts an SRS rotation including wall kicks.
+   * @param {number} direction - +1 clockwise, -1 counter-clockwise, 2 for a 180-degree turn.
+   * @returns {boolean} True if the rotation succeeded.
+   */
+  tryRotate(direction) {
+    if (!this.piece) return false;
+    const definition = PIECE_DEFINITIONS[this.piece.type];
+    const fromRotation = this.piece.rotation;
+    const toRotation = (fromRotation + direction + 4) % 4;
+    const kicks = definition.kicks[`${fromRotation}>${toRotation}`] || [[0, 0]];
+    for (let index = 0; index < kicks.length; index++) {
+      const candidate = { ...this.piece, rotation: toRotation, x: this.piece.x + kicks[index][0], y: this.piece.y + kicks[index][1] };
+      if (!this.board.collides(getPieceCells(candidate))) {
+        this.piece = candidate;
+        this.lastMoveWasRotation = true;
+        this.lastKickIndex = Math.abs(direction) === 2 ? -1 : index; // 180-degree kicks never count as the special 5th-kick T-spin
+        if (this.piece.y > this.lowestRow) { this.lowestRow = this.piece.y; this.lockResets = 0; }
+        this.registerPieceAdjustment();
+        this.emit('pieceRotated', { direction });
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Resets the lock timer after a successful manual adjustment while grounded (limited by maxLockResets).
+   * @returns {void}
+   */
+  registerPieceAdjustment() {
+    if (this.isGrounded() && this.lockResets < this.config.gameplay.maxLockResets) {
+      this.lockTimer = 0;
+      this.lockResets++;
+    }
+  }
+
+  /** Tests whether the active piece rests on something. @returns {boolean} True when it cannot move down. */
+  isGrounded() {
+    return this.board.collides(getPieceCells({ ...this.piece, y: this.piece.y + 1 }));
+  }
+
+  /**
+   * Moves the active piece straight down until it rests on something, WITHOUT locking it
+   * (the player can still slide or rotate it until the lock delay runs out). Awards soft-drop points per row.
+   * @returns {number} Number of rows the piece moved.
+   */
+  softDropToFloor() {
+    let rows = 0;
+    while (this.tryMove(0, 1, false)) rows++;
+    this.stats.score += rows * this.config.gameplay.scoring.softDropPerCell;
+    return rows;
+  }
+
+  /** Drops the active piece to the bottom and locks it immediately. @returns {void} */
+  hardDrop() {
+    if (!this.piece) return;
+    const fromCells = getPieceCells(this.piece);
+    let distance = 0;
+    while (!this.board.collides(getPieceCells({ ...this.piece, y: this.piece.y + 1 }))) {
+      this.piece = { ...this.piece, y: this.piece.y + 1 };
+      distance++;
+    }
+    if (distance > 0) this.lastMoveWasRotation = false;
+    this.stats.score += distance * this.config.gameplay.scoring.hardDropPerCell;
+    this.emit('hardDropped', { type: this.piece.type, fromCells, toCells: getPieceCells(this.piece), distance });
+    this.lockActivePiece();
+  }
+
+  /** Stores the active piece in the hold slot (swapping if occupied); once per piece. @returns {void} */
+  holdPiece() {
+    if (!this.piece || this.holdUsed) return;
+    const currentType = this.piece.type;
+    const swapType = this.holdType;
+    this.holdType = currentType;
+    this.emit('pieceHeld', { type: currentType });
+    this.spawnPiece(swapType || this.generator.next(), true);
+  }
+
+  /**
+   * Places a new piece at the top of the board; ends the game if it overlaps.
+   * @param {string} type - Piece type to spawn.
+   * @param {boolean} isFromHold - True if spawned by a hold action (keeps hold locked).
+   * @returns {void}
+   */
+  spawnPiece(type, isFromHold) {
+    const piece = { type, rotation: 0, x: type === 'O' ? 4 : 3, y: this.config.board.spawnRow };
+    this.holdUsed = isFromHold;
+    this.lockTimer = 0;
+    this.lockResets = 0;
+    this.lowestRow = piece.y;
+    this.lastMoveWasRotation = false;
+    this.gravityAccumulator = 0;
+    this.pieceSerial++;
+    if (this.board.collides(getPieceCells(piece))) {
+      this.piece = null;
+      this.state = 'gameover';
+      this.emit('gameOver', { stats: this.getStats() });
+      return;
+    }
+    this.piece = piece;
+    this.emit('pieceSpawned', { type });
+  }
+
+  /**
+   * Classifies a T-spin using the 3-corner rule (call before locking the piece).
+   * @returns {'none'|'mini'|'full'} T-spin classification.
+   */
+  detectTSpin() {
+    if (!this.piece || this.piece.type !== 'T' || !this.lastMoveWasRotation) return 'none';
+    const { x, y, rotation } = this.piece;
+    const occupied = (cx, cy) => this.board.isBlocked(x + cx, y + cy);
+    const corners = { topLeft: occupied(0, 0), topRight: occupied(2, 0), bottomLeft: occupied(0, 2), bottomRight: occupied(2, 2) };
+    const total = Object.values(corners).filter(Boolean).length;
+    if (total < 3) return 'none';
+    const frontCorners = [
+      [corners.topLeft, corners.topRight],
+      [corners.topRight, corners.bottomRight],
+      [corners.bottomLeft, corners.bottomRight],
+      [corners.topLeft, corners.bottomLeft],
+    ][rotation];
+    if (frontCorners[0] && frontCorners[1]) return 'full';
+    return this.lastKickIndex === 4 ? 'full' : 'mini';
+  }
+
+  /** Locks the active piece, resolves line clears and spawns the next piece. @returns {void} */
+  lockActivePiece() {
+    const piece = this.piece;
+    const cells = getPieceCells(piece);
+    const tSpin = this.detectTSpin();
+    this.board.lockCells(cells, piece.type);
+    this.stats.pieces++;
+    this.emit('pieceLocked', { type: piece.type, cells });
+
+    const fullRows = this.board.findFullRows();
+    if (fullRows.length === 0) this.stats.combo = -1;
+    if (fullRows.length > 0 || tSpin !== 'none') this.resolveClear(fullRows, tSpin, piece.type);
+
+    this.piece = null;
+    this.spawnPiece(this.generator.next(), false);
+  }
+
+  /**
+   * Removes cleared rows, updates stats/score and emits "linesCleared".
+   * @param {number[]} fullRows - Completed row indices.
+   * @param {'none'|'mini'|'full'} tSpin - T-spin classification of the locking move.
+   * @param {string} pieceType - Type of the piece that caused the clear.
+   * @returns {void}
+   */
+  resolveClear(fullRows, tSpin, pieceType) {
+    const { scoring, linesPerLevel } = this.config.gameplay;
+    const lines = fullRows.length;
+    const rows = fullRows.map((row) => ({ row, types: [...this.board.cells[row]] }));
+    this.board.removeRows(fullRows);
+    const isPerfectClear = lines > 0 && this.board.isEmpty();
+
+    let baseScore = 0;
+    if (tSpin === 'full') baseScore = scoring.tSpin[lines];
+    else if (tSpin === 'mini') baseScore = scoring.tSpinMini[Math.min(lines, scoring.tSpinMini.length - 1)];
+    else baseScore = scoring.lineClear[lines];
+    if (isPerfectClear) baseScore = scoring.lineClear[4] * scoring.perfectClearQuadMultiplier;
+
+    const isDifficult = lines === 4 || isPerfectClear || (tSpin !== 'none' && lines > 0);
+    const appliedBackToBack = lines > 0 && isDifficult && this.stats.backToBack && !isPerfectClear;
+    if (lines > 0) this.stats.backToBack = isDifficult;
+
+    let awarded = baseScore * this.stats.level;
+    if (appliedBackToBack) awarded = Math.floor(awarded * scoring.backToBackMultiplier);
+    if (lines > 0) {
+      this.stats.combo++;
+      if (this.stats.combo > 0) awarded += scoring.comboPerStep * this.stats.combo * this.stats.level;
+    }
+    this.stats.score += awarded;
+    this.stats.lines += lines;
+    if (lines === 4) this.stats.quads++;
+    if (isPerfectClear) this.stats.perfectClears++;
+    if (tSpin === 'full' && lines >= 2) this.stats.tSpins++;
+
+    const previousLevel = this.stats.level;
+    this.stats.level = 1 + Math.floor(this.stats.lines / linesPerLevel);
+
+    this.emit('linesCleared', {
+      lines, tSpin, rows, pieceType, awarded,
+      combo: this.stats.combo,
+      backToBack: appliedBackToBack,
+      perfectClear: isPerfectClear,
+      explosive: lines === 4 || (tSpin === 'full' && lines >= 2) || isPerfectClear,
+    });
+    if (this.stats.level > previousLevel) this.emit('levelUp', { level: this.stats.level });
+  }
+
+  /** Computes where the active piece would land. @returns {Array<{x:number,y:number}>} Ghost cells (empty if no piece). */
+  getGhostCells() {
+    if (!this.piece) return [];
+    let ghost = this.piece;
+    while (!this.board.collides(getPieceCells({ ...ghost, y: ghost.y + 1 }))) ghost = { ...ghost, y: ghost.y + 1 };
+    return getPieceCells(ghost);
+  }
+
+  /**
+   * Returns upcoming piece types.
+   * @param {number} count - Number of pieces to preview.
+   * @returns {string[]} Piece types.
+   */
+  getNextTypes(count) { return this.generator.peek(count); }
+
+  /**
+   * Builds a snapshot of statistics including derived rates.
+   * @returns {{score:number,level:number,lines:number,tSpins:number,quads:number,pieces:number,elapsedSeconds:number,linesPerMinute:number,piecesPerSecond:number}} Stats snapshot.
+   */
+  getStats() {
+    const elapsedSeconds = this.frames / this.config.gameplay.logicFps;
+    return {
+      ...this.stats,
+      elapsedSeconds,
+      linesPerMinute: elapsedSeconds > 0 ? (this.stats.lines / elapsedSeconds) * 60 : 0,
+      piecesPerSecond: elapsedSeconds > 0 ? this.stats.pieces / elapsedSeconds : 0,
+    };
+  }
+}
+
+/**
+ * Converts keyboard / touch presses into per-frame gameplay actions with DAS/ARR.
+ * Left/right/soft-drop move once instantly on press, wait DAS frames, then
+ * repeat every ARR frames until released. Rotate, hold and hard drop never repeat.
+ */
+class InputController {
+  /**
+   * Creates the controller.
+   * @param {Object} options - Setup options.
+   * @param {Object<string,string[]>} options.keybinds - Action name to KeyboardEvent.code list.
+   * @param {function(string): {das:number, arr:number}} options.getRepeatTiming - Returns live DAS/ARR for an action.
+   * @param {number} options.columns - Board width (used for instant ARR).
+   * @param {function(string): void} options.onSystemAction - Called for pause/restart/start.
+   */
+  constructor({ keybinds, getRepeatTiming, columns, onSystemAction }) {
+    this.getRepeatTiming = getRepeatTiming;
+    this.columns = columns;
+    this.onSystemAction = onSystemAction;
+    this.enabled = true;
+    this.codeToAction = new Map();
+    Object.entries(keybinds).forEach(([action, codes]) => codes.forEach((code) => this.codeToAction.set(code, action)));
+    this.heldCodes = new Set();
+    this.heldActions = new Set();
+    this.repeatState = new Map();
+    this.pendingActions = [];
+    this.activeHorizontal = null;
+  }
+
+  /**
+   * Starts listening for keyboard events.
+   * @param {Window|HTMLElement} target - Event target (usually window).
+   * @returns {void}
+   */
+  attachKeyboard(target) {
+    target.addEventListener('keydown', (event) => this.handleKeyDown(event), { passive: false });
+    target.addEventListener('keyup', (event) => this.handleKeyUp(event));
+    window.addEventListener('blur', () => this.releaseAll());
+  }
+
+  /**
+   * Handles a keydown event.
+   * @param {KeyboardEvent} event - Browser event.
+   * @returns {void}
+   */
+  handleKeyDown(event) {
+    const action = this.codeToAction.get(event.code);
+    if (!action) return;
+    event.preventDefault();
+    if (event.repeat) return;
+    this.heldCodes.add(event.code);
+    this.press(action);
+  }
+
+  /**
+   * Handles a keyup event.
+   * @param {KeyboardEvent} event - Browser event.
+   * @returns {void}
+   */
+  handleKeyUp(event) {
+    const action = this.codeToAction.get(event.code);
+    if (!action) return;
+    this.heldCodes.delete(event.code);
+    const stillHeld = [...this.heldCodes].some((code) => this.codeToAction.get(code) === action);
+    if (!stillHeld) this.release(action);
+  }
+
+  /**
+   * Registers that an action began (key down or touch down).
+   * @param {string} action - Action name.
+   * @returns {void}
+   */
+  press(action) {
+    if (!this.enabled) return;
+    if (action === 'pause' || action === 'restart' || action === 'start') { this.onSystemAction(action); return; }
+    if (this.heldActions.has(action)) return;
+    this.heldActions.add(action);
+    if (action === 'moveLeft' || action === 'moveRight' || action === 'softDrop') {
+      this.repeatState.set(action, { frames: 0, justPressed: true });
+      if (action !== 'softDrop') this.activeHorizontal = action;
+    }
+    const instantSoftDrop = action === 'softDrop' && this.getRepeatTiming(action).arr <= 0;
+    this.pendingActions.push(instantSoftDrop ? 'softDropInstant' : action);
+  }
+
+  /**
+   * Registers that an action ended (key up or touch up).
+   * @param {string} action - Action name.
+   * @returns {void}
+   */
+  release(action) {
+    this.heldActions.delete(action);
+    this.repeatState.delete(action);
+    if (this.activeHorizontal === action) {
+      const other = action === 'moveLeft' ? 'moveRight' : 'moveLeft';
+      this.activeHorizontal = this.heldActions.has(other) ? other : null;
+    }
+  }
+
+  /** Releases every held input (used on blur or when input is disabled). @returns {void} */
+  releaseAll() {
+    this.heldCodes.clear();
+    [...this.heldActions].forEach((action) => this.release(action));
+    this.pendingActions = [];
+  }
+
+  /**
+   * Enables or disables input processing.
+   * @param {boolean} enabled - New state.
+   * @returns {void}
+   */
+  setEnabled(enabled) {
+    this.enabled = enabled;
+    if (!enabled) this.releaseAll();
+  }
+
+  /**
+   * Produces the actions to apply during this logic frame. Call exactly once per logic frame.
+   * @returns {string[]} Ordered list of action names (may contain duplicates for instant ARR).
+   */
+  poll() {
+    const actions = this.pendingActions;
+    this.pendingActions = [];
+    this.repeatState.forEach((state, action) => {
+      const isHorizontal = action !== 'softDrop';
+      if (isHorizontal && action !== this.activeHorizontal) return;
+      if (state.justPressed) { state.justPressed = false; return; }
+      state.frames++;
+      const { das, arr } = this.getRepeatTiming(action);
+      if (state.frames < das) return;
+      if (arr <= 0 && isHorizontal) {
+        for (let i = 0; i < this.columns; i++) actions.push(action);
+      } else if (arr <= 0) {
+        actions.push('softDropInstant'); // soft drop with no delay: reach the floor every frame while held
+      } else if ((state.frames - das) % arr === 0) {
+        actions.push(action);
+      }
+    });
+    return actions;
+  }
+}
+// ==== LOGIC END
+
+/* =====================================================================
+ * SECTION 6 — RENDERING HELPERS (layout, textures, geometry)
+ * ===================================================================== */
+
+/** Converts between grid coordinates and world space. */
+class BoardLayout {
+  /**
+   * Creates a layout.
+   * @param {{columns:number, visibleRows:number, hiddenRows:number}} boardConfig - Board dimensions.
+   */
+  constructor(boardConfig) {
+    this.columns = boardConfig.columns;
+    this.rows = boardConfig.visibleRows + boardConfig.hiddenRows;
+    this.visibleRows = boardConfig.visibleRows;
+  }
+
+  /**
+   * Converts a (possibly fractional) grid cell to its world-space center.
+   * @param {number} column - Grid column.
+   * @param {number} row - Grid row (0 is the top hidden row).
+   * @param {THREE.Vector3} [target] - Vector to write into.
+   * @returns {THREE.Vector3} World position of the cell center.
+   */
+  gridToWorld(column, row, target = new THREE.Vector3()) {
+    return target.set(column - (this.columns - 1) / 2, this.rows - 1 - row + 0.5, 0);
+  }
+}
+
+/**
+ * Creates a soft radial glow texture used for sparks, flashes and rain streaks.
+ * @returns {THREE.CanvasTexture} Texture with a white center fading to transparent.
+ */
+function createGlowTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 64;
+  const context = canvas.getContext('2d');
+  const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gradient.addColorStop(0, 'rgba(255,255,255,1)');
+  gradient.addColorStop(0.25, 'rgba(255,255,255,0.75)');
+  gradient.addColorStop(1, 'rgba(255,255,255,0)');
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(canvas);
+}
+
+/**
+ * Creates a subtle grid texture for the back wall of the well.
+ * @returns {THREE.CanvasTexture} Repeating grid texture (one tile per cell).
+ */
+function createGridTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 128;
+  const context = canvas.getContext('2d');
+  context.fillStyle = '#0a0d16';
+  context.fillRect(0, 0, 128, 128);
+  context.strokeStyle = '#1d2740';
+  context.lineWidth = 3;
+  context.strokeRect(0, 0, 128, 128);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.anisotropy = 4;
+  return texture;
+}
+
+/**
+ * Creates the dark gradient used as distant backdrop.
+ * @returns {THREE.CanvasTexture} Vertical gradient texture.
+ */
+function createBackdropTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 16; canvas.height = 256;
+  const context = canvas.getContext('2d');
+  const gradient = context.createLinearGradient(0, 0, 0, 256);
+  gradient.addColorStop(0, '#0b1020');
+  gradient.addColorStop(0.55, '#0a0b16');
+  gradient.addColorStop(1, '#14091c');
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, 16, 256);
+  return new THREE.CanvasTexture(canvas);
+}
+
+/**
+ * Builds a beveled cube so metallic surfaces catch highlights on their edges.
+ * @param {number} size - Edge length on X and Y.
+ * @param {number} depth - Thickness on Z.
+ * @param {number} bevel - Bevel radius.
+ * @returns {THREE.BufferGeometry} Centered geometry.
+ */
+function createBeveledCubeGeometry(size, depth, bevel) {
+  const half = size / 2 - bevel;
+  const shape = new THREE.Shape();
+  shape.moveTo(-half, -half);
+  shape.lineTo(half, -half);
+  shape.lineTo(half, half);
+  shape.lineTo(-half, half);
+  shape.closePath();
+  const extrudeDepth = depth - 2 * bevel;
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth: extrudeDepth, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 3, curveSegments: 1,
+  });
+  geometry.translate(0, 0, -extrudeDepth / 2);
+  return geometry;
+}
+
+/**
+ * Builds a procedural HDR-ish studio environment (softboxes and colored strips)
+ * and prefilters it so metal surfaces have something interesting to reflect.
+ * @param {THREE.WebGLRenderer} renderer - Renderer used to bake the environment.
+ * @returns {THREE.Texture} Prefiltered environment map.
+ */
+function createStudioEnvironment(renderer) {
+  const environmentScene = new THREE.Scene();
+  environmentScene.background = new THREE.Color(0x06070c);
+  /**
+   * Adds an emissive rectangle to the environment scene.
+   * @param {number} color - Hex color.
+   * @param {number} intensity - Brightness multiplier (values above 1 act as HDR).
+   * @param {number[]} size - [width, height].
+   * @param {number[]} position - [x, y, z].
+   * @returns {void}
+   */
+  const addPanel = (color, intensity, size, position) => {
+    const material = new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(intensity), side: THREE.DoubleSide, toneMapped: false });
+    const panel = new THREE.Mesh(new THREE.PlaneGeometry(size[0], size[1]), material);
+    panel.position.set(...position);
+    panel.lookAt(0, 0, 0);
+    environmentScene.add(panel);
+  };
+  addPanel(0xffffff, 6, [14, 14], [0, 18, 4]);
+  addPanel(0x35d9ff, 4, [3, 20], [-16, 2, 4]);
+  addPanel(0xff3fb4, 4, [3, 20], [16, 2, 4]);
+  addPanel(0xffb060, 2.5, [18, 5], [0, -3, 16]);
+  addPanel(0x7a8cff, 1.5, [22, 8], [0, 4, -16]);
+  const generator = new THREE.PMREMGenerator(renderer);
+  const environmentMap = generator.fromScene(environmentScene, 0.02).texture;
+  generator.dispose();
+  return environmentMap;
+}
+
+/* =====================================================================
+ * SECTION 7 — SCENE: STAGE, BOARD VIEW, CAMERA, GRAPHICS PIPELINE
+ * ===================================================================== */
+
+/** Final color-grading shader: tone map, chromatic aberration, vignette, grain, gamma. */
+const FINAL_GRADE_SHADER = {
+  uniforms: {
+    tDiffuse: { value: null },
+    exposure: { value: 1.1 },
+    vignette: { value: 0.5 },
+    aberration: { value: 0.0008 },
+    grain: { value: 0.03 },
+    time: { value: 0 },
+    whiteout: { value: 0 },
+  },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: [
+    'uniform sampler2D tDiffuse; uniform float exposure; uniform float vignette; uniform float aberration; uniform float grain; uniform float time; uniform float whiteout;',
+    'varying vec2 vUv;',
+    'vec3 aces(vec3 x){ return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14), 0.0, 1.0); }',
+    'void main(){',
+    '  vec2 dir = vUv - 0.5;',
+    '  vec2 offset = dir * aberration * (1.0 + dot(dir, dir) * 4.0);',
+    '  vec3 color = vec3(texture2D(tDiffuse, vUv + offset).r, texture2D(tDiffuse, vUv).g, texture2D(tDiffuse, vUv - offset).b);',
+    '  color = aces(color * exposure);',
+    '  color = mix(color, vec3(1.0), clamp(whiteout, 0.0, 1.0));',
+    '  color *= 1.0 - vignette * smoothstep(0.3, 1.0, length(dir) * 1.45);',
+    '  float noise = fract(sin(dot(vUv * vec2(1913.0, 1077.0) + time, vec2(12.9898, 78.233))) * 43758.5453);',
+    '  color += (noise - 0.5) * grain;',
+    '  gl_FragColor = vec4(pow(max(color, 0.0), vec3(1.0 / 2.2)), 1.0);',
+    '}',
+  ].join('\n'),
+};
+
+/**
+ * Builds the static scenery: back wall, frame, reflective floor, backdrop and lights.
+ * @param {THREE.Scene} scene - Scene to populate.
+ * @param {BoardLayout} layout - Board layout.
+ * @param {Object} config - The CONFIG object.
+ * @returns {{floorReflector:?THREE.Object3D, floorProxy:?THREE.Mesh, plainFloor:THREE.Mesh, keyLight:THREE.SpotLight, flashLight:THREE.PointLight, orbitLights:THREE.PointLight[], setReflectionsEnabled:function(boolean):void}} Handles needed at runtime.
+ */
+function buildStage(scene, layout, config) {
+  const columns = layout.columns;
+  const wellHeight = layout.visibleRows;
+
+  // Back wall with grid texture.
+  const gridTexture = createGridTexture();
+  gridTexture.repeat.set(columns, wellHeight);
+  const backWall = new THREE.Mesh(
+    new THREE.PlaneGeometry(columns, wellHeight),
+    new THREE.MeshStandardMaterial({ map: gridTexture, metalness: 0.7, roughness: 0.5, envMapIntensity: 0.5 })
+  );
+  backWall.position.set(0, wellHeight / 2, -0.55);
+  backWall.receiveShadow = true;
+  scene.add(backWall);
+
+  // Metallic frame: side rails, base, glowing inlays.
+  const railMaterial = new THREE.MeshStandardMaterial({ color: 0x20263a, metalness: 1, roughness: 0.28, envMapIntensity: 1.3 });
+  [-1, 1].forEach((side) => {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.5, wellHeight + 0.6, 1.3), railMaterial);
+    rail.position.set(side * (columns / 2 + 0.25), wellHeight / 2 + 0.05, 0);
+    scene.add(rail);
+    const inlay = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, wellHeight, 0.08),
+      new THREE.MeshBasicMaterial({ color: side < 0 ? new THREE.Color(0x35d9ff).multiplyScalar(2.2) : new THREE.Color(0xff3fb4).multiplyScalar(2.2), toneMapped: false })
+    );
+    inlay.position.set(side * (columns / 2 - 0.02), wellHeight / 2, 0.66);
+    scene.add(inlay);
+  });
+  const base = new THREE.Mesh(new THREE.BoxGeometry(columns + 1.4, 0.5, 1.5), railMaterial);
+  base.position.set(0, -0.25, 0);
+  scene.add(base);
+
+  // Floor: a dark glossy plain floor, swapped for a real mirror (Reflector) when reflections are switched on.
+  // The mirror is only created on first use, so setups that keep reflections off never pay for it.
+  const floorGeometry = new THREE.PlaneGeometry(90, 64);
+  const plainFloor = new THREE.Mesh(floorGeometry, new THREE.MeshStandardMaterial({ color: 0x151824, metalness: 0.85, roughness: 0.4, envMapIntensity: 0.5 }));
+  plainFloor.rotation.x = -Math.PI / 2;
+  plainFloor.position.set(0, -0.5, 8);
+  scene.add(plainFloor);
+
+  // Distant backdrop.
+  const backdrop = new THREE.Mesh(
+    new THREE.PlaneGeometry(220, 120),
+    new THREE.MeshBasicMaterial({ map: createBackdropTexture(), fog: false, toneMapped: false })
+  );
+  backdrop.position.set(0, 24, -30);
+  scene.add(backdrop);
+
+  // Lighting: hemisphere fill, shadow-casting key spot, two colored orbiting points, flash light for explosions.
+  scene.add(new THREE.HemisphereLight(0x7080b8, 0x120a1c, 0.3));
+  const keyLight = new THREE.SpotLight(0xfff2e0, 1.7, 90, 0.55, 0.6, 1);
+  keyLight.position.set(6, 28, 22);
+  keyLight.target.position.set(0, 10, 0);
+  keyLight.castShadow = true;
+  keyLight.shadow.mapSize.set(1024, 1024); // placeholder: the Shadow quality setting picks the real size
+  keyLight.shadow.camera.near = 10;
+  keyLight.shadow.camera.far = 70;
+  keyLight.shadow.bias = -0.0004;
+  scene.add(keyLight, keyLight.target);
+
+  const cyanLight = new THREE.PointLight(0x35d9ff, 1.1, 40, 2);
+  const magentaLight = new THREE.PointLight(0xff3fb4, 1.0, 40, 2);
+  scene.add(cyanLight, magentaLight);
+  const flashLight = new THREE.PointLight(0xffc880, 0, 60, 2);
+  flashLight.position.set(0, 10, 7);
+  scene.add(flashLight);
+
+  const stage = { floorReflector: null, floorProxy: null, plainFloor, keyLight, flashLight, orbitLights: [cyanLight, magentaLight] };
+
+  /**
+   * Switches between the mirror floor and the plain floor (creating the mirror on first use).
+   * @param {boolean} enabled - True for real-time reflections.
+   * @returns {void}
+   */
+  stage.setReflectionsEnabled = (enabled) => {
+    if (enabled && !stage.floorReflector) {
+      const size = config.graphics.reflections.textureSize;
+      const reflector = new THREE.Reflector(floorGeometry, { color: 0x2c3042, textureWidth: size, textureHeight: size, multisample: 2 });
+      reflector.rotation.x = -Math.PI / 2;
+      reflector.position.copy(plainFloor.position);
+      scene.add(reflector);
+      // Cheap stand-in used while depth is rendered for the depth-of-field pass (avoids a second mirror render).
+      const proxy = new THREE.Mesh(floorGeometry, new THREE.MeshStandardMaterial({ color: 0x0b0d14 }));
+      proxy.rotation.copy(reflector.rotation);
+      proxy.position.copy(reflector.position);
+      proxy.visible = false;
+      scene.add(proxy);
+      stage.floorReflector = reflector;
+      stage.floorProxy = proxy;
+    }
+    if (stage.floorReflector) stage.floorReflector.visible = enabled;
+    plainFloor.visible = !enabled;
+  };
+  return stage;
+}
+
+/** Renders the locked stack, the active piece and the ghost piece using instanced metal cubes. */
+class BoardView {
+  /**
+   * Creates the view and adds its meshes to the scene.
+   * @param {THREE.Scene} scene - Target scene.
+   * @param {BoardLayout} layout - Board layout.
+   * @param {GameEngine} engine - Engine whose state is displayed.
+   * @param {Object} config - The CONFIG object.
+   * @param {Object<string, number>} settings - Runtime settings (reads smoothPieceMovement).
+   */
+  constructor(scene, layout, engine, config, settings) {
+    this.settings = settings;
+    this.layout = layout;
+    this.engine = engine;
+    this.config = config;
+    this.dummy = new THREE.Object3D();
+    this.scratchColor = new THREE.Color();
+    this.scratchVector = new THREE.Vector3();
+    this.lastBoardVersion = -1;
+    this.smoothedOrigin = null;
+    this.smoothedSerial = -1;
+
+    const { cell } = config.graphics;
+    this.geometry = createBeveledCubeGeometry(cell.size, cell.depth, cell.bevel);
+    const metalMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff, metalness: cell.metalness, roughness: cell.roughness,
+      clearcoat: cell.clearcoat, clearcoatRoughness: 0.12, envMapIntensity: cell.envMapIntensity,
+    });
+    this.lockedMesh = this.createInstancedMesh(this.geometry, metalMaterial, layout.columns * layout.rows);
+    this.activeMesh = this.createInstancedMesh(this.geometry, metalMaterial, 4);
+    this.activeMesh.receiveShadow = false;
+
+    const ghostMaterial = new THREE.MeshBasicMaterial({
+      transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+    });
+    this.ghostMesh = this.createInstancedMesh(this.geometry, ghostMaterial, 4);
+    this.ghostMesh.castShadow = false;
+    [this.lockedMesh, this.activeMesh, this.ghostMesh].forEach((mesh) => scene.add(mesh));
+  }
+
+  /**
+   * Creates an instanced mesh with dynamic buffers and per-instance color.
+   * @param {THREE.BufferGeometry} geometry - Shared geometry.
+   * @param {THREE.Material} material - Shared material.
+   * @param {number} capacity - Max instance count.
+   * @returns {THREE.InstancedMesh} Configured mesh with zero visible instances.
+   */
+  createInstancedMesh(geometry, material, capacity) {
+    const mesh = new THREE.InstancedMesh(geometry, material, capacity);
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    mesh.setColorAt(0, this.scratchColor.set(0xffffff));
+    mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
+    mesh.castShadow = true;
+    mesh.frustumCulled = false;
+    mesh.count = 0;
+    return mesh;
+  }
+
+  /**
+   * Writes one instance (position + color).
+   * @param {THREE.InstancedMesh} mesh - Target mesh.
+   * @param {number} index - Instance slot.
+   * @param {number} column - Fractional grid column.
+   * @param {number} row - Fractional grid row.
+   * @param {number} colorHex - Instance color.
+   * @returns {void}
+   */
+  setInstance(mesh, index, column, row, colorHex) {
+    this.layout.gridToWorld(column, row, this.scratchVector);
+    this.dummy.position.copy(this.scratchVector);
+    this.dummy.updateMatrix();
+    mesh.setMatrixAt(index, this.dummy.matrix);
+    mesh.setColorAt(index, this.scratchColor.set(colorHex));
+  }
+
+  /**
+   * Marks an instanced mesh's buffers as needing upload.
+   * @param {THREE.InstancedMesh} mesh - Mesh to flag.
+   * @returns {void}
+   */
+  flagForUpload(mesh) {
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.instanceColor.needsUpdate = true;
+  }
+
+  /**
+   * Updates all meshes from the current engine state. Call once per rendered frame.
+   * @param {number} deltaSeconds - Frame time in seconds.
+   * @returns {void}
+   */
+  update(deltaSeconds) {
+    if (this.engine.board.version !== this.lastBoardVersion) this.rebuildLockedCells();
+    this.updateActivePiece(deltaSeconds);
+    this.updateGhostPiece();
+  }
+
+  /** Rebuilds instances for every locked cell. @returns {void} */
+  rebuildLockedCells() {
+    const { cells } = this.engine.board;
+    let count = 0;
+    cells.forEach((rowCells, row) => rowCells.forEach((type, column) => {
+      if (type) this.setInstance(this.lockedMesh, count++, column, row, this.config.pieceColors[type]);
+    }));
+    this.lockedMesh.count = count;
+    this.flagForUpload(this.lockedMesh);
+    this.lastBoardVersion = this.engine.board.version;
+  }
+
+  /**
+   * Positions the active piece, easing its origin so motion looks fluid (and blurs well).
+   * @param {number} deltaSeconds - Frame time in seconds.
+   * @returns {void}
+   */
+  updateActivePiece(deltaSeconds) {
+    const piece = this.engine.piece;
+    if (!piece) { this.activeMesh.count = 0; return; }
+    if (!this.smoothedOrigin || this.smoothedSerial !== this.engine.pieceSerial) {
+      this.smoothedOrigin = { x: piece.x, y: piece.y };
+      this.smoothedSerial = this.engine.pieceSerial;
+    }
+    // With smoothing disabled the blend factor is 1, so the piece snaps to its logical cell every frame.
+    const blend = this.settings.smoothPieceMovement
+      ? 1 - Math.exp(-deltaSeconds * this.config.graphics.pieceSmoothingPerSecond)
+      : 1;
+    this.smoothedOrigin.x = lerp(this.smoothedOrigin.x, piece.x, blend);
+    this.smoothedOrigin.y = lerp(this.smoothedOrigin.y, piece.y, blend);
+    const color = this.config.pieceColors[piece.type];
+    PIECE_DEFINITIONS[piece.type].rotations[piece.rotation].forEach(([cx, cy], index) => {
+      this.setInstance(this.activeMesh, index, this.smoothedOrigin.x + cx, this.smoothedOrigin.y + cy, color);
+    });
+    this.activeMesh.count = 4;
+    this.flagForUpload(this.activeMesh);
+  }
+
+  /** Positions the translucent landing preview. @returns {void} */
+  updateGhostPiece() {
+    const piece = this.engine.piece;
+    const ghostCells = this.engine.getGhostCells();
+    const sameAsPiece = piece && ghostCells.length === 4 && ghostCells[0].y === getPieceCells(piece)[0].y;
+    if (!piece || sameAsPiece) { this.ghostMesh.count = 0; return; }
+    const color = this.config.pieceColors[piece.type];
+    ghostCells.forEach((cell, index) => this.setInstance(this.ghostMesh, index, cell.x, cell.y, color));
+    this.ghostMesh.count = 4;
+    this.flagForUpload(this.ghostMesh);
+  }
+}
+
+/** Controls the camera: framing, idle sway and trauma-based shake. */
+class CameraRig {
+  /**
+   * Creates the rig.
+   * @param {THREE.PerspectiveCamera} camera - Camera to drive.
+   * @param {Object} config - The CONFIG object.
+   * @param {Object<string, number>} settings - Runtime settings (reads cameraShakeStrength).
+   */
+  constructor(camera, config, settings) {
+    this.camera = camera;
+    this.config = config;
+    this.settings = settings;
+    this.target = new THREE.Vector3(0, config.graphics.cameraTargetHeight, 0);
+    this.distance = 40;
+    this.trauma = 0;
+    this.frozen = false;          // true while the camera must stay perfectly still (nuclear explosion)
+    this.frozenTimeOffset = 0;    // total time spent frozen, so the idle sway resumes without a jump
+  }
+
+  /**
+   * Chooses a camera distance so the board fits the viewport.
+   * @param {number} aspect - Viewport width / height.
+   * @returns {void}
+   */
+  fitToViewport(aspect) {
+    const { framing, fieldOfViewDegrees } = this.config.graphics;
+    const frame = aspect < 1 ? framing.portrait : framing.landscape;
+    const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(fieldOfViewDegrees / 2));
+    this.distance = Math.max(frame.height / (2 * tanHalfFov), frame.width / (2 * tanHalfFov * aspect));
+  }
+
+  /**
+   * Freezes or releases the camera. While frozen it holds perfectly still (no sway, shake or movement)
+   * and ignores new shake; on release the idle sway continues from where it stopped, with no jump.
+   * @param {boolean} frozen - True to freeze, false to release.
+   * @returns {void}
+   */
+  setFrozen(frozen) {
+    this.frozen = frozen;
+    if (frozen) this.trauma = 0;
+  }
+
+  /**
+   * Adds shake energy (clamped to 1).
+   * @param {number} amount - Trauma to add (0..1).
+   * @returns {void}
+   */
+  addTrauma(amount) {
+    if (this.frozen) return;
+    this.trauma = Math.min(1, this.trauma + amount);
+  }
+
+  /**
+   * Updates camera pose for this frame.
+   * @param {number} deltaSeconds - Frame time in seconds.
+   * @param {number} time - Elapsed time in seconds.
+   * @returns {void}
+   */
+  update(deltaSeconds, time) {
+    if (this.frozen) { this.frozenTimeOffset += deltaSeconds; this.trauma = 0; }
+    const poseTime = time - this.frozenTimeOffset;
+    const shakeConfig = this.config.effects.shake;
+    this.trauma = Math.max(0, this.trauma - shakeConfig.decayPerSecond * deltaSeconds);
+    const intensity = this.trauma * this.trauma * this.settings.cameraShakeStrength;
+    const shakeTime = poseTime * shakeConfig.frequency;
+    const pitch = THREE.MathUtils.degToRad(this.config.graphics.cameraPitchDegrees);
+
+    this.camera.position.set(
+      this.target.x + Math.sin(poseTime * 0.23) * 1.1 + smoothNoise(shakeTime, 1) * shakeConfig.maxOffset * intensity,
+      this.target.y + Math.sin(pitch) * this.distance + Math.sin(poseTime * 0.31) * 0.35 + smoothNoise(shakeTime, 7) * shakeConfig.maxOffset * intensity,
+      this.target.z + Math.cos(pitch) * this.distance + smoothNoise(shakeTime, 13) * shakeConfig.maxOffset * 0.6 * intensity
+    );
+    this.camera.lookAt(this.target);
+    this.camera.rotateZ(smoothNoise(shakeTime, 21) * shakeConfig.maxRotationRadians * intensity);
+  }
+}
+
+/** Owns the WebGL renderer, scene, camera and the post-processing chain. */
+class GraphicsEngine {
+  /**
+   * Creates the full graphics pipeline.
+   * @param {HTMLElement} container - Element that receives the canvas.
+   * @param {BoardLayout} layout - Board layout.
+   * @param {Object} config - The CONFIG object.
+   * @param {Object<string, number>} settings - Runtime settings.
+   * @param {{bloom:number, flash:number, chromaticAberration:number}} impulses - Transient post-fx boosts written by effects.
+   */
+  constructor(container, layout, config, settings, impulses) {
+    this.container = container;
+    this.config = config;
+    this.settings = settings;
+    this.impulses = impulses;
+    this.pixelRatio = Math.min(window.devicePixelRatio || 1, config.graphics.pixelRatio.max);
+    this.frameTimeSamples = [];
+    this.sampleClock = 0;
+
+    this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.autoUpdate = false;
+    container.appendChild(this.renderer.domElement);
+
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(config.graphics.fieldOfViewDegrees, 1, 0.5, 220);
+    this.cameraRig = new CameraRig(this.camera, config, settings);
+    this.scene.environment = createStudioEnvironment(this.renderer);
+    this.stage = buildStage(this.scene, layout, config);
+    this.composer = this.createComposer();
+    this.appliedQuality = { reflections: null, antiAliasing: -1, shadow: -1 }; // last values pushed to the GPU
+    this.resize();
+    this.syncQualitySettings();
+  }
+
+  /**
+   * Builds the post chain: scene → depth of field → motion blur → bloom → grading.
+   * @returns {THREE.EffectComposer} Configured composer.
+   */
+  createComposer() {
+    const { graphics } = this.config;
+    const target = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: 0 }); // the Anti-aliasing setting applies the real sample count right after creation
+    const composer = new THREE.EffectComposer(this.renderer, target);
+    composer.addPass(new THREE.RenderPass(this.scene, this.camera));
+
+    this.bokehPass = new THREE.BokehPass(this.scene, this.camera, { focus: 40, aperture: graphics.depthOfField.aperture, maxblur: graphics.depthOfField.maxBlur });
+    // The mirror floor is replaced by a simple proxy while depth is rendered, avoiding a second reflection pass.
+    const renderBokeh = this.bokehPass.render.bind(this.bokehPass);
+    this.bokehPass.render = (...args) => {
+      const { floorReflector, floorProxy } = this.stage;
+      if (!floorReflector || !floorReflector.visible) { renderBokeh(...args); return; } // mirror off: the plain floor renders normally
+      floorReflector.visible = false;
+      floorProxy.visible = true;
+      renderBokeh(...args);
+      floorReflector.visible = true;
+      floorProxy.visible = false;
+    };
+    composer.addPass(this.bokehPass);
+
+    this.motionBlurPass = new THREE.AfterimagePass(0.5);
+    composer.addPass(this.motionBlurPass);
+
+    this.bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(4, 4), graphics.bloom.strength, graphics.bloom.radius, graphics.bloom.threshold);
+    composer.addPass(this.bloomPass);
+
+    this.gradePass = new THREE.ShaderPass(FINAL_GRADE_SHADER);
+    composer.addPass(this.gradePass);
+    return composer;
+  }
+
+  /** Resizes renderer, composer and camera to the container. @returns {void} */
+  resize() {
+    const width = Math.max(1, this.container.clientWidth);
+    const height = Math.max(1, this.container.clientHeight);
+    this.renderer.setPixelRatio(this.pixelRatio);
+    this.renderer.setSize(width, height);
+    this.composer.setPixelRatio(this.pixelRatio);
+    this.composer.setSize(width, height);
+    this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
+    this.cameraRig.fitToViewport(this.camera.aspect);
+  }
+
+  /**
+   * Applies the Reflections, Anti-aliasing and Shadow quality settings to the GPU pipeline. Cheap to call every
+   * frame: it only does work when a value has changed since the last call.
+   * @returns {void}
+   */
+  syncQualitySettings() {
+    const { graphics } = this.config;
+    const applied = this.appliedQuality;
+    const reflections = Boolean(this.settings.reflectionsEnabled);
+    if (reflections !== applied.reflections) {
+      this.stage.setReflectionsEnabled(reflections);
+      applied.reflections = reflections;
+    }
+    const antiAliasingIndex = clamp(Math.round(this.settings.antiAliasingLevel), 0, graphics.antiAliasingLevels.length - 1);
+    if (antiAliasingIndex !== applied.antiAliasing) {
+      this.applyAntiAliasing(graphics.antiAliasingLevels[antiAliasingIndex]);
+      applied.antiAliasing = antiAliasingIndex;
+    }
+    const shadowIndex = clamp(Math.round(this.settings.shadowQuality), 0, graphics.shadowQualityLevels.length - 1);
+    if (shadowIndex !== applied.shadow) {
+      this.applyShadowQuality(graphics.shadowQualityLevels[shadowIndex]);
+      applied.shadow = shadowIndex;
+    }
+  }
+
+  /**
+   * Sets the multisample anti-aliasing level of the scene render targets (capped to the GPU maximum).
+   * @param {number} samples - Requested MSAA sample count (0 = off).
+   * @returns {void}
+   */
+  applyAntiAliasing(samples) {
+    const capped = Math.min(samples, this.renderer.capabilities.maxSamples || 0);
+    [this.composer.renderTarget1, this.composer.renderTarget2].forEach((target) => {
+      target.samples = capped;
+      target.dispose(); // forces the framebuffer to be rebuilt with the new sample count on next use
+    });
+  }
+
+  /**
+   * Sets the shadow map resolution, or turns shadows off entirely.
+   * @param {number} size - Shadow map edge length in pixels (0 = shadows off).
+   * @returns {void}
+   */
+  applyShadowQuality(size) {
+    const light = this.stage.keyLight;
+    if (size === 0) { light.castShadow = false; return; }
+    light.castShadow = true;
+    if (light.shadow.mapSize.x !== size) {
+      light.shadow.mapSize.set(size, size);
+      if (light.shadow.map) { light.shadow.map.dispose(); light.shadow.map = null; } // re-created at the new size
+    }
+  }
+
+  /**
+   * Lowers resolution when the frame rate stays below target, keeping interaction smooth.
+   * @param {number} deltaSeconds - Frame time in seconds.
+   * @returns {void}
+   */
+  monitorPerformance(deltaSeconds) {
+    const quality = this.config.graphics.adaptiveQuality;
+    if (!quality.enabled) return;
+    this.frameTimeSamples.push(deltaSeconds);
+    this.sampleClock += deltaSeconds;
+    if (this.sampleClock < quality.sampleSeconds) return;
+    const averageFps = this.frameTimeSamples.length / this.sampleClock;
+    this.frameTimeSamples = [];
+    this.sampleClock = 0;
+    if (averageFps < quality.lowFpsThreshold && this.pixelRatio > this.config.graphics.pixelRatio.min) {
+      this.pixelRatio = Math.max(this.config.graphics.pixelRatio.min, this.pixelRatio - quality.pixelRatioStep);
+      this.resize();
+    }
+  }
+
+  /**
+   * Renders one frame through the whole post chain.
+   * @param {number} deltaSeconds - Frame time in seconds.
+   * @param {number} time - Elapsed time in seconds.
+   * @returns {void}
+   */
+  render(deltaSeconds, time) {
+    this.syncQualitySettings();
+    this.monitorPerformance(deltaSeconds);
+    this.cameraRig.update(deltaSeconds, time);
+    this.animateLights(time);
+
+    const { graphics } = this.config;
+    const { settings, impulses } = this;
+    this.bokehPass.enabled = settings.depthOfFieldStrength > 0;
+    this.bokehPass.uniforms.focus.value = this.cameraRig.distance;
+    this.bokehPass.uniforms.aperture.value = graphics.depthOfField.aperture * settings.depthOfFieldStrength;
+    this.motionBlurPass.enabled = settings.motionBlurStrength > 0.001;
+    this.motionBlurPass.uniforms.damp.value = settings.motionBlurStrength;
+    this.bloomPass.strength = (graphics.bloom.strength + impulses.bloom) * settings.bloomStrength;
+    this.bloomPass.enabled = this.bloomPass.strength > 0.001;
+
+    const gradeUniforms = this.gradePass.uniforms;
+    gradeUniforms.exposure.value = graphics.finalGrade.exposure;
+    gradeUniforms.vignette.value = graphics.finalGrade.vignette;
+    gradeUniforms.grain.value = graphics.finalGrade.grain;
+    gradeUniforms.aberration.value = graphics.finalGrade.baseChromaticAberration + impulses.chromaticAberration;
+    gradeUniforms.time.value = time % 100;
+    gradeUniforms.whiteout.value = impulses.whiteout;
+
+    this.stage.flashLight.intensity = impulses.flash * graphics.flashLightMaxIntensity;
+    this.renderer.shadowMap.needsUpdate = true;
+    this.composer.render(deltaSeconds);
+  }
+
+  /**
+   * Moves the two colored accent lights so reflections slowly shimmer.
+   * @param {number} time - Elapsed time in seconds.
+   * @returns {void}
+   */
+  animateLights(time) {
+    const [cyan, magenta] = this.stage.orbitLights;
+    cyan.position.set(-11 + Math.sin(time * 0.5) * 2.5, 12 + Math.sin(time * 0.37) * 5, 7 + Math.cos(time * 0.43) * 2);
+    magenta.position.set(11 + Math.cos(time * 0.45) * 2.5, 8 + Math.cos(time * 0.33) * 5, 7 + Math.sin(time * 0.39) * 2);
+  }
+}
+
+/* =====================================================================
+ * SECTION 8 — VISUAL EFFECTS
+ * ===================================================================== */
+
+/** GPU-instanced billboard particles (sparks, sparkles, debris, splashes). */
+class ParticleSystem {
+  /**
+   * Creates the pool and adds it to the scene.
+   * @param {THREE.Scene} scene - Target scene.
+   * @param {number} capacity - Maximum simultaneous particles.
+   * @param {THREE.Texture} texture - Sprite texture.
+   */
+  constructor(scene, capacity, texture) {
+    this.capacity = capacity;
+    this.alive = 0;
+    this.position = new Float32Array(capacity * 3);
+    this.velocity = new Float32Array(capacity * 3);
+    this.color = new Float32Array(capacity * 3);
+    this.life = new Float32Array(capacity);
+    this.maxLife = new Float32Array(capacity);
+    this.size = new Float32Array(capacity);
+    this.gravity = new Float32Array(capacity);
+    this.drag = new Float32Array(capacity);
+    this.twinkle = new Float32Array(capacity);
+    this.dummy = new THREE.Object3D();
+    this.scale = new THREE.Vector3();
+    this.matrix = new THREE.Matrix4();
+
+    const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false });
+    this.mesh = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), material, capacity);
+    this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.mesh.setColorAt(0, new THREE.Color(1, 1, 1));
+    this.mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
+    this.mesh.frustumCulled = false;
+    this.mesh.count = 0;
+    scene.add(this.mesh);
+  }
+
+  /**
+   * Spawns one particle (silently dropped when the pool is full).
+   * @param {Object} p - Particle description.
+   * @param {number} p.x - Start X. @param {number} p.y - Start Y. @param {number} p.z - Start Z.
+   * @param {number} [p.vx] - Velocity X. @param {number} [p.vy] - Velocity Y. @param {number} [p.vz] - Velocity Z.
+   * @param {THREE.Color} p.color - Base color (values above 1 allowed for glow).
+   * @param {number} p.life - Lifetime in seconds. @param {number} p.size - World-space size.
+   * @param {number} [p.gravity] - Vertical acceleration. @param {number} [p.drag] - Velocity damping per second.
+   * @param {number} [p.twinkle] - 0..1 flicker amount.
+   * @returns {void}
+   */
+  emit(p) {
+    if (this.alive >= this.capacity) return;
+    const i = this.alive++;
+    this.position[i * 3] = p.x; this.position[i * 3 + 1] = p.y; this.position[i * 3 + 2] = p.z;
+    this.velocity[i * 3] = p.vx || 0; this.velocity[i * 3 + 1] = p.vy || 0; this.velocity[i * 3 + 2] = p.vz || 0;
+    this.color[i * 3] = p.color.r; this.color[i * 3 + 1] = p.color.g; this.color[i * 3 + 2] = p.color.b;
+    this.life[i] = this.maxLife[i] = p.life;
+    this.size[i] = p.size;
+    this.gravity[i] = p.gravity || 0;
+    this.drag[i] = p.drag || 0;
+    this.twinkle[i] = p.twinkle || 0;
+  }
+
+  /**
+   * Copies particle data from one slot to another (used for swap-remove).
+   * @param {number} from - Source slot.
+   * @param {number} to - Destination slot.
+   * @returns {void}
+   */
+  copySlot(from, to) {
+    for (let k = 0; k < 3; k++) {
+      this.position[to * 3 + k] = this.position[from * 3 + k];
+      this.velocity[to * 3 + k] = this.velocity[from * 3 + k];
+      this.color[to * 3 + k] = this.color[from * 3 + k];
+    }
+    this.life[to] = this.life[from]; this.maxLife[to] = this.maxLife[from];
+    this.size[to] = this.size[from]; this.gravity[to] = this.gravity[from];
+    this.drag[to] = this.drag[from]; this.twinkle[to] = this.twinkle[from];
+  }
+
+  /**
+   * Integrates particles and uploads instance data.
+   * @param {number} deltaSeconds - Frame time in seconds.
+   * @param {THREE.Quaternion} cameraQuaternion - Used to face particles toward the camera.
+   * @param {number} time - Elapsed time (drives twinkle).
+   * @returns {void}
+   */
+  update(deltaSeconds, cameraQuaternion, time) {
+    let i = 0;
+    while (i < this.alive) {
+      this.life[i] -= deltaSeconds;
+      if (this.life[i] <= 0) { this.copySlot(this.alive - 1, i); this.alive--; continue; }
+      const damping = Math.max(0, 1 - this.drag[i] * deltaSeconds);
+      this.velocity[i * 3] *= damping;
+      this.velocity[i * 3 + 1] = this.velocity[i * 3 + 1] * damping + this.gravity[i] * deltaSeconds;
+      this.velocity[i * 3 + 2] *= damping;
+      this.position[i * 3] += this.velocity[i * 3] * deltaSeconds;
+      this.position[i * 3 + 1] += this.velocity[i * 3 + 1] * deltaSeconds;
+      this.position[i * 3 + 2] += this.velocity[i * 3 + 2] * deltaSeconds;
+      i++;
+    }
+    const colorArray = this.mesh.instanceColor.array;
+    const matrixArray = this.mesh.instanceMatrix.array;
+    for (let n = 0; n < this.alive; n++) {
+      const fade = this.life[n] / this.maxLife[n];
+      const flicker = this.twinkle[n] > 0 ? 1 - this.twinkle[n] * (0.5 + 0.5 * Math.sin(time * 38 + n * 1.9)) : 1;
+      const brightness = fade * flicker;
+      colorArray[n * 3] = this.color[n * 3] * brightness;
+      colorArray[n * 3 + 1] = this.color[n * 3 + 1] * brightness;
+      colorArray[n * 3 + 2] = this.color[n * 3 + 2] * brightness;
+      const scale = this.size[n] * (0.35 + 0.65 * fade);
+      this.dummy.position.set(this.position[n * 3], this.position[n * 3 + 1], this.position[n * 3 + 2]);
+      this.matrix.compose(this.dummy.position, cameraQuaternion, this.scale.set(scale, scale, scale));
+      this.matrix.toArray(matrixArray, n * 16);
+    }
+    this.mesh.count = this.alive;
+    this.mesh.instanceMatrix.needsUpdate = true;
+    this.mesh.instanceColor.needsUpdate = true;
+  }
+}
+
+/** Pool of additive meshes that scale and fade over a short duration (beams, flashes, shockwave rings). */
+class TimedMeshPool {
+  /**
+   * Creates the pool.
+   * @param {THREE.Scene} scene - Target scene.
+   * @param {THREE.BufferGeometry} geometry - Shared geometry for all items.
+   * @param {THREE.Texture|null} texture - Optional sprite texture.
+   * @param {number} size - Number of pooled meshes.
+   */
+  constructor(scene, geometry, texture, size) {
+    this.items = [];
+    this.cursor = 0;
+    for (let i = 0; i < size; i++) {
+      const material = new THREE.MeshBasicMaterial({
+        map: texture, transparent: true, opacity: 0, blending: THREE.AdditiveBlending,
+        depthWrite: false, fog: false, toneMapped: false, side: THREE.DoubleSide,
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.visible = false;
+      scene.add(mesh);
+      this.items.push({ mesh, age: 0, duration: 1, from: [1, 1], to: [1, 1], peak: 1, active: false });
+    }
+  }
+
+  /**
+   * Starts an animated item (reuses the oldest slot if all are busy).
+   * @param {Object} o - Item description.
+   * @param {number[]} o.position - [x, y, z]. @param {number[]} o.from - Start [scaleX, scaleY].
+   * @param {number[]} o.to - End [scaleX, scaleY]. @param {THREE.Color} o.color - Tint (may exceed 1 for glow).
+   * @param {number} o.duration - Seconds. @param {number} o.peak - Starting opacity.
+   * @returns {void}
+   */
+  spawn(o) {
+    const item = this.items.find((candidate) => !candidate.active) || this.items[this.cursor++ % this.items.length];
+    item.active = true; item.age = 0; item.duration = o.duration;
+    item.from = o.from; item.to = o.to; item.peak = o.peak;
+    item.mesh.material.color.copy(o.color);
+    item.mesh.position.set(o.position[0], o.position[1], o.position[2]);
+    item.mesh.scale.set(o.from[0], o.from[1], 1);
+    item.mesh.visible = true;
+  }
+
+  /**
+   * Advances all active items.
+   * @param {number} deltaSeconds - Frame time in seconds.
+   * @returns {void}
+   */
+  update(deltaSeconds) {
+    this.items.forEach((item) => {
+      if (!item.active) return;
+      item.age += deltaSeconds;
+      const progress = item.age / item.duration;
+      if (progress >= 1) { item.active = false; item.mesh.visible = false; return; }
+      const eased = 1 - Math.pow(1 - progress, 3);
+      item.mesh.scale.set(lerp(item.from[0], item.to[0], eased), lerp(item.from[1], item.to[1], eased), 1);
+      item.mesh.material.opacity = item.peak * Math.pow(1 - progress, 1.5);
+    });
+  }
+}
+
+/** Falling rain streaks with splashes on the reflective floor. */
+class RainSystem {
+  /**
+   * Creates the rain field.
+   * @param {THREE.Scene} scene - Target scene.
+   * @param {Object} rainConfig - CONFIG.effects.rain.
+   * @param {THREE.Texture} texture - Streak sprite texture.
+   * @param {ParticleSystem} particles - Used to spawn splashes.
+   * @param {Object} stormConfig - CONFIG.effects.storm.
+   */
+  constructor(scene, rainConfig, texture, particles, stormConfig) {
+    this.config = rainConfig;
+    this.stormConfig = stormConfig;
+    this.currentWind = rainConfig.slant;
+    this.particles = particles;
+    this.dummy = new THREE.Object3D();
+    this.splashColor = new THREE.Color(0.55, 0.75, 1.4);
+    const count = rainConfig.maxDrops;
+    this.drops = Array.from({ length: count }, () => this.createDrop(true));
+    const material = new THREE.MeshBasicMaterial({ map: texture, color: 0x9cbcff, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false });
+    this.material = material;
+    this.mesh = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), material, count);
+    this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.mesh.frustumCulled = false;
+    scene.add(this.mesh);
+  }
+
+  /**
+   * Creates a raindrop at a random position.
+   * @param {boolean} randomHeight - If true, spread vertically (initial fill); otherwise start at the top.
+   * @returns {{x:number,y:number,z:number,speed:number,length:number}} New drop.
+   */
+  createDrop(randomHeight) {
+    const c = this.config;
+    return {
+      x: randomRange(-c.areaHalfWidth, c.areaHalfWidth),
+      y: randomHeight ? randomRange(c.floorY, c.topY) : c.topY + randomRange(0, 6),
+      z: randomRange(c.zMin, c.zMax),
+      speed: randomRange(c.speedMin, c.speedMax),
+      length: randomRange(c.lengthMin, c.lengthMax),
+    };
+  }
+
+  /**
+   * Moves drops, recycles those that hit the floor and spawns splashes. As the storm level
+   * rises there are more drops, they fall faster, get longer and thicker, and are blown sideways by gusting wind.
+   * @param {number} deltaSeconds - Frame time in seconds.
+   * @param {number} userAmount - 0..1 user rain-intensity multiplier from settings.
+   * @param {number} stormLevel - 0 (drizzle) .. 1 (hurricane) from the current combo chain.
+   * @param {number} time - Elapsed time in seconds (drives wind gusts).
+   * @returns {void}
+   */
+  update(deltaSeconds, userAmount, stormLevel, time) {
+    const c = this.config;
+    const s = this.stormConfig;
+    const dropFraction = lerp(s.calmDropFraction, 1, stormLevel) * clamp(userAmount, 0, 1);
+    const visibleCount = Math.floor(this.drops.length * dropFraction);
+    const speedScale = lerp(1, s.speedMultiplierMax, stormLevel);
+    const gust = 1 + s.gustStrength * stormLevel * Math.sin(time * s.gustFrequency * 2.1) * Math.sin(time * s.gustFrequency * 0.7 + 1.3);
+    const wind = lerp(c.slant, s.slantMax, stormLevel) * gust;
+    const thickness = 0.05 * lerp(1, s.thicknessMultiplierMax, stormLevel);
+    const lengthScale = lerp(1, s.lengthMultiplierMax, stormLevel);
+    const splashChance = lerp(c.splashChance, s.splashChanceMax, stormLevel);
+    this.currentWind = wind;
+    this.material.opacity = lerp(s.opacityMin, s.opacityMax, stormLevel);
+    for (let i = 0; i < visibleCount; i++) {
+      const drop = this.drops[i];
+      const fallSpeed = drop.speed * speedScale;
+      drop.y -= fallSpeed * deltaSeconds;
+      drop.x += wind * deltaSeconds;
+      if (drop.x > c.areaHalfWidth) drop.x -= 2 * c.areaHalfWidth;
+      if (drop.y < c.floorY) {
+        if (Math.random() < splashChance && drop.z > -6 && Math.abs(drop.x) < c.areaHalfWidth) this.spawnSplash(drop);
+        Object.assign(drop, this.createDrop(false));
+      }
+      this.dummy.position.set(drop.x, drop.y, drop.z);
+      this.dummy.rotation.set(0, 0, Math.atan2(wind, fallSpeed));
+      this.dummy.scale.set(thickness, drop.length * lengthScale, 1);
+      this.dummy.updateMatrix();
+      this.mesh.setMatrixAt(i, this.dummy.matrix);
+    }
+    this.mesh.count = visibleCount;
+    this.mesh.instanceMatrix.needsUpdate = true;
+  }
+
+  /**
+   * Emits a couple of tiny droplets where a raindrop hit the floor.
+   * @param {{x:number, z:number}} drop - The drop that landed.
+   * @returns {void}
+   */
+  spawnSplash(drop) {
+    for (let k = 0; k < 2; k++) {
+      this.particles.emit({
+        x: drop.x, y: this.config.floorY + 0.05, z: drop.z,
+        vx: randomRange(-1.5, 1.5), vy: randomRange(2, 4.5), vz: randomRange(-1.5, 1.5),
+        color: this.splashColor, life: 0.35, size: 0.14, gravity: -14,
+      });
+    }
+  }
+}
+
+/**
+ * Translates game events into particles, flashes, shockwaves, camera shake
+ * and post-processing impulses. Contains no gameplay logic.
+ */
+class EffectsDirector extends EventEmitter {
+  /**
+   * Creates the director and its pools.
+   * @param {Object} deps - Collaborators.
+   * @param {GraphicsEngine} deps.graphics - Graphics pipeline (scene and camera rig).
+   * @param {BoardLayout} deps.layout - Board layout.
+   * @param {GameEngine} deps.engine - Engine (read-only, for ambient sparkles).
+   * @param {Object} deps.config - The CONFIG object.
+   * @param {Object<string, number>} deps.settings - Runtime settings.
+   * @param {{bloom:number, flash:number, chromaticAberration:number}} deps.impulses - Shared post-fx impulses.
+   */
+  constructor({ graphics, layout, engine, config, settings, impulses }) {
+    super();
+    this.graphics = graphics;
+    this.layout = layout;
+    this.engine = engine;
+    this.config = config;
+    this.settings = settings;
+    this.impulses = impulses;
+    this.cameraRig = graphics.cameraRig;
+    this.time = 0;
+    this.sparkleClock = 0;
+    this.scheduledCalls = [];
+    this.scratchVector = new THREE.Vector3();
+    this.colorCache = new Map();
+
+    const glowTexture = createGlowTexture();
+    const scene = graphics.scene;
+    this.particles = new ParticleSystem(scene, config.effects.particleCapacity, glowTexture);
+    this.rain = new RainSystem(scene, config.effects.rain, glowTexture, this.particles, config.effects.storm);
+    this.stormLevel = 0;
+    this.lightningCountdown = 0;
+    this.mistClock = 0;
+    this.nuclear = null;              // state of the running nuclear sequence, or null
+    this.slowMotionAge = Infinity;    // seconds since the last slow-motion trigger (Infinity = none)
+    this.timeScale = 1;               // visual time scale (below 1 during slow motion)
+    this.nuclearColor = new THREE.Color();
+    this.groundRings = new TimedMeshPool(scene, new THREE.RingGeometry(0.9, 1, 96), null, 2);
+    this.groundRings.items.forEach((item) => { item.mesh.rotation.x = -Math.PI / 2; });
+    this.beams = new TimedMeshPool(scene, new THREE.PlaneGeometry(1, 1), glowTexture, 24);
+    this.rings = new TimedMeshPool(scene, new THREE.RingGeometry(0.9, 1, 72), null, 6);
+  }
+
+  /**
+   * Returns a cached THREE.Color for a hex value, optionally brightened for HDR glow.
+   * @param {number} hex - Base color.
+   * @param {number} [gain] - Brightness multiplier.
+   * @returns {THREE.Color} Shared color (do not mutate).
+   */
+  getColor(hex, gain = 1) {
+    const key = `${hex}:${gain}`;
+    if (!this.colorCache.has(key)) this.colorCache.set(key, new THREE.Color(hex).multiplyScalar(gain));
+    return this.colorCache.get(key);
+  }
+
+  /**
+   * Adds camera shake scaled by the user's shake setting inside the rig.
+   * @param {number} amount - Trauma amount.
+   * @returns {void}
+   */
+  shake(amount) { this.cameraRig.addTrauma(amount); }
+
+  /**
+   * Runs a function after a delay (driven by update()).
+   * @param {number} delaySeconds - Delay.
+   * @param {function(): void} callback - Function to run.
+   * @returns {void}
+   */
+  schedule(delaySeconds, callback) {
+    this.scheduledCalls.push({ time: this.time + delaySeconds, callback });
+  }
+
+  /**
+   * Reacts to a piece locking: tiny sparkle and thud.
+   * @param {{type:string, cells:Array<{x:number,y:number}>}} event - Lock event.
+   * @returns {void}
+   */
+  handleLock(event) {
+    this.shake(this.config.effects.shake.lock);
+    const color = this.getColor(this.config.pieceColors[event.type], 1.6);
+    event.cells.forEach((cell) => {
+      this.layout.gridToWorld(cell.x, cell.y, this.scratchVector);
+      for (let i = 0; i < 2; i++) {
+        this.particles.emit({
+          x: this.scratchVector.x, y: this.scratchVector.y, z: 0.55,
+          vx: randomRange(-1.5, 1.5), vy: randomRange(-0.5, 2), vz: randomRange(0.2, 1.2),
+          color, life: randomRange(0.25, 0.45), size: 0.28, drag: 2, twinkle: 0.6,
+        });
+      }
+    });
+  }
+
+  /**
+   * Reacts to a hard drop: light trails down each column and an impact spray.
+   * @param {{type:string, fromCells:Array<{x:number,y:number}>, toCells:Array<{x:number,y:number}>, distance:number}} event - Drop event.
+   * @returns {void}
+   */
+  handleHardDrop(event) {
+    const shakeConfig = this.config.effects.shake;
+    this.shake(Math.min(shakeConfig.hardDropBase + event.distance * shakeConfig.hardDropPerCell, shakeConfig.hardDropMax));
+    const color = this.getColor(this.config.pieceColors[event.type], 2.2);
+    const topByColumn = new Map();
+    event.fromCells.forEach((cell) => topByColumn.set(cell.x, Math.min(topByColumn.get(cell.x) ?? Infinity, cell.y)));
+    const bottomByColumn = new Map();
+    event.toCells.forEach((cell) => bottomByColumn.set(cell.x, Math.max(bottomByColumn.get(cell.x) ?? -Infinity, cell.y)));
+
+    bottomByColumn.forEach((bottomRow, column) => {
+      if (event.distance > 0) {
+        const topY = this.layout.gridToWorld(column, topByColumn.get(column), this.scratchVector).y;
+        const bottomY = this.layout.gridToWorld(column, bottomRow, this.scratchVector).y;
+        this.beams.spawn({
+          position: [this.layout.gridToWorld(column, 0, this.scratchVector).x, (topY + bottomY) / 2, 0.2],
+          from: [1.2, topY - bottomY + 1.4], to: [0.2, topY - bottomY + 1.4], color, duration: 0.28, peak: 0.55,
+        });
+      }
+      this.layout.gridToWorld(column, bottomRow, this.scratchVector);
+      for (let i = 0; i < 9; i++) {
+        this.particles.emit({
+          x: this.scratchVector.x + randomRange(-0.4, 0.4), y: this.scratchVector.y - 0.45, z: 0.4,
+          vx: randomRange(-5, 5), vy: randomRange(1, 6), vz: randomRange(-1, 2),
+          color, life: randomRange(0.25, 0.6), size: 0.26, gravity: -18, twinkle: 0.4,
+        });
+      }
+    });
+  }
+
+  /**
+   * Reacts to line clears: debris from every cleared cell, row flashes and, for
+   * quads and T-spin doubles/triples, a full explosion.
+   * @param {{lines:number, tSpin:string, rows:Array<{row:number, types:Array<string|null>}>, explosive:boolean}} result - Clear event.
+   * @returns {void}
+   */
+  handleLinesCleared(result) {
+    const shakeConfig = this.config.effects.shake;
+    const lineClear = this.config.effects.lineClear;
+    if (result.lines === 0) { this.shake(shakeConfig.lock * 2); return; }
+
+    this.shake(result.lines * shakeConfig.lineClearPerLine);
+    this.impulses.bloom = Math.max(this.impulses.bloom, 0.25 * result.lines);
+    this.graphics.stage.flashLight.color.set(0xffc880);
+    this.impulses.flash = Math.max(this.impulses.flash, 0.12 * result.lines);
+
+    let centerY = 0;
+    result.rows.forEach((rowInfo) => {
+      centerY += this.layout.gridToWorld(0, rowInfo.row, this.scratchVector).y / result.rows.length;
+      this.beams.spawn({
+        position: [0, this.layout.gridToWorld(0, rowInfo.row, this.scratchVector).y, 0.7],
+        from: [this.layout.columns + 1, 1.1], to: [this.layout.columns + 5, 0.08],
+        color: this.getColor(0xdff4ff, 2.4), duration: 0.4, peak: 0.9,
+      });
+      rowInfo.types.forEach((type, column) => {
+        if (!type) return;
+        const color = this.getColor(this.config.pieceColors[type], 2);
+        this.layout.gridToWorld(column, rowInfo.row, this.scratchVector);
+        for (let i = 0; i < lineClear.particlesPerCell; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = randomRange(lineClear.speedMin, lineClear.speedMax);
+          this.particles.emit({
+            x: this.scratchVector.x, y: this.scratchVector.y, z: randomRange(-0.2, 0.6),
+            vx: Math.cos(angle) * speed, vy: Math.abs(Math.sin(angle)) * speed * 0.8 + 1, vz: randomRange(0, speed * 0.4),
+            color, life: randomRange(0.5, 1.1), size: randomRange(0.22, 0.5), gravity: lineClear.gravity, drag: 0.8, twinkle: 0.5,
+          });
+        }
+      });
+    });
+
+    if (result.perfectClear) this.triggerNuclearExplosion();
+    else if (result.explosive) this.triggerExplosion(centerY, result.tSpin === 'full' ? 'tSpin' : 'quad');
+  }
+
+  /**
+   * Fires the big explosion: shockwave rings, radial burst, flash, bloom and heavy shake.
+   * @param {number} centerY - World Y of the explosion center.
+   * @param {'quad'|'tSpin'} style - Chooses the color palette and shake strength.
+   * @returns {void}
+   */
+  triggerExplosion(centerY, style) {
+    const explosion = this.config.effects.explosion;
+    const palette = explosion.palettes[style];
+    this.shake(style === 'tSpin' ? this.config.effects.shake.tSpin : this.config.effects.shake.quad);
+    this.graphics.stage.flashLight.color.set(0xffc880);
+    this.impulses.flash = explosion.flash;
+    this.impulses.bloom = explosion.bloom;
+    this.impulses.chromaticAberration = explosion.chromaticAberration;
+
+    explosion.ringDurations.forEach((duration, index) => {
+      this.rings.spawn({
+        position: [0, centerY, 1.2], from: [1, 1], to: [explosion.ringMaxScale * (1 - index * 0.25), explosion.ringMaxScale * (1 - index * 0.25)],
+        color: this.getColor(palette[index % palette.length], 2.4), duration, peak: 0.9,
+      });
+    });
+    this.emitRadialBurst(0, centerY, explosion.particleCount, palette);
+    for (let i = 0; i < explosion.secondaryBursts; i++) {
+      this.schedule(0.18 + i * 0.16, () => {
+        this.emitRadialBurst(randomRange(-4, 4), centerY + randomRange(-5, 5), 110, palette);
+        this.shake(0.25);
+        this.impulses.flash = Math.max(this.impulses.flash, 0.4);
+      });
+    }
+  }
+
+  /**
+   * Emits particles flying outward from a point.
+   * @param {number} x - World X. @param {number} y - World Y.
+   * @param {number} count - Number of particles.
+   * @param {number[]} palette - Hex colors to pick from.
+   * @returns {void}
+   */
+  emitRadialBurst(x, y, count, palette) {
+    const explosion = this.config.effects.explosion;
+    for (let i = 0; i < count; i++) {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(randomRange(-1, 1));
+      const speed = randomRange(explosion.speedMin, explosion.speedMax);
+      this.particles.emit({
+        x, y, z: 1,
+        vx: Math.sin(phi) * Math.cos(theta) * speed, vy: Math.sin(phi) * Math.sin(theta) * speed, vz: Math.cos(phi) * speed * 0.8,
+        color: this.getColor(palette[i % palette.length], randomRange(1.4, 2.8)),
+        life: randomRange(0.7, 1.7), size: randomRange(0.25, 0.7), gravity: -9, drag: 1.4, twinkle: 0.5,
+      });
+    }
+  }
+
+  /**
+   * Reacts to game over with a dull red burst along the stack.
+   * @returns {void}
+   */
+  handleGameOver() {
+    this.shake(this.config.effects.shake.gameOver);
+    const color = this.getColor(0xff4a5c, 1.8);
+    for (let i = 0; i < 160; i++) {
+      this.particles.emit({
+        x: randomRange(-5, 5), y: randomRange(0, 20), z: 0.6,
+        vx: randomRange(-2, 2), vy: randomRange(1, 6), vz: randomRange(0, 2),
+        color, life: randomRange(0.6, 1.4), size: randomRange(0.2, 0.45), gravity: -6, twinkle: 0.5,
+      });
+    }
+  }
+
+  /**
+   * Adds twinkles on random locked blocks so the metal feels alive.
+   * @param {number} deltaSeconds - Frame time in seconds.
+   * @returns {void}
+   */
+  updateAmbientSparkles(deltaSeconds) {
+    this.sparkleClock += deltaSeconds;
+    if (this.sparkleClock < this.config.effects.sparkleIntervalSeconds) return;
+    this.sparkleClock = 0;
+    const { cells } = this.engine.board;
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const row = Math.floor(Math.random() * cells.length);
+      const column = Math.floor(Math.random() * this.layout.columns);
+      const type = cells[row][column];
+      if (!type) continue;
+      this.layout.gridToWorld(column, row, this.scratchVector);
+      this.particles.emit({
+        x: this.scratchVector.x + randomRange(-0.35, 0.35), y: this.scratchVector.y + randomRange(-0.35, 0.35), z: 0.5,
+        color: this.getColor(0xffffff, 2.4), life: 0.55, size: 0.55, twinkle: 0.9,
+      });
+      break;
+    }
+  }
+
+  /**
+   * Converts the current combo chain (consecutive piece drops that each cleared a line) into a
+   * smoothed storm level and drives rain, wind spray, lightning and camera buffeting from it.
+   * @param {number} deltaSeconds - Frame time in seconds.
+   * @returns {void}
+   */
+  updateStorm(deltaSeconds) {
+    const storm = this.config.effects.storm;
+    const chain = Math.max(0, this.engine.stats.combo + 1);
+    const target = clamp(chain / storm.chainForMaxStorm, 0, 1);
+    const rate = target > this.stormLevel ? storm.riseRatePerSecond : storm.fallRatePerSecond;
+    this.stormLevel = target > this.stormLevel
+      ? Math.min(target, this.stormLevel + rate * deltaSeconds)
+      : Math.max(target, this.stormLevel - rate * deltaSeconds);
+
+    this.rain.update(deltaSeconds, this.settings.rainAmount, this.stormLevel, this.time);
+    this.updateWindSpray(deltaSeconds);
+    this.updateLightning(deltaSeconds);
+    if (this.stormLevel > storm.cameraBuffetStartLevel && !this.cameraRig.frozen) {
+      const buffet = ((this.stormLevel - storm.cameraBuffetStartLevel) / (1 - storm.cameraBuffetStartLevel)) * storm.cameraBuffetMaxTrauma;
+      if (this.cameraRig.trauma < buffet) this.cameraRig.trauma = buffet;
+    }
+  }
+
+  /**
+   * Emits faint wind-driven spray streaming across the screen during heavy storms.
+   * @param {number} deltaSeconds - Frame time in seconds.
+   * @returns {void}
+   */
+  updateWindSpray(deltaSeconds) {
+    const storm = this.config.effects.storm;
+    if (this.stormLevel <= storm.mistStartLevel) return;
+    const strength = (this.stormLevel - storm.mistStartLevel) / (1 - storm.mistStartLevel);
+    this.mistClock += deltaSeconds * storm.mistParticlesPerSecondAtMax * strength;
+    const wind = this.rain.currentWind;
+    while (this.mistClock >= 1) {
+      this.mistClock -= 1;
+      this.particles.emit({
+        x: randomRange(-24, 10), y: randomRange(0, 26), z: randomRange(-8, 10),
+        vx: wind * randomRange(1.1, 1.7), vy: randomRange(-2, 1), vz: 0,
+        color: this.getColor(0x9cc0ff, 0.35), life: randomRange(0.5, 0.9), size: randomRange(1.2, 3),
+      });
+    }
+  }
+
+  /**
+   * Counts down to the next lightning strike; strikes get more frequent as the storm grows.
+   * @param {number} deltaSeconds - Frame time in seconds.
+   * @returns {void}
+   */
+  updateLightning(deltaSeconds) {
+    const lightning = this.config.effects.storm.lightning;
+    if (this.stormLevel < lightning.startLevel) { this.lightningCountdown = lightning.intervalSecondsAtStart; return; }
+    this.lightningCountdown -= deltaSeconds;
+    if (this.lightningCountdown > 0) return;
+    const strength = (this.stormLevel - lightning.startLevel) / (1 - lightning.startLevel);
+    this.lightningCountdown = lerp(lightning.intervalSecondsAtStart, lightning.intervalSecondsAtMax, strength) * randomRange(0.6, 1.4);
+    this.strikeLightning(strength);
+  }
+
+  /**
+   * Produces a double-flicker lightning flash with a thunder shake.
+   * @param {number} strength - 0..1 storm strength past the lightning threshold.
+   * @returns {void}
+   */
+  strikeLightning(strength) {
+    const lightning = this.config.effects.storm.lightning;
+    const light = this.graphics.stage.flashLight;
+    light.color.set(0xbfd8ff);
+    light.position.x = randomRange(-10, 10);
+    const flash = lightning.flash * (0.6 + 0.4 * strength);
+    this.impulses.flash = Math.max(this.impulses.flash, flash);
+    this.impulses.bloom = Math.max(this.impulses.bloom, lightning.bloom * (0.5 + 0.5 * strength));
+    this.shake(0.05 + lightning.shake * strength);
+    this.schedule(0.11, () => { this.impulses.flash = Math.max(this.impulses.flash, flash * 0.8); });
+    this.emit('lightning', { strength });
+  }
+
+  /**
+   * Computes the visual time scale: slow motion right after a nuclear blast, easing back to normal speed.
+   * @param {number} deltaSeconds - Real frame time in seconds.
+   * @returns {number} Scale to multiply effect time with (1 = normal).
+   */
+  updateTimeScale(deltaSeconds) {
+    const slow = this.config.effects.nuclear.slowMotion;
+    this.slowMotionAge += deltaSeconds;
+    const ramp = clamp((this.slowMotionAge - slow.holdSeconds) / slow.rampSeconds, 0, 1);
+    this.timeScale = lerp(slow.scale, 1, ramp);
+    return this.timeScale;
+  }
+
+  /**
+   * Returns a fire color between white-hot (heat 1) and deep red (heat 0), reusing one shared Color.
+   * @param {number} heat - 0..1 temperature. @param {number} brightness - Overall brightness multiplier.
+   * @returns {THREE.Color} Shared color (copy its values immediately).
+   */
+  getFireColor(heat, brightness) {
+    return this.nuclearColor.setRGB(lerp(0.6, 1.7, heat) * brightness, lerp(0.12, 0.85, heat) * brightness, lerp(0.05, 0.3, heat) * brightness);
+  }
+
+  /**
+   * Starts the cinematic nuclear explosion (perfect clear): white-out flash, slow motion, fireball,
+   * ground and dome shockwaves, flying debris and a rising mushroom cloud. The camera is frozen
+   * (no shake, sway or movement) until the blast is over.
+   * Emits "nuclear" so the audio and UI can join in.
+   * @returns {void}
+   */
+  triggerNuclearExplosion() {
+    const n = this.config.effects.nuclear;
+    const floorY = this.config.effects.rain.floorY;
+    this.nuclear = { age: 0, stemCarry: 0, capCarry: 0 };
+    this.slowMotionAge = 0;
+    this.graphics.stage.flashLight.color.set(0xfff0d0);
+    this.impulses.whiteout = n.whiteout;
+    this.impulses.flash = n.flash;
+    this.impulses.bloom = n.bloom;
+    this.impulses.chromaticAberration = n.chromaticAberration;
+    this.cameraRig.setFrozen(true); // the camera stays perfectly still for the whole blast
+
+    const radius = n.fireball.radius;
+    this.beams.spawn({ position: [0, n.fireball.y, 1.5], from: [2, 2], to: [radius * 2.2, radius * 2.2], color: this.getColor(0xffe9b0, 3.2), duration: n.fireball.seconds, peak: 1 });
+    this.beams.spawn({ position: [0, n.fireball.y + 2, 1.2], from: [4, 4], to: [radius * 3.4, radius * 3.4], color: this.getColor(0xff6a1a, 2.2), duration: n.fireball.seconds * 1.4, peak: 0.8 });
+    this.groundRings.spawn({ position: [0, floorY + 0.05, 0], from: [1, 1], to: [n.groundRing.maxScale, n.groundRing.maxScale], color: this.getColor(0xffc890, 2.4), duration: n.groundRing.seconds, peak: 0.9 });
+    this.rings.spawn({ position: [0, n.fireball.y, 2], from: [1, 1], to: [n.domeRing.maxScale, n.domeRing.maxScale], color: this.getColor(0xffffff, 2.6), duration: n.domeRing.seconds, peak: 0.9 });
+
+    for (let i = 0; i < n.debrisCount; i++) {
+      this.particles.emit({
+        x: randomRange(-3, 3), y: floorY + 0.5, z: randomRange(-2, 2),
+        vx: randomRange(-9, 9), vy: randomRange(8, 30), vz: randomRange(-7, 7),
+        color: this.getColor(0xff9a3c, randomRange(1.2, 2.6)),
+        life: randomRange(0.9, 2.2), size: randomRange(0.3, 0.8), gravity: -14, drag: 0.3, twinkle: 0.5,
+      });
+    }
+    this.emit('nuclear', { duration: n.durationSeconds });
+  }
+
+  /**
+   * Drives the running nuclear sequence: a rising stem of fire from the floor and an expanding
+   * mushroom cap on top of it, emitted over time.
+   * @param {number} deltaSeconds - Time-scaled frame time in seconds.
+   * @returns {void}
+   */
+  updateNuclear(deltaSeconds) {
+    const state = this.nuclear;
+    if (!state) return;
+    const n = this.config.effects.nuclear;
+    const floorY = this.config.effects.rain.floorY;
+    state.age += deltaSeconds;
+    if (state.age > n.durationSeconds) { this.nuclear = null; this.cameraRig.setFrozen(false); return; }
+
+    const { stem, cap } = n;
+    if (state.age >= stem.startSeconds && state.age <= stem.endSeconds) {
+      const heat = 1 - (state.age - stem.startSeconds) / (stem.endSeconds - stem.startSeconds);
+      state.stemCarry += deltaSeconds * stem.particlesPerSecond;
+      while (state.stemCarry >= 1) {
+        state.stemCarry -= 1;
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.sqrt(Math.random()) * stem.radius;
+        this.particles.emit({
+          x: Math.cos(angle) * radius, y: floorY + 0.3 + Math.random() * 1.5, z: Math.sin(angle) * radius,
+          vx: Math.cos(angle) * randomRange(0, 1.5), vy: randomRange(stem.riseSpeedMin, stem.riseSpeedMax), vz: Math.sin(angle) * randomRange(0, 1.5),
+          color: this.getFireColor(heat, 0.7), life: randomRange(1.2, 2), size: randomRange(2.5, 4.5), drag: 0.5,
+        });
+      }
+    }
+    if (state.age >= cap.startSeconds && state.age <= cap.endSeconds) {
+      const progress = (state.age - cap.startSeconds) / (cap.endSeconds - cap.startSeconds);
+      const capY = floorY + 3 + cap.riseHeight * (1 - Math.pow(1 - progress, 2));
+      const capRadius = lerp(cap.startRadius, cap.endRadius, progress);
+      state.capCarry += deltaSeconds * cap.particlesPerSecond;
+      while (state.capCarry >= 1) {
+        state.capCarry -= 1;
+        const angle = Math.random() * Math.PI * 2;
+        const onRim = Math.random() < 0.6; // the rim curls outward and down, forming the mushroom shape
+        const radius = onRim ? capRadius * randomRange(0.75, 1) : Math.sqrt(Math.random()) * capRadius;
+        const outward = onRim ? randomRange(1, 3) : randomRange(0.5, 2);
+        this.particles.emit({
+          x: Math.cos(angle) * radius, y: capY + randomRange(-1.5, 1.5), z: Math.sin(angle) * radius * 0.35,
+          vx: Math.cos(angle) * outward, vy: onRim ? -randomRange(0.5, 3) : randomRange(0.5, 3), vz: Math.sin(angle) * outward * 0.35,
+          color: this.getFireColor(1 - progress * 0.6, 1.1), life: randomRange(1, 1.8), size: randomRange(3, 6), drag: 1,
+        });
+      }
+    }
+  }
+
+  /**
+   * Advances every effect. Call once per rendered frame.
+   * @param {number} deltaSeconds - Frame time in seconds.
+   * @returns {void}
+   */
+  update(deltaSeconds) {
+    this.time += deltaSeconds;
+    const decay = this.config.effects.impulseDecayPerSecond;
+    this.impulses.bloom = Math.max(0, this.impulses.bloom - decay.bloom * deltaSeconds);
+    this.impulses.flash = Math.max(0, this.impulses.flash - decay.flash * deltaSeconds);
+    this.impulses.chromaticAberration = Math.max(0, this.impulses.chromaticAberration - decay.chromaticAberration * 0.01 * deltaSeconds);
+    this.impulses.whiteout = Math.max(0, this.impulses.whiteout - decay.whiteout * deltaSeconds);
+
+    this.scheduledCalls = this.scheduledCalls.filter((call) => {
+      if (call.time > this.time) return true;
+      call.callback();
+      return false;
+    });
+    this.updateAmbientSparkles(deltaSeconds);
+    const effectDelta = deltaSeconds * this.updateTimeScale(deltaSeconds);
+    this.updateStorm(effectDelta);
+    this.updateNuclear(effectDelta);
+    this.beams.update(effectDelta);
+    this.rings.update(effectDelta);
+    this.groundRings.update(effectDelta);
+    this.particles.update(effectDelta, this.graphics.camera.quaternion, this.time);
+  }
+}
+
+/* =====================================================================
+ * SECTION 8B — AUDIO
+ * Procedurally synthesised sound (no audio files): ambient rain that follows the storm level,
+ * thunder, and pitch-laddered line-clear chimes.
+ * ===================================================================== */
+
+/** Synthesises all game audio with the Web Audio API. */
+class AudioEngine {
+  /**
+   * Creates the engine. No audio context exists until unlock() is called from a user gesture.
+   * @param {Object} config - The CONFIG object (reads config.audio).
+   * @param {Object<string, number>} settings - Runtime settings (reads rainVolume and effectsVolume).
+   */
+  constructor(config, settings) {
+    this.config = config.audio;
+    this.settings = settings;
+    this.context = null;
+    this.masterGain = null;
+    this.effectsBus = null;
+    this.reverbSend = null;
+    this.rainBus = null;
+    this.noiseBuffer = null;
+    this.rainLayers = null;
+    this.suppressNextLock = false; // a hard drop already plays its own impact, so its lock thud is skipped
+    this.updateClock = 0;
+  }
+
+  /**
+   * Creates (first call) and resumes the audio context. Browsers only allow audio after a user gesture,
+   * so call this from key/pointer handlers. Safe to call repeatedly.
+   * @returns {void}
+   */
+  unlock() {
+    if (!this.context) {
+      const ContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!ContextClass) return;
+      this.context = new ContextClass();
+      this.buildGraph();
+    }
+    if (this.context.state === 'suspended') this.context.resume();
+  }
+
+  /**
+   * Suspends or resumes audio (used when the tab is hidden).
+   * @param {boolean} suspended - True to suspend.
+   * @returns {void}
+   */
+  setSuspended(suspended) {
+    if (!this.context) return;
+    if (suspended) this.context.suspend();
+    else this.context.resume();
+  }
+
+  /** Builds the mixer: master gain, compressed effects bus with reverb, and the rain bus. @returns {void} */
+  buildGraph() {
+    const context = this.context;
+    this.masterGain = context.createGain();
+    this.masterGain.gain.value = this.config.masterVolume;
+    this.masterGain.connect(context.destination);
+
+    const compressor = context.createDynamicsCompressor();
+    compressor.connect(this.masterGain);
+    this.effectsBus = context.createGain();
+    this.effectsBus.gain.value = this.settings.effectsVolume;
+    this.effectsBus.connect(compressor);
+
+    this.reverbSend = context.createGain();
+    this.reverbSend.gain.value = this.config.reverbAmount;
+    const convolver = context.createConvolver();
+    convolver.buffer = this.createReverbImpulse(this.config.reverbSeconds);
+    this.reverbSend.connect(convolver);
+    convolver.connect(this.effectsBus);
+
+    this.noiseBuffer = this.createNoiseBuffer(4);
+    this.buildRainLayers();
+  }
+
+  /**
+   * Creates a buffer of white noise.
+   * @param {number} seconds - Buffer length.
+   * @returns {AudioBuffer} Mono noise buffer.
+   */
+  createNoiseBuffer(seconds) {
+    const buffer = this.context.createBuffer(1, Math.floor(this.context.sampleRate * seconds), this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    return buffer;
+  }
+
+  /**
+   * Creates a decaying-noise impulse response for a simple room reverb.
+   * @param {number} seconds - Reverb tail length.
+   * @returns {AudioBuffer} Stereo impulse response.
+   */
+  createReverbImpulse(seconds) {
+    const length = Math.floor(this.context.sampleRate * seconds);
+    const buffer = this.context.createBuffer(2, length, this.context.sampleRate);
+    for (let channel = 0; channel < 2; channel++) {
+      const data = buffer.getChannelData(channel);
+      for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2.5);
+    }
+    return buffer;
+  }
+
+  /**
+   * Starts a looping noise source at a random offset.
+   * @returns {AudioBufferSourceNode} The running source (not yet connected).
+   */
+  createLoopingNoise() {
+    const source = this.context.createBufferSource();
+    source.buffer = this.noiseBuffer;
+    source.loop = true;
+    source.start(0, Math.random() * 2);
+    return source;
+  }
+
+  /** Builds the three continuous rain layers: hiss, low body and wind. @returns {void} */
+  buildRainLayers() {
+    const context = this.context;
+    this.rainBus = context.createGain();
+    this.rainBus.gain.value = 0;
+    this.rainBus.connect(this.masterGain);
+
+    const hissHigh = context.createBiquadFilter();
+    hissHigh.type = 'highpass';
+    hissHigh.frequency.value = 1400;
+    const hissLow = context.createBiquadFilter();
+    hissLow.type = 'lowpass';
+    hissLow.frequency.value = this.config.rain.calmBrightnessHz;
+    const hissGain = context.createGain();
+    hissGain.gain.value = 0;
+    this.createLoopingNoise().connect(hissHigh);
+    hissHigh.connect(hissLow);
+    hissLow.connect(hissGain);
+    hissGain.connect(this.rainBus);
+
+    const bodyFilter = context.createBiquadFilter();
+    bodyFilter.type = 'bandpass';
+    bodyFilter.frequency.value = 650;
+    bodyFilter.Q.value = 0.7;
+    const bodyGain = context.createGain();
+    bodyGain.gain.value = 0;
+    this.createLoopingNoise().connect(bodyFilter);
+    bodyFilter.connect(bodyGain);
+    bodyGain.connect(this.rainBus);
+
+    const windFilter = context.createBiquadFilter();
+    windFilter.type = 'bandpass';
+    windFilter.frequency.value = 300;
+    windFilter.Q.value = 1.4;
+    const windGain = context.createGain();
+    windGain.gain.value = 0;
+    this.createLoopingNoise().connect(windFilter);
+    windFilter.connect(windGain);
+    windGain.connect(this.rainBus);
+    const windLfo = context.createOscillator();
+    windLfo.frequency.value = 0.13;
+    const windLfoDepth = context.createGain();
+    windLfoDepth.gain.value = 160;
+    windLfo.connect(windLfoDepth);
+    windLfoDepth.connect(windFilter.frequency);
+    windLfo.start();
+
+    this.rainLayers = { hissGain, hissLow, bodyGain, windGain, windFilter };
+  }
+
+  /**
+   * Updates volumes and rain character. Rain grows brighter, louder and windier with the storm level.
+   * Throttled internally to the interval set in CONFIG.audio.rain.
+   * @param {number} stormLevel - 0 (drizzle) .. 1 (hurricane).
+   * @param {number} deltaSeconds - Frame time in seconds.
+   * @returns {void}
+   */
+  update(stormLevel, deltaSeconds) {
+    if (!this.context || this.context.state !== 'running') return;
+    this.updateClock += deltaSeconds;
+    if (this.updateClock < this.config.rain.updateIntervalSeconds) return;
+    this.updateClock = 0;
+    const now = this.context.currentTime;
+    const rain = this.config.rain;
+    const storm = clamp(stormLevel, 0, 1);
+    const layers = this.rainLayers;
+    this.rainBus.gain.setTargetAtTime(this.settings.rainVolume, now, 0.1);
+    this.effectsBus.gain.setTargetAtTime(this.settings.effectsVolume, now, 0.05);
+    layers.hissGain.gain.setTargetAtTime(lerp(rain.calmHiss, rain.stormHiss, storm), now, 0.25);
+    layers.hissLow.frequency.setTargetAtTime(lerp(rain.calmBrightnessHz, rain.stormBrightnessHz, storm), now, 0.25);
+    layers.bodyGain.gain.setTargetAtTime(lerp(rain.calmBody, rain.stormBody, storm), now, 0.25);
+    layers.windGain.gain.setTargetAtTime(rain.windMax * storm * storm, now, 0.3);
+    layers.windFilter.frequency.setTargetAtTime(lerp(250, 520, storm), now, 0.3);
+  }
+
+  /**
+   * Works out the pitch offset (in semitones) of a clear: the clear type sets the base step
+   * (single < double < triple < quad < T-spin double < T-spin triple) and each combo step raises it further.
+   * @param {{lines:number, tSpin:string, combo:number}} result - "linesCleared" event payload.
+   * @returns {number} Semitones above the base frequency.
+   */
+  getClearSemitones(result) {
+    const tiers = this.config.clearSemitones;
+    const table = result.tSpin === 'full'
+      ? [0, tiers.tSpinSingle, tiers.tSpinDouble, tiers.tSpinTriple]
+      : [0, tiers.single, tiers.double, tiers.triple, tiers.quad];
+    const tier = result.perfectClear ? tiers.perfectClear : table[Math.min(result.lines, table.length - 1)];
+    const comboBonus = Math.min(Math.max(0, result.combo) * this.config.comboSemitonesPerStep, this.config.maxComboSemitones);
+    return tier + comboBonus;
+  }
+
+  /**
+   * Plays the line-clear sound: one chime per cleared line (up to four) rising as a chord, with the
+   * root pitch set by clear type and combo. Quads and full T-spin doubles/triples add an explosion.
+   * @param {{lines:number, tSpin:string, combo:number, explosive:boolean}} result - "linesCleared" event payload.
+   * @returns {void}
+   */
+  playLineClear(result) {
+    if (!this.context || this.context.state !== 'running' || result.lines === 0) return;
+    const root = this.config.baseFrequencyHz * Math.pow(2, this.getClearSemitones(result) / 12);
+    const chordSize = this.config.chordOffsetsSemitones.length;
+    const noteCount = result.perfectClear ? chordSize : Math.min(result.lines, chordSize);
+    const bright = result.tSpin === 'full' || Boolean(result.perfectClear);
+    const startTime = this.context.currentTime;
+    for (let i = 0; i < noteCount; i++) {
+      const frequency = root * Math.pow(2, this.config.chordOffsetsSemitones[i] / 12);
+      this.playChime(frequency, startTime + i * this.config.noteSpacingSeconds, 0.3 / Math.sqrt(noteCount), 0.5 + 0.12 * noteCount, bright);
+    }
+    if (result.explosive) this.playExplosion(bright);
+    if (result.perfectClear) this.playPerfectClearFlourish(root);
+  }
+
+  /**
+   * Plays one bell-like note built from a few sine/triangle partials.
+   * @param {number} frequency - Fundamental in Hz.
+   * @param {number} startTime - AudioContext time to start at.
+   * @param {number} peak - Peak gain.
+   * @param {number} duration - Length in seconds.
+   * @param {boolean} bright - Adds extra upper partials (used for T-spins).
+   * @returns {void}
+   */
+  playChime(frequency, startTime, peak, duration, bright) {
+    const context = this.context;
+    const output = context.createGain();
+    output.gain.setValueAtTime(0.0001, startTime);
+    output.gain.exponentialRampToValueAtTime(peak, startTime + 0.006);
+    output.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+    const partials = [[1, 'sine', 1], [2, 'triangle', 0.35], [3.01, 'sine', bright ? 0.3 : 0.12]];
+    if (bright) partials.push([4.2, 'sine', 0.18]);
+    partials.forEach(([ratio, type, amplitude]) => {
+      const oscillator = context.createOscillator();
+      oscillator.type = type;
+      oscillator.frequency.value = frequency * ratio;
+      const gain = context.createGain();
+      gain.gain.value = amplitude;
+      oscillator.connect(gain);
+      gain.connect(output);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration + 0.05);
+    });
+    output.connect(this.effectsBus);
+    output.connect(this.reverbSend);
+  }
+
+  /**
+   * Plays a filtered noise burst with an exponential filter sweep and fade.
+   * @param {Object} o - Burst options.
+   * @param {string} o.type - Biquad filter type. @param {number} o.startFrequency - Filter start Hz.
+   * @param {number} o.endFrequency - Filter end Hz. @param {number} o.peak - Peak gain.
+   * @param {number} o.duration - Seconds. @param {AudioNode} o.destination - Where to connect.
+   * @param {number} [o.delay] - Seconds before starting. @param {number} [o.attack] - Attack seconds.
+   * @returns {void}
+   */
+  playNoiseBurst({ type, startFrequency, endFrequency, peak, duration, destination, delay = 0, attack = 0.005 }) {
+    const context = this.context;
+    const start = context.currentTime + delay;
+    const source = context.createBufferSource();
+    source.buffer = this.noiseBuffer;
+    const filter = context.createBiquadFilter();
+    filter.type = type;
+    filter.frequency.setValueAtTime(startFrequency, start);
+    filter.frequency.exponentialRampToValueAtTime(endFrequency, start + duration);
+    const gain = context.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(peak, start + attack);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(destination);
+    source.start(start, Math.random());
+    source.stop(start + duration + 0.05);
+  }
+
+  /**
+   * Plays the big explosion: sub boom, rumbling noise and a bright sparkle (plus a rising whoosh for T-spins).
+   * @param {boolean} isTSpin - True for the T-spin variant.
+   * @returns {void}
+   */
+  playExplosion(isTSpin) {
+    const context = this.context;
+    const now = context.currentTime;
+    const boom = context.createOscillator();
+    boom.type = 'sine';
+    boom.frequency.setValueAtTime(isTSpin ? 140 : 110, now);
+    boom.frequency.exponentialRampToValueAtTime(32, now + 0.7);
+    const boomGain = context.createGain();
+    boomGain.gain.setValueAtTime(0.9, now);
+    boomGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
+    boom.connect(boomGain);
+    boomGain.connect(this.effectsBus);
+    boom.start(now);
+    boom.stop(now + 1);
+
+    this.playNoiseBurst({ type: 'lowpass', startFrequency: 2400, endFrequency: 180, peak: 0.7, duration: 1, destination: this.effectsBus });
+    this.playNoiseBurst({ type: 'highpass', startFrequency: 4500, endFrequency: 6500, peak: 0.22, duration: 0.6, destination: this.reverbSend });
+    if (isTSpin) {
+      const whoosh = context.createOscillator();
+      whoosh.type = 'sawtooth';
+      whoosh.frequency.setValueAtTime(300, now);
+      whoosh.frequency.exponentialRampToValueAtTime(1800, now + 0.5);
+      const whooshGain = context.createGain();
+      whooshGain.gain.setValueAtTime(0.0001, now);
+      whooshGain.gain.exponentialRampToValueAtTime(0.12, now + 0.3);
+      whooshGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+      whoosh.connect(whooshGain);
+      whooshGain.connect(this.reverbSend);
+      whoosh.start(now);
+      whoosh.stop(now + 0.7);
+    }
+  }
+
+  /** Tells whether sound can currently be played. @returns {boolean} True when the audio context is running. */
+  isReady() {
+    return Boolean(this.context) && this.context.state === 'running';
+  }
+
+  /**
+   * Plays a simple enveloped oscillator note with an optional pitch glide.
+   * @param {Object} o - Tone options.
+   * @param {string} o.type - Oscillator type. @param {number} o.frequency - Start frequency in Hz.
+   * @param {number} [o.endFrequency] - End frequency in Hz (defaults to the start frequency).
+   * @param {number} o.peak - Peak gain. @param {number} o.duration - Length in seconds.
+   * @param {number} [o.delay] - Seconds before starting. @param {boolean} [o.reverb] - Also send to the reverb. @param {AudioNode} [o.destination] - Output node (defaults to the effects bus).
+   * @returns {void}
+   */
+  playTone({ type, frequency, endFrequency = frequency, peak, duration, delay = 0, reverb = false, destination = this.effectsBus }) {
+    const context = this.context;
+    const start = context.currentTime + delay;
+    const oscillator = context.createOscillator();
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, start);
+    oscillator.frequency.exponentialRampToValueAtTime(endFrequency, start + duration);
+    const gain = context.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(peak, start + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    oscillator.connect(gain);
+    gain.connect(destination);
+    if (reverb) gain.connect(this.reverbSend);
+    oscillator.start(start);
+    oscillator.stop(start + duration + 0.03);
+  }
+
+  /**
+   * Plays a short mechanical tick for a successful rotation (pitch glides up clockwise, down counter-clockwise).
+   * @param {number} direction - +1 clockwise, -1 counter-clockwise.
+   * @returns {void}
+   */
+  playRotate(direction) {
+    if (!this.isReady()) return;
+    const gain = this.config.sfxGains.rotate;
+    const clockwise = direction > 0;
+    if (Math.abs(direction) === 2) this.playTone({ type: 'triangle', frequency: 700, endFrequency: 1000, peak: gain, duration: 0.06, delay: 0.05 });
+    this.playTone({ type: 'triangle', frequency: clockwise ? 620 : 820, endFrequency: clockwise ? 880 : 560, peak: gain, duration: 0.07 });
+    this.playNoiseBurst({ type: 'highpass', startFrequency: 3000, endFrequency: 5000, peak: gain * 0.35, duration: 0.03, destination: this.effectsBus });
+  }
+
+  /** Plays a swoosh with a two-note blip when a piece is held or swapped. @returns {void} */
+  playHold() {
+    if (!this.isReady()) return;
+    const gain = this.config.sfxGains.hold;
+    this.playNoiseBurst({ type: 'bandpass', startFrequency: 500, endFrequency: 2600, peak: gain * 0.8, duration: 0.2, attack: 0.05, destination: this.effectsBus });
+    this.playTone({ type: 'sine', frequency: 520, endFrequency: 780, peak: gain * 0.5, duration: 0.14 });
+    this.playTone({ type: 'sine', frequency: 780, endFrequency: 1040, peak: gain * 0.4, duration: 0.14, delay: 0.06 });
+  }
+
+  /** Plays a soft metallic thud when a piece locks into place (skipped right after a hard drop). @returns {void} */
+  playLock() {
+    if (this.suppressNextLock) { this.suppressNextLock = false; return; }
+    if (!this.isReady()) return;
+    const gain = this.config.sfxGains.lock;
+    this.playTone({ type: 'sine', frequency: 170, endFrequency: 70, peak: gain, duration: 0.13 });
+    this.playNoiseBurst({ type: 'lowpass', startFrequency: 1400, endFrequency: 200, peak: gain * 0.6, duration: 0.08, destination: this.effectsBus });
+  }
+
+  /**
+   * Plays a heavy impact for a hard drop: a falling whoosh, deep thud and metallic clank. Longer drops hit harder.
+   * @param {number} distance - Rows the piece fell.
+   * @returns {void}
+   */
+  playHardDrop(distance) {
+    if (!this.isReady()) return;
+    this.suppressNextLock = true;
+    const gain = this.config.sfxGains.hardDrop * (0.6 + 0.4 * Math.min(distance, 20) / 20);
+    if (distance > 2) {
+      this.playNoiseBurst({ type: 'bandpass', startFrequency: 1800, endFrequency: 400, peak: gain * 0.35, duration: 0.12, destination: this.effectsBus });
+    }
+    this.playTone({ type: 'sine', frequency: 130, endFrequency: 38, peak: gain, duration: 0.28 });
+    this.playNoiseBurst({ type: 'lowpass', startFrequency: 3200, endFrequency: 140, peak: gain * 0.8, duration: 0.25, destination: this.effectsBus });
+    this.playTone({ type: 'triangle', frequency: 1250, endFrequency: 900, peak: gain * 0.18, duration: 0.09 });
+  }
+
+  /** Plays a slow descending minor phrase with a low rumble when the game ends. @returns {void} */
+  playGameOver() {
+    if (!this.isReady()) return;
+    const gain = this.config.sfxGains.gameOver;
+    [392, 370, 330, 247].forEach((frequency, index) => {
+      this.playTone({ type: 'triangle', frequency, endFrequency: frequency * 0.97, peak: gain * 0.8, duration: 0.5 + index * 0.1, delay: index * 0.22, reverb: true });
+    });
+    this.playTone({ type: 'sine', frequency: 98, endFrequency: 40, peak: gain, duration: 1.2, delay: 0.8, reverb: true });
+    this.playNoiseBurst({ type: 'lowpass', startFrequency: 1800, endFrequency: 60, peak: gain * 0.5, duration: 1.8, delay: 0.6, destination: this.effectsBus });
+  }
+
+  /**
+   * Plays a fast ascending sparkle run on top of a perfect clear.
+   * @param {number} root - Root frequency of the clear chord in Hz.
+   * @returns {void}
+   */
+  playPerfectClearFlourish(root) {
+    const startTime = this.context.currentTime + 0.25;
+    [0, 4, 7, 12, 16, 19].forEach((semitones, index) => {
+      this.playChime(root * Math.pow(2, semitones / 12), startTime + index * 0.05, 0.1, 0.45, true);
+    });
+  }
+
+  /**
+   * Plays the nuclear blast: a sharp crack, a huge sub-bass boom with a roaring noise wash, a delayed
+   * second rumble and a faint ringing tone.
+   * @returns {void}
+   */
+  playNuclearExplosion() {
+    if (!this.isReady()) return;
+    this.playNoiseBurst({ type: 'highpass', startFrequency: 2500, endFrequency: 8000, peak: 0.8, duration: 0.25, destination: this.effectsBus });
+    this.playTone({ type: 'sine', frequency: 75, endFrequency: 20, peak: 1, duration: 3.6, reverb: true });
+    this.playNoiseBurst({ type: 'lowpass', startFrequency: 4000, endFrequency: 60, peak: 0.9, duration: 3.4, attack: 0.06, destination: this.effectsBus });
+    this.playTone({ type: 'sine', frequency: 48, endFrequency: 18, peak: 0.8, duration: 3, delay: 0.7, reverb: true });
+    this.playNoiseBurst({ type: 'lowpass', startFrequency: 900, endFrequency: 50, peak: 0.6, duration: 3, delay: 0.8, destination: this.reverbSend });
+    this.playTone({ type: 'sine', frequency: 3150, endFrequency: 3100, peak: 0.05, duration: 2.6, delay: 0.3 });
+  }
+
+  /**
+   * Plays a lightning strike: a sharp crack with crackling sizzle and an electric zap (matching the visual
+   * double flash), followed by rolling thunder. It uses the ambient bus, so the rain volume controls it.
+   * @param {number} strength - 0..1 storm strength at the time of the strike.
+   * @returns {void}
+   */
+  playLightning(strength) {
+    if (!this.isReady()) return;
+    const { crackGain, zapGain } = this.config.lightning;
+    const destination = this.rainBus;
+    const loudness = 0.6 + 0.4 * strength;
+    this.playNoiseBurst({ type: 'highpass', startFrequency: 2500, endFrequency: 9000, peak: crackGain * loudness, duration: 0.14, destination });
+    this.playTone({ type: 'sawtooth', frequency: 2600, endFrequency: 260, peak: zapGain * loudness, duration: 0.14, destination });
+    for (let i = 0; i < 4; i++) {
+      this.playNoiseBurst({
+        type: 'bandpass', startFrequency: randomRange(1800, 4500), endFrequency: randomRange(900, 2500),
+        peak: crackGain * 0.45 * loudness, duration: randomRange(0.03, 0.07), delay: 0.05 + i * randomRange(0.03, 0.07), destination,
+      });
+    }
+    this.playNoiseBurst({ type: 'highpass', startFrequency: 3000, endFrequency: 8000, peak: crackGain * 0.7 * loudness, duration: 0.1, delay: 0.11, destination });
+    this.playThunder(strength);
+  }
+
+  /**
+   * Plays a rolling thunder rumble shortly after a lightning flash (part of the rain volume).
+   * @param {number} strength - 0..1 storm strength at the time of the strike.
+   * @returns {void}
+   */
+  playThunder(strength) {
+    if (!this.context || this.context.state !== 'running') return;
+    const delay = lerp(0.9, 0.1, strength) + randomRange(0, 0.15); // stronger storms strike closer, so thunder arrives sooner
+    this.playNoiseBurst({
+      type: 'lowpass', startFrequency: 420, endFrequency: 70, peak: 0.5 + 0.5 * strength,
+      duration: 2.8, destination: this.rainBus, delay, attack: 0.15,
+    });
+    this.playTone({ type: 'sine', frequency: 62, endFrequency: 28, peak: 0.35 + 0.4 * strength, duration: 2, delay, destination: this.rainBus });
+  }
+}
+
+/* =====================================================================
+ * SECTION 9 — USER INTERFACE (DOM)
+ * ===================================================================== */
+
+/** Draws small metallic tetromino previews on 2D canvases (hold and next slots). */
+class PiecePreviewRenderer {
+  /**
+   * Creates the renderer.
+   * @param {Object<string, number>} pieceColors - Hex color per piece type.
+   */
+  constructor(pieceColors) {
+    this.pieceColors = pieceColors;
+    this.cellSize = 20;
+  }
+
+  /**
+   * Prepares a canvas for crisp drawing at the device pixel ratio.
+   * @param {HTMLCanvasElement} canvas - Preview canvas.
+   * @returns {CanvasRenderingContext2D} Scaled drawing context.
+   */
+  prepareCanvas(canvas) {
+    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = 96 * ratio;
+    canvas.height = 64 * ratio;
+    const context = canvas.getContext('2d');
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    return context;
+  }
+
+  /**
+   * Draws a piece (or clears the canvas when type is null).
+   * @param {HTMLCanvasElement} canvas - Target canvas.
+   * @param {string|null} type - Piece type or null for empty.
+   * @param {boolean} [dimmed] - Draw with reduced opacity (hold slot already used).
+   * @returns {void}
+   */
+  draw(canvas, type, dimmed = false) {
+    const context = this.prepareCanvas(canvas);
+    context.clearRect(0, 0, 96, 64);
+    if (!type) return;
+    const cells = PIECE_DEFINITIONS[type].rotations[0];
+    const xs = cells.map((cell) => cell[0]);
+    const ys = cells.map((cell) => cell[1]);
+    const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+    const offsetX = (96 - (maxX - minX + 1) * this.cellSize) / 2;
+    const offsetY = (64 - (maxY - minY + 1) * this.cellSize) / 2;
+    context.globalAlpha = dimmed ? 0.35 : 1;
+    const base = hexToCss(this.pieceColors[type]);
+    cells.forEach(([cx, cy]) => {
+      const x = offsetX + (cx - minX) * this.cellSize;
+      const y = offsetY + (cy - minY) * this.cellSize;
+      const gradient = context.createLinearGradient(x, y, x + this.cellSize, y + this.cellSize);
+      gradient.addColorStop(0, '#ffffff');
+      gradient.addColorStop(0.22, base);
+      gradient.addColorStop(0.75, base);
+      gradient.addColorStop(1, 'rgba(0,0,0,0.55)');
+      context.fillStyle = base;
+      context.fillRect(x + 1, y + 1, this.cellSize - 2, this.cellSize - 2);
+      context.fillStyle = gradient;
+      context.globalAlpha = (dimmed ? 0.35 : 1) * 0.85;
+      context.fillRect(x + 1, y + 1, this.cellSize - 2, this.cellSize - 2);
+      context.globalAlpha = dimmed ? 0.35 : 1;
+    });
+    context.globalAlpha = 1;
+  }
+}
+
+/** Describes the rows of the stats panel. */
+const STAT_ROWS = [
+  { id: 'score', labelKey: 'hud.score', primary: true, format: (s) => s.score.toLocaleString() },
+  { id: 'level', labelKey: 'hud.level', format: (s) => String(s.level) },
+  { id: 'lines', labelKey: 'hud.lines', format: (s) => String(s.lines) },
+  { id: 'time', labelKey: 'hud.time', format: (s) => formatTime(s.elapsedSeconds) },
+  { id: 'lpm', labelKey: 'hud.linesPerMinute', format: (s) => s.linesPerMinute.toFixed(1) },
+  { id: 'pps', labelKey: 'hud.piecesPerSecond', format: (s) => s.piecesPerSecond.toFixed(2) },
+  { id: 'tspins', labelKey: 'hud.tSpins', format: (s) => String(s.tSpins) },
+  { id: 'quads', labelKey: 'hud.quads', format: (s) => String(s.quads) },
+  { id: 'perfects', labelKey: 'hud.perfectClears', format: (s) => String(s.perfectClears) },
+];
+
+/**
+ * Formats seconds as m:ss.
+ * @param {number} totalSeconds - Duration.
+ * @returns {string} Formatted time.
+ */
+function formatTime(totalSeconds) {
+  const whole = Math.floor(totalSeconds);
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
+}
+
+/**
+ * Chooses the popup text key for a clear result.
+ * @param {{lines:number, tSpin:string}} result - Clear event.
+ * @returns {string} String table key.
+ */
+function getClearLabelKey(result) {
+  if (result.perfectClear) return 'popup.perfectClear';
+  if (result.tSpin === 'full') return ['tspin.zero', 'tspin.single', 'tspin.double', 'tspin.triple'][result.lines];
+  if (result.tSpin === 'mini') return ['tspinMini.zero', 'tspinMini.single', 'tspinMini.double'][Math.min(result.lines, 2)];
+  return ['', 'clear.single', 'clear.double', 'clear.triple', 'clear.quad'][result.lines];
+}
+
+/** Owns every DOM element of the HUD, overlays and popups. */
+class HudView {
+  /**
+   * Binds to the page and builds dynamic parts (stat rows, next queue).
+   * @param {Object} config - The CONFIG object.
+   */
+  constructor(config) {
+    this.config = config;
+    this.previewRenderer = new PiecePreviewRenderer(config.pieceColors);
+    this.holdCanvas = document.getElementById('hold-canvas');
+    this.nextQueue = document.getElementById('next-queue');
+    this.popupLayer = document.getElementById('popup-layer');
+    this.overlay = document.getElementById('overlay');
+    this.overlayTitle = document.getElementById('overlay-title');
+    this.overlayMessage = document.getElementById('overlay-message');
+    this.overlayHelp = document.getElementById('overlay-help');
+    this.overlayButton = document.getElementById('overlay-button');
+    this.statCells = new Map();
+    this.statTextCache = new Map();
+    this.lastNextKey = '';
+    this.lastHoldKey = '';
+    this.statsClock = 0;
+    this.applyStaticStrings();
+    this.buildStatRows();
+    this.buildNextQueue();
+  }
+
+  /** Fills every [data-i18n] / [data-i18n-title] element from the string table. @returns {void} */
+  applyStaticStrings() {
+    document.title = t('game.title');
+    document.querySelectorAll('[data-i18n]').forEach((element) => { element.textContent = t(element.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-title]').forEach((element) => {
+      element.title = t(element.dataset.i18nTitle);
+      element.setAttribute('aria-label', element.title);
+    });
+  }
+
+  /** Creates the <dt>/<dd> pairs for statistics. @returns {void} */
+  buildStatRows() {
+    const list = document.getElementById('stats-list');
+    STAT_ROWS.forEach((row) => {
+      const term = document.createElement('dt');
+      term.textContent = t(row.labelKey);
+      const value = document.createElement('dd');
+      if (row.primary) value.className = 'primary';
+      list.append(term, value);
+      this.statCells.set(row.id, value);
+    });
+  }
+
+  /** Creates one preview canvas per upcoming piece. @returns {void} */
+  buildNextQueue() {
+    this.nextCanvases = [];
+    for (let i = 0; i < this.config.gameplay.nextQueueSize; i++) {
+      const canvas = document.createElement('canvas');
+      canvas.className = 'piece-preview';
+      this.nextQueue.appendChild(canvas);
+      this.nextCanvases.push(canvas);
+    }
+  }
+
+  /**
+   * Refreshes previews and (throttled) statistics.
+   * @param {GameEngine} engine - Engine to read from.
+   * @param {number} deltaSeconds - Frame time in seconds.
+   * @returns {void}
+   */
+  update(engine, deltaSeconds) {
+    const nextTypes = engine.getNextTypes(this.nextCanvases.length);
+    const nextKey = nextTypes.join('');
+    if (nextKey !== this.lastNextKey) {
+      this.lastNextKey = nextKey;
+      nextTypes.forEach((type, index) => this.previewRenderer.draw(this.nextCanvases[index], type));
+    }
+    const holdKey = `${engine.holdType}:${engine.holdUsed}`;
+    if (holdKey !== this.lastHoldKey) {
+      this.lastHoldKey = holdKey;
+      this.previewRenderer.draw(this.holdCanvas, engine.holdType, engine.holdUsed);
+    }
+    this.statsClock += deltaSeconds;
+    if (this.statsClock >= 0.1) {
+      this.statsClock = 0;
+      this.renderStats(engine.getStats());
+    }
+  }
+
+  /**
+   * Writes statistics into the DOM, touching only values that changed.
+   * @param {Object} stats - Snapshot from GameEngine.getStats().
+   * @returns {void}
+   */
+  renderStats(stats) {
+    STAT_ROWS.forEach((row) => {
+      const text = row.format(stats);
+      if (this.statTextCache.get(row.id) !== text) {
+        this.statTextCache.set(row.id, text);
+        this.statCells.get(row.id).textContent = text;
+      }
+    });
+  }
+
+  /**
+   * Shows a floating text popup that removes itself after its animation.
+   * @param {string} text - Display text.
+   * @param {string} [variant] - Extra CSS classes (small, big, tspin).
+   * @returns {void}
+   */
+  showPopup(text, variant = '') {
+    const element = document.createElement('div');
+    element.className = `popup ${variant}`.trim();
+    element.textContent = text;
+    this.popupLayer.appendChild(element);
+    element.addEventListener('animationend', () => element.remove());
+    while (this.popupLayer.children.length > 5) this.popupLayer.firstChild.remove();
+  }
+
+  /**
+   * Shows popups describing a clear result.
+   * @param {Object} result - "linesCleared" event payload.
+   * @returns {void}
+   */
+  showClearPopups(result) {
+    const key = getClearLabelKey(result);
+    if (key) {
+      const variant = result.perfectClear ? 'big perfect' : result.explosive ? `big${result.tSpin === 'full' ? ' tspin' : ''}` : (result.tSpin !== 'none' ? 'tspin' : '');
+      this.showPopup(t(key), variant);
+    }
+    if (result.backToBack) this.showPopup(t('popup.backToBack'), 'small');
+    if (result.combo > 0) this.showPopup(t('popup.combo', { count: result.combo }), 'small');
+  }
+
+  /**
+   * Shows or hides the full-screen overlay.
+   * @param {'start'|'paused'|'gameover'|null} mode - Which screen to show (null hides it).
+   * @param {Object} [stats] - Final stats (used by the game-over message).
+   * @returns {void}
+   */
+  setOverlay(mode, stats) {
+    if (!mode) { this.overlay.hidden = true; return; }
+    const content = {
+      start: ['overlay.startTitle', t('overlay.startMessage'), 'button.start'],
+      paused: ['overlay.pausedTitle', t('overlay.pausedMessage'), 'button.resume'],
+      gameover: ['overlay.gameOverTitle', t('overlay.gameOverMessage', { score: stats ? stats.score.toLocaleString() : 0, lines: stats ? stats.lines : 0 }), 'button.restart'],
+    }[mode];
+    this.overlayTitle.textContent = t(content[0]);
+    this.overlayMessage.textContent = content[1];
+    this.overlayButton.textContent = t(content[2]);
+    this.overlayHelp.textContent = t('overlay.help');
+    this.overlayHelp.hidden = mode === 'gameover';
+    this.overlay.hidden = false;
+  }
+}
+
+/** Tabs of the settings dialog, in display order. */
+const SETTINGS_TABS = [
+  { id: 'graphics', labelKey: 'settings.tab.graphics' },
+  { id: 'gameplay', labelKey: 'settings.tab.gameplay' },
+  { id: 'audio', labelKey: 'settings.tab.audio' },
+];
+
+/** The settings dialog; edits the shared settings object live. */
+class SettingsPanel {
+  /**
+   * Builds the sliders and wires buttons.
+   * @param {Object<string, number>} settings - Shared mutable settings.
+   * @param {{onOpen: function(): void, onClose: function(): void}} callbacks - Notifications for the app.
+   */
+  constructor(settings, callbacks) {
+    this.settings = settings;
+    this.callbacks = callbacks;
+    this.panel = document.getElementById('settings-panel');
+    this.fieldsContainer = document.getElementById('settings-fields');
+    this.tabBar = document.getElementById('settings-tabs');
+    this.controls = new Map();
+    this.tabButtons = new Map();
+    this.tabPanels = new Map();
+    SETTINGS_TABS.forEach((tab) => this.buildTab(tab));
+    SETTINGS_FIELDS.forEach((field) => this.buildRow(field));
+    this.selectTab(SETTINGS_TABS[0].id);
+    document.getElementById('btn-settings').addEventListener('click', (event) => { event.currentTarget.blur(); this.open(); });
+    document.getElementById('settings-close').addEventListener('click', () => this.close());
+    document.getElementById('settings-reset').addEventListener('click', () => this.resetToDefaults());
+  }
+
+  /**
+   * Creates one tab button and its (initially hidden) panel.
+   * @param {{id:string, labelKey:string}} tab - Tab description.
+   * @returns {void}
+   */
+  buildTab(tab) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'tab-btn';
+    button.setAttribute('role', 'tab');
+    button.textContent = t(tab.labelKey);
+    button.addEventListener('click', () => this.selectTab(tab.id));
+    this.tabBar.appendChild(button);
+    this.tabButtons.set(tab.id, button);
+
+    const panel = document.createElement('div');
+    panel.className = 'tab-panel';
+    panel.setAttribute('role', 'tabpanel');
+    panel.hidden = true;
+    this.fieldsContainer.appendChild(panel);
+    this.tabPanels.set(tab.id, panel);
+  }
+
+  /**
+   * Shows one tab's settings and hides the others.
+   * @param {string} tabId - Id of the tab to show.
+   * @returns {void}
+   */
+  selectTab(tabId) {
+    this.tabButtons.forEach((button, id) => {
+      button.classList.toggle('active', id === tabId);
+      button.setAttribute('aria-selected', String(id === tabId));
+    });
+    this.tabPanels.forEach((panel, id) => { panel.hidden = id !== tabId; });
+  }
+
+  /**
+   * Creates one labelled slider row.
+   * @param {{key:string,labelKey:string,min:number,max:number,step:number,decimals:number}} field - Field description.
+   * @returns {void}
+   */
+  buildRow(field) {
+    const row = document.createElement('label');
+    row.className = 'settings-row';
+    const label = document.createElement('span');
+    label.textContent = t(field.labelKey);
+    const input = document.createElement('input');
+    const isToggle = field.type === 'toggle';
+    Object.assign(input, isToggle ? { type: 'checkbox' } : { type: 'range', min: field.min, max: field.max, step: field.step });
+    const output = document.createElement('output');
+    input.addEventListener('input', () => {
+      this.settings[field.key] = isToggle ? (input.checked ? 1 : 0) : parseFloat(input.value);
+      output.textContent = SettingsPanel.formatValue(field, this.settings[field.key]);
+      saveSettings(this.settings);
+    });
+    row.append(label, input, output);
+    this.tabPanels.get(field.tab).appendChild(row);
+    this.controls.set(field.key, { input, output, field });
+  }
+
+  /** Copies current settings into the slider positions. @returns {void} */
+  syncControls() {
+    this.controls.forEach(({ input, output, field }) => {
+      if (field.type === 'toggle') input.checked = Boolean(this.settings[field.key]);
+      else input.value = this.settings[field.key];
+      output.textContent = SettingsPanel.formatValue(field, this.settings[field.key]);
+    });
+  }
+
+  /**
+   * Formats a setting value for the readout next to its control.
+   * @param {{type?:string, decimals:number}} field - Field description.
+   * @param {number} value - Current value.
+   * @returns {string} "On"/"Off" for toggles, otherwise the number with the field's decimals.
+   */
+  static formatValue(field, value) {
+    if (field.zeroLabelKey && Number(value) === 0) return t(field.zeroLabelKey);
+    if (field.optionKeys) return t(field.optionKeys[Math.round(value)]);
+    if (field.type === 'toggle') return t(value ? 'settings.on' : 'settings.off');
+    return Number(value).toFixed(field.decimals);
+  }
+
+  /** Opens the dialog. @returns {void} */
+  open() {
+    this.syncControls();
+    this.panel.hidden = false;
+    this.callbacks.onOpen();
+  }
+
+  /** Closes the dialog. @returns {void} */
+  close() {
+    this.panel.hidden = true;
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    this.callbacks.onClose();
+  }
+
+  /** Whether the dialog is currently visible. @returns {boolean} True when open. */
+  isOpen() { return !this.panel.hidden; }
+
+  /** Restores every setting to its CONFIG default. @returns {void} */
+  resetToDefaults() {
+    Object.assign(this.settings, createDefaultSettings());
+    saveSettings(this.settings);
+    this.syncControls();
+  }
+}
+
+/** Buttons shown on touch devices. */
+const TOUCH_BUTTONS = [
+  { group: 'left', action: 'moveLeft', labelKey: 'touch.left' },
+  { group: 'left', action: 'softDrop', labelKey: 'touch.down' },
+  { group: 'left', action: 'moveRight', labelKey: 'touch.right' },
+  { group: 'right', action: 'rotateCounterClockwise', labelKey: 'touch.rotateCounterClockwise' },
+  { group: 'right', action: 'rotateClockwise', labelKey: 'touch.rotateClockwise' },
+  { group: 'right', action: 'rotate180', labelKey: 'touch.rotate180' },
+  { group: 'right', action: 'hold', labelKey: 'touch.hold' },
+  { group: 'right', action: 'hardDrop', labelKey: 'touch.hardDrop', wide: true },
+];
+
+/**
+ * Builds on-screen touch buttons that feed the same InputController as the keyboard.
+ * @param {HTMLElement} container - The #touch-controls element.
+ * @param {InputController} input - Input controller to drive.
+ * @returns {void}
+ */
+function buildTouchControls(container, input) {
+  const groups = { left: document.createElement('div'), right: document.createElement('div') };
+  groups.left.className = 'touch-group left';
+  groups.right.className = 'touch-group right';
+  TOUCH_BUTTONS.forEach(({ group, action, labelKey, wide }) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = wide ? 'touch-btn wide' : 'touch-btn';
+    button.textContent = t(labelKey);
+    const end = () => input.release(action);
+    button.addEventListener('pointerdown', (event) => { event.preventDefault(); button.setPointerCapture(event.pointerId); input.press(action); });
+    button.addEventListener('pointerup', end);
+    button.addEventListener('pointercancel', end);
+    button.addEventListener('lostpointercapture', end);
+    button.addEventListener('contextmenu', (event) => event.preventDefault());
+    groups[group].appendChild(button);
+  });
+  container.append(groups.left, groups.right);
+}
+
+/* =====================================================================
+ * SECTION 10 — APPLICATION (wiring, main loop)
+ * ===================================================================== */
+
+/** Connects engine, input, graphics, effects and UI, and runs the main loop. */
+class TetrisApp {
+  /** Builds every subsystem and subscribes them to engine events. */
+  constructor() {
+    this.settings = loadSettings();
+    this.engine = new GameEngine(CONFIG);
+    this.layout = new BoardLayout(CONFIG.board);
+    this.impulses = { bloom: 0, flash: 0, chromaticAberration: 0, whiteout: 0 };
+    this.graphics = new GraphicsEngine(document.getElementById('stage'), this.layout, CONFIG, this.settings, this.impulses);
+    this.boardView = new BoardView(this.graphics.scene, this.layout, this.engine, CONFIG, this.settings);
+    this.effects = new EffectsDirector({ graphics: this.graphics, layout: this.layout, engine: this.engine, config: CONFIG, settings: this.settings, impulses: this.impulses });
+    this.hud = new HudView(CONFIG);
+    this.audio = new AudioEngine(CONFIG, this.settings);
+    const unlockAudio = () => this.audio.unlock();
+    ['pointerdown', 'keydown', 'touchstart'].forEach((eventName) => window.addEventListener(eventName, unlockAudio, { passive: true }));
+    this.settingsPanel = new SettingsPanel(this.settings, { onOpen: () => this.handleSettingsOpened(), onClose: () => this.handleSettingsClosed() });
+    this.input = new InputController({
+      keybinds: CONFIG.input.keybinds,
+      columns: CONFIG.board.columns,
+      getRepeatTiming: (action) => (action === 'softDrop'
+        ? { das: 0, arr: this.settings.softDropRepeatFrames }
+        : { das: this.settings.dasFrames, arr: this.settings.arrFrames }),
+      onSystemAction: (action) => this.handleSystemAction(action),
+    });
+    this.input.attachKeyboard(window);
+    buildTouchControls(document.getElementById('touch-controls'), this.input);
+
+    this.logicAccumulator = 0;
+    this.lastFrameTime = performance.now();
+    this.elapsedSeconds = 0;
+    this.resumeAfterSettings = false;
+
+    this.subscribeToEngine();
+    this.bindUiButtons();
+    window.addEventListener('resize', () => this.graphics.resize());
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && this.engine.state === 'playing') this.engine.togglePause();
+      this.audio.setSuspended(document.hidden);
+    });
+    this.hud.setOverlay('start');
+    this.frame = this.frame.bind(this);
+    requestAnimationFrame(this.frame);
+  }
+
+  /** Subscribes effects and HUD to engine events. @returns {void} */
+  subscribeToEngine() {
+    const engine = this.engine;
+    engine.on('pieceLocked', (event) => this.effects.handleLock(event));
+    engine.on('hardDropped', (event) => this.effects.handleHardDrop(event));
+    engine.on('linesCleared', (result) => { this.effects.handleLinesCleared(result); this.hud.showClearPopups(result); });
+    engine.on('linesCleared', (result) => this.audio.playLineClear(result));
+    engine.on('pieceRotated', (event) => this.audio.playRotate(event.direction));
+    engine.on('pieceHeld', () => this.audio.playHold());
+    engine.on('hardDropped', (event) => this.audio.playHardDrop(event.distance));
+    engine.on('pieceLocked', () => this.audio.playLock());
+    engine.on('gameOver', () => this.audio.playGameOver());
+    this.effects.on('lightning', (event) => this.audio.playLightning(event.strength));
+    this.effects.on('nuclear', () => this.audio.playNuclearExplosion());
+    engine.on('levelUp', (event) => this.hud.showPopup(t('popup.levelUp', { level: event.level }), 'small'));
+    engine.on('gameOver', (event) => { this.effects.handleGameOver(); this.hud.setOverlay('gameover', event.stats); this.hud.renderStats(event.stats); });
+    engine.on('paused', (event) => this.hud.setOverlay(event.paused ? 'paused' : null));
+  }
+
+  /** Wires overlay and toolbar buttons. @returns {void} */
+  bindUiButtons() {
+    document.getElementById('overlay-button').addEventListener('click', (event) => {
+      event.currentTarget.blur();
+      this.handleSystemAction('start');
+    });
+    document.getElementById('btn-pause').addEventListener('click', (event) => {
+      event.currentTarget.blur();
+      this.handleSystemAction('pause');
+    });
+  }
+
+  /**
+   * Handles pause / restart / start commands from keyboard or buttons.
+   * @param {'pause'|'restart'|'start'} action - System action.
+   * @returns {void}
+   */
+  handleSystemAction(action) {
+    const state = this.engine.state;
+    if (action === 'pause') {
+      if (this.settingsPanel.isOpen()) { this.settingsPanel.close(); return; }
+      this.engine.togglePause();
+    } else if (action === 'restart') {
+      this.startNewGame();
+    } else if (action === 'start') {
+      if (state === 'paused') this.engine.togglePause();
+      else if (state === 'idle' || state === 'gameover') this.startNewGame();
+    }
+  }
+
+  /** Starts a fresh game and clears the overlay. @returns {void} */
+  startNewGame() {
+    this.input.releaseAll();
+    this.hud.setOverlay(null);
+    this.engine.start();
+    this.hud.statsClock = 1;
+  }
+
+  /** Pauses the game and blocks gameplay input while settings are open. @returns {void} */
+  handleSettingsOpened() {
+    this.input.setEnabled(false);
+    this.resumeAfterSettings = false;
+    if (this.engine.state === 'playing') this.engine.togglePause();
+    this.hud.setOverlay(null);
+  }
+
+  /** Re-enables input and returns to the correct overlay. @returns {void} */
+  handleSettingsClosed() {
+    this.input.setEnabled(true);
+    const state = this.engine.state;
+    if (state === 'paused') this.hud.setOverlay('paused');
+    else if (state === 'idle') this.hud.setOverlay('start');
+    else if (state === 'gameover') this.hud.setOverlay('gameover', this.engine.getStats());
+  }
+
+  /**
+   * Runs the fixed-rate game simulation for the elapsed real time.
+   * @param {number} deltaSeconds - Real frame time in seconds.
+   * @returns {void}
+   */
+  stepLogic(deltaSeconds) {
+    const stepSeconds = 1 / CONFIG.gameplay.logicFps;
+    if (this.engine.state !== 'playing') {
+      this.input.poll();
+      this.logicAccumulator = 0;
+      return;
+    }
+    this.logicAccumulator += deltaSeconds;
+    let steps = 0;
+    while (this.logicAccumulator >= stepSeconds && steps < CONFIG.gameplay.maxLogicStepsPerFrame) {
+      this.engine.tick(this.input.poll());
+      this.logicAccumulator -= stepSeconds;
+      steps++;
+    }
+    if (steps >= CONFIG.gameplay.maxLogicStepsPerFrame) this.logicAccumulator = 0;
+  }
+
+  /**
+   * One iteration of the main loop: logic, effects, view sync, render.
+   * @param {number} now - High-resolution timestamp from requestAnimationFrame.
+   * @returns {void}
+   */
+  frame(now) {
+    requestAnimationFrame(this.frame);
+    const deltaSeconds = Math.min(0.05, (now - this.lastFrameTime) / 1000);
+    this.lastFrameTime = now;
+    this.elapsedSeconds += deltaSeconds;
+
+    this.stepLogic(deltaSeconds);
+    this.effects.update(deltaSeconds);
+    this.audio.update(this.effects.stormLevel, deltaSeconds);
+    this.boardView.update(deltaSeconds);
+    this.hud.update(this.engine, deltaSeconds);
+    this.graphics.render(deltaSeconds, this.elapsedSeconds);
+  }
+}
+
+/* =====================================================================
+ * SECTION 11 — BOOTSTRAP
+ * ===================================================================== */
+
+/**
+ * Shows a fatal error message in the overlay card.
+ * @param {string} message - Text to display.
+ * @returns {void}
+ */
+function showFatalError(message) {
+  document.getElementById('overlay-title').textContent = t('game.title');
+  document.getElementById('overlay-message').textContent = message;
+  document.getElementById('overlay-help').hidden = true;
+  document.getElementById('overlay-button').hidden = true;
+  document.getElementById('overlay').hidden = false;
+}
+
+/**
+ * Entry point: validates the environment and starts the application.
+ * @returns {void}
+ */
+function bootstrap() {
+  setLocale('en');
+  if (typeof THREE === 'undefined' || !THREE.EffectComposer || !THREE.Reflector) {
+    document.querySelectorAll('[data-i18n]').forEach((element) => { element.textContent = t(element.dataset.i18n); });
+    showFatalError(t('error.noThree'));
+    return;
+  }
+  try {
+    new TetrisApp();
+  } catch (error) {
+    console.error(error);
+    showFatalError(t('error.noWebGl'));
+  }
+}
+
+bootstrap();
+
+})();
+</script>
+</body>
+</html>

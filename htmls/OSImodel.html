@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="zh-Hant-TW"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Network Operations Terminal</title>
+<style>
+:root{--bg:#0B0D10;--p:rgba(20,23,27,.88);--t:#EDEFF2;--m:#9AA3AB;--c:#35D6D0;--o:#FF7A45;--y:#F2C94C;--l:#2B3238;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:inherit}html{scroll-padding-top:120px}
+body{margin:0;background:var(--bg);color:var(--t);font:15px/1.6 "Segoe UI","PingFang TC","Microsoft JhengHei","Noto Sans TC","Helvetica Neue",Arial,sans-serif;
+background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 40px),repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 1px,transparent 1px 40px)}
+.mono,code{font-family:ui-monospace,"SF Mono",Consolas,monospace}
+.lab{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--m)}
+button,input{font:inherit;color:inherit}
+button{background:none;border:1px solid var(--l);border-radius:0;cursor:pointer;padding:6px 12px}
+button:hover{border-color:var(--c)}
+:focus-visible{outline:2px solid var(--c);outline-offset:2px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(11,13,16,.95);border-bottom:1px solid var(--l)}
+.bar{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;padding:10px 20px}
+h1{margin:0;font-size:17px;font-weight:800;letter-spacing:.28em}
+.sub{font-size:10px;letter-spacing:.22em;color:var(--m)}
+.search{position:relative;margin-left:auto;min-width:220px}
+.search input{width:100%;background:#0F1215;border:1px solid var(--l);padding:7px 10px;border-radius:0}
+#res{position:absolute;top:100%;left:0;right:0;background:#101317;border:1px solid var(--c);max-height:300px;overflow:auto}
+#res button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--l)}
+nav{display:flex;overflow-x:auto;padding:0 20px}
+nav button{border:0;border-bottom:2px solid transparent;letter-spacing:.16em;text-transform:uppercase;font-size:12px;padding:10px 14px;white-space:nowrap}
+nav button[aria-current=true]{border-color:var(--c);color:var(--c)}
+.status{display:flex;flex-wrap:wrap;gap:6px 22px;padding:5px 20px;border-top:1px solid var(--l);font-size:11px;color:var(--m)}
+.status b{color:var(--c);font-weight:600}
+main{max-width:1280px;margin:0 auto;padding:22px 20px 80px}
+h2{margin:0 0 4px;font-size:13px;letter-spacing:.3em;text-transform:uppercase}
+.panel{background:var(--p);border:1px solid var(--l);position:relative}
+.hd{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--l);padding:8px 14px}
+.bd{padding:14px}
+.chip{display:inline-block;font-family:ui-monospace,Consolas,monospace;font-size:12px;border:1px solid var(--l);padding:2px 8px;margin:2px 4px 2px 0;background:#0F1215;color:var(--t)}
+.layer{position:relative;overflow:hidden;display:block;width:100%;text-align:left;padding:18px 20px 18px 26px;margin-bottom:8px;border:1px solid var(--l);border-left:4px solid var(--lc);background:var(--p);min-height:118px;animation:in .5s both;animation-delay:calc(var(--i)*70ms)}
+.layer .num{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:min(30vw,190px);line-height:.8;font-weight:900;letter-spacing:-.04em;color:transparent;-webkit-text-stroke:1.5px rgba(237,239,242,.13);pointer-events:none;user-select:none;z-index:0;transition:.15s}
+.layer:hover .num,.layer[aria-pressed=true] .num{-webkit-text-stroke-color:rgba(53,214,208,.4)}
+.layer:hover,.layer[aria-pressed=true]{border-color:var(--c);border-left-color:var(--c)}
+.layer>*:not(.num){position:relative;z-index:1}
+.layer .nm{font-size:22px;font-weight:800;letter-spacing:.22em;text-transform:uppercase}
+.layer .rs{max-width:560px;color:#C9CFD5;text-shadow:0 0 8px #0B0D10,0 0 3px #0B0D10}
+.pdu{color:var(--o);font-size:11px;letter-spacing:.18em;font-family:ui-monospace,Consolas,monospace}
+@keyframes in{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+.split{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:start}
+@media(max-width:900px){.split{grid-template-columns:1fr}}
+#dos{position:sticky;top:150px}
+@media(max-width:900px){#dos{position:static}}
+.dos-in{animation:sl .18s both}@keyframes sl{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+dl{margin:0}dt{margin-top:12px}dd{margin:2px 0 0;font-size:15px}
+.bc{height:22px;background:repeating-linear-gradient(90deg,var(--m) 0 2px,transparent 2px 4px,var(--m) 4px 5px,transparent 5px 9px);opacity:.5;width:120px}
+.warn{background:repeating-linear-gradient(135deg,var(--y) 0 8px,#111 8px 16px);padding:3px;margin-top:12px}
+.warn div{background:#14171B;padding:8px 12px;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:14px}
+.pc{text-align:left;padding:10px 12px;background:var(--p);min-height:70px}
+.pc[aria-pressed=true]{border-color:var(--c);background:#10201F}
+.pc b{display:block;font-family:ui-monospace,Consolas,monospace;font-size:16px}
+.pc span{font-size:11px;color:var(--m);letter-spacing:.1em}
+.fields{display:grid;grid-template-columns:repeat(32,1fr);gap:3px}
+.f{border:1px solid #3a434b;background:#0F1215;padding:6px 6px;min-height:50px;text-align:left;font-size:12px;border-radius:0;overflow:hidden}
+.f small{display:block;color:var(--m);font-size:10px}
+.f[aria-pressed=true]{background:#10312F;border-color:var(--c)}
+.f.opt{border-style:dashed}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.tabs button[aria-pressed=true]{border-color:var(--c);color:var(--c)}
+.wire{display:flex;gap:2px;margin:10px 0;flex-wrap:wrap}
+.wire div{padding:10px 8px;border:1px solid var(--l);font-size:11px;font-family:ui-monospace,Consolas,monospace;opacity:.25;transition:.15s;background:#0F1215;flex:1 1 auto;text-align:center}
+.wire div.on{opacity:1;border-color:var(--c)}
+.stg{display:grid;gap:6px;grid-template-columns:repeat(5,1fr)}
+@media(max-width:700px){.stg{grid-template-columns:1fr}.wire{flex-direction:column}}
+.stg button{text-align:left;padding:10px;min-height:64px}
+.stg button[aria-pressed=true]{border-color:var(--c);background:#10201F}
+.stg button.act{box-shadow:inset 0 -3px var(--o)}
+.lad{font-family:ui-monospace,Consolas,monospace;font-size:13px}
+.lad div{padding:3px 0;border-bottom:1px dashed var(--l)}
+.lad .w{color:var(--o)}
+svg text{font-family:ui-monospace,Consolas,monospace;font-size:11px;fill:var(--m);letter-spacing:.1em}
+.nd rect{fill:#0F1215;stroke:#3a434b}.nd.on rect{stroke:var(--c)}
+#pk{transition:transform .55s ease-in-out}
+.cur{display:inline-block;padding:3px 10px;background:var(--c);color:#04201F;font-weight:800;letter-spacing:.16em;font-size:12px}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+.btn-p{border-color:var(--c);color:var(--c)}
+.cap{min-height:90px;font-size:16px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+html[lang^=zh] h1,html[lang^=zh] .lab,html[lang^=zh] nav button,html[lang^=zh] .layer .nm,html[lang^=zh] .cur{letter-spacing:.08em}#lang{font-size:12px;letter-spacing:.1em}
+</style></head>
+<body>
+<header>
+<div class="bar"><div><h1>NETWORK OPERATIONS TERMINAL</h1><div class="sub">OSI MODEL // PROTOCOL ARCHIVE // PACKET INSPECTOR</div></div>
+<div class="search"><label class="lab" for="q" style="position:absolute;left:-9999px">Search</label><input id="q" type="search" placeholder="SEARCH LAYERS, PROTOCOLS, FIELDS" autocomplete="off"><div id="res" hidden></div></div><button id="lang" type="button">EN</button></div>
+<nav id="nav" aria-label="Primary"></nav>
+<div class="status mono"><span>VIEW <b id="sv">OSI STACK</b></span><span>LAYER <b id="sl">—</b></span><span>PROTOCOL <b id="sp">—</b></span><span>DOC RHD-NET-001</span></div>
+</header>
+<main id="main"></main>
+<script>
+"use strict";
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const LC=["#6B7B8C","#6F8A8A","#7C8A6B","#8A7F6B","#8A6B6B","#7A6B8A","#6B8A7A"];
+const L=[
+[7,"Application","User-facing network services and APIs","DATA / MESSAGE","URLs, hostnames, service names",["HTTP","DNS","SMTP","SSH","DHCP"],"Browsers, servers, API gateways, reverse proxies, L7 load balancers","Receives user intent and builds a message. Hands it to layer 6 (in TCP/IP, straight to transport).","Injection and broken authentication, DNS spoofing, request-flood DDoS, misconfigured CORS.","This is where protocols define what the two programs actually say to each other. It is not the app itself, but the protocol the app speaks.","Layers 6, 4; HTTP, DNS"],
+[6,"Presentation","Data representation, encoding, compression and encryption","DATA / MESSAGE","MIME types, character sets",["TLS","JSON","UTF-8","gzip","MIME"],"Libraries, TLS terminators, codecs","Receives a structured message and encodes or encrypts it. Passes bytes to layer 5.","Weak cipher suites, expired certificates, downgrade attacks, parser bugs on malformed data.","Ensures both ends interpret bytes the same way. In practice TLS, serialization and compression are folded into application stacks rather than a separate layer.","Layers 7, 5; TLS"],
+[5,"Session","Establishing, maintaining and ending dialogues","DATA / MESSAGE","Session IDs, tokens, RPC handles",["TLS sessions","RPC","NetBIOS","SOCKS"],"Session managers, gateways, app servers","Receives encoded data tagged to a dialogue and passes it to transport.","Session hijacking, fixation, token theft, replay of stale sessions.","Tracks who is talking to whom and for how long, including checkpoints and resumption. In TCP/IP these functions live inside applications and libraries.","Layers 6, 4; TLS resumption"],
+[4,"Transport","Process-to-process delivery, ports, reliability, flow control","SEGMENT / DATAGRAM","Port numbers (0–65535) on top of an IP address",["TCP","UDP","QUIC","SCTP"],"Firewalls (stateful), NAT, L4 load balancers","Receives a byte stream or message; adds ports and control info; hands a segment or datagram to IP.","SYN floods, RST injection, UDP amplification, port scanning, congestion collapse.","Delivers data to the right application, not just the right host. TCP adds ordered reliable delivery; UDP adds only ports and a checksum; QUIC builds both inside UDP.","Layers 5, 3; TCP, UDP, QUIC"],
+[3,"Network","Logical addressing and routing across networks","PACKET","IPv4 and IPv6 addresses",["IPv4","IPv6","ICMP","OSPF","BGP"],"Routers, L3 switches, firewalls","Receives a segment; adds source and destination IP; passes a packet to the data-link layer for the next hop.","IP spoofing, route hijacking (BGP), TTL expiry, fragmentation attacks, black holes.","Moves packets hop by hop toward a destination across many links. Each router reads the destination IP, consults its routing table, and forwards.","Layers 4, 2; IP, ICMP, ARP"],
+[2,"Data Link","Node-to-node delivery on a single link or LAN","FRAME","MAC addresses (48-bit), VLAN IDs",["Ethernet","Wi-Fi","ARP*","PPP","802.1Q"],"Switches, bridges, NICs, wireless access points","Receives a packet; wraps it in a frame with MAC addresses and an FCS; passes bits to the physical layer.","MAC flooding, ARP spoofing, VLAN hopping, broadcast storms, rogue access points.","Gets a frame to the next device on the same link. Switches learn which MAC lives on which port. *ARP is commonly placed between layers 2 and 3.","Layers 3, 1; Ethernet, ARP"],
+[1,"Physical","Transmission of raw bits as signals","BIT / SYMBOL","None; defined by the medium and signaling",["Ethernet PHY","Fiber","802.11 PHY","DSL"],"Cables, fiber, hubs, repeaters, radios, transceivers","Receives frame bits and converts them to electrical, optical or radio signals.","Cable faults, interference, signal attenuation, wiretapping, jamming.","Defines voltages, light pulses, radio modulation, connectors and timing. No addressing exists at this layer.","Layer 2; Ethernet, Wi-Fi"]];
+const P=[
+["ARP","Address Resolution Protocol","L2/L3 boundary","Maps an IPv4 address to a MAC address on the local link","Connectionless, stateless (with a cache)","IPv4 in, MAC out; broadcast request, unicast reply","Hardware type, protocol type, opcode, sender MAC/IP, target MAC/IP","No reliability, no encryption, no authentication; latency of one LAN round trip","Every IPv4 LAN host before first local delivery","Rides directly in Ethernet (EtherType 0x0806). IPv6 uses NDP over ICMPv6 instead.","Use whenever the destination IP is on your subnet and the MAC is unknown.",[["C→*","Who has 192.168.1.1? Tell 192.168.1.20"],["R→C","192.168.1.1 is at aa:bb:cc:00:00:01"]]],
+["IP","IPv4 / IPv6","L3","Best-effort addressing and routing between networks","Connectionless, stateless","32-bit (IPv4) or 128-bit (IPv6) addresses","IPv4: version, IHL, TTL, protocol, checksum, src, dst. IPv6: version, traffic class, flow label, payload length, next header, hop limit, src, dst","No delivery, ordering or encryption guarantees; IPv6 drops the header checksum and router fragmentation","All internet traffic","Carries TCP, UDP, ICMP; sits in Ethernet frames. IPv6 uses extension headers and ICMPv6 for neighbor discovery.","Always present for routed traffic. IPv6 for new deployments and large address space.",[]],
+["ICMP","Internet Control Message Protocol","L3 (carried in IP)","Error reporting and diagnostics","Connectionless, stateless","IP address; type and code fields","Type, code, checksum, rest of header","No reliability; messages themselves are never retransmitted","ping, traceroute, Destination Unreachable, Time Exceeded, path MTU discovery","IP protocol number 1 (ICMPv6 is 58). Not a transport; it reports on IP.","Use to test reachability and learn why packets were dropped.",[["C→S","Echo request, TTL 64"],["S→C","Echo reply"]]],
+["TCP","Transmission Control Protocol","L4","Reliable, ordered byte-stream delivery","Connection-oriented, stateful","Port pair plus IP pair (the 4-tuple)","Ports, sequence, acknowledgment, offset, flags, window, checksum, options","Reliable, ordered, flow control, congestion control; no built-in encryption; handshake adds 1 RTT","Web, email, SSH, databases","Carried in IP protocol 6. HTTP/1.1 and HTTP/2 and TLS run over it.","Use when every byte must arrive in order.",[["C→S","SYN seq=x"],["S→C","SYN+ACK seq=y ack=x+1"],["C→S","ACK ack=y+1"]]],
+["UDP","User Datagram Protocol","L4","Minimal message delivery between ports","Connectionless, stateless","Port pair","Source port, destination port, length, checksum","No reliability or ordering; no congestion control; lowest latency","DNS, VoIP, games, streaming, QUIC","Carried in IP protocol 17. QUIC runs on top.","Use for small queries or real-time data that tolerates loss.",[["C→S","Datagram"],["S→C","Datagram (optional)"]]],
+["QUIC","QUIC (RFC 9000)","L4 + security, over UDP","Multiplexed, encrypted, reliable transport","Connection-oriented, stateful, over connectionless UDP","Connection IDs (survive IP changes)","Flags, version, DCID, SCID, packet number, frames (STREAM, ACK, CRYPTO)","Per-stream reliability, loss recovery, congestion control, TLS 1.3 integrated; 1-RTT handshake, 0-RTT resumption","HTTP/3, mobile apps","Runs inside UDP datagrams. Not simply UDP with encryption: it is a full transport with streams, so one lost packet stalls only its stream. HTTP/3 maps onto QUIC streams.","Use for web traffic on lossy or mobile links.",[["C→S","Initial (ClientHello)"],["S→C","Initial + Handshake"],["C→S","Handshake done + HTTP/3 request"]]],
+["TLS","Transport Layer Security 1.3","Between L4 and L7","Confidentiality, integrity and server authentication","Stateful session over a connection","Certificates and session keys","Record type, version, length, encrypted payload","Encryption plus authentication; 1-RTT handshake in TLS 1.3, optional 0-RTT","HTTPS, SMTP-STARTTLS, QUIC","Runs over TCP; its handshake is embedded inside QUIC.","Use whenever data crosses an untrusted network.",[["C→S","ClientHello + key share"],["S→C","ServerHello, cert, Finished"],["C→S","Finished; encrypted data"]]],
+["HTTP","HTTP / HTTPS","L7","Request/response transfer of web resources","Stateless (cookies add sessions)","URLs; methods GET, POST, etc.","Method, path, host, status, headers, body","Depends on transport: H1/H2 on TCP, H3 on QUIC; HTTPS adds TLS","Web pages, APIs","HTTP/1.1 and 2 over TCP, HTTP/3 over QUIC; resolved via DNS.","Use for nearly all client-server APIs.",[["C→S","GET /index.html"],["S→C","200 OK + body"]]],
+["DNS","Domain Name System","L7","Resolves names to addresses and records","Connectionless (UDP 53; TCP for large)","Domain names; record types A, AAAA, MX","ID, flags, question, answer, authority, additional","Caching, no default encryption (DoT/DoH add it); low latency","Every web lookup","Usually UDP; also TCP, DoT (853), DoH.","Use before connecting to any named host.",[["C→R","A? example.com"],["R→C","93.184.216.34, TTL 300"]]],
+["DHCP","Dynamic Host Configuration Protocol","L7 (UDP 67/68)","Automatic IP configuration","Connectionless; leases hold state","MAC address; offered IP, gateway, DNS","op, xid, client MAC, your IP, options","No auth by default; rogue servers are a risk","Joining any LAN","Broadcast over UDP before the host has an IP.",  "Use to hand out addresses at scale.",[["C→*","DISCOVER"],["S→C","OFFER"],["C→S","REQUEST"],["S→C","ACK"]]],
+["Ethernet","Ethernet (IEEE 802.3)","L1/L2","Wired LAN framing and media access","Connectionless, stateless","48-bit MAC addresses","Dst MAC, src MAC, EtherType, payload, FCS","Detects errors (FCS) but does not retransmit","Wired LANs","Carries IP, ARP and VLAN tags.","The default wired link layer.",[]],
+["Wi-Fi","Wi-Fi (IEEE 802.11)","L1/L2","Wireless LAN access","Connectionless frames with association state","MAC addresses (up to 4 per frame)","Frame control, duration, addresses 1–4, sequence, body, FCS","Per-frame ACK and retry, WPA2/WPA3 encryption; variable latency","Wireless networks","Translated to Ethernet at the access point.","Use when cabling is impractical.",[]]];
+const ENC=[
+["APPLICATION DATA","Message",[],"“GET /index.html” or any application bytes","No fixed header: the format belongs to the application."],
+["TCP SEGMENT / UDP DATAGRAM","Segment",[["Ports","4 B","Selects sender and receiver applications"],["Seq / Ack","8 B","TCP only: tracks bytes for reliability"],["Flags + Window","4 B","Connection control and flow control"],["Checksum","2 B","Detects corruption"]],"Application data","TCP header is 20+ bytes; UDP header is 8 bytes."],
+["IP PACKET","Packet",[["Version / IHL","1 B","IPv4, header length"],["TTL","1 B","Hop limit"],["Protocol","1 B","6 = TCP, 17 = UDP, 1 = ICMP"],["Src / Dst IP","8 B","End-to-end addresses"]],"TCP segment or UDP datagram","IPv4 header is 20+ bytes. Addresses stay the same end to end (barring NAT)."],
+["ETHERNET FRAME","Frame",[["Dst / Src MAC","12 B","Next-hop addresses; rewritten at each hop"],["EtherType","2 B","0x0800 = IPv4, 0x86DD = IPv6"]],"IP packet + 4 B FCS trailer","Payload is 46–1500 B (standard MTU). The FCS detects bit errors."],
+["PHYSICAL BITS","Bits",[["Preamble + SFD","8 B","Synchronizes the receiver clock"],["Line coding","—","Bits become voltages, light or radio symbols"]],"Frame bits","Encoding depends on the medium (e.g. PAM-4, 8b/10b, OFDM)."]];
+const PK={
+eth:["Ethernet II frame (representative)",[["Preamble + SFD","8 B",8,"Synchronization pattern (7 B 0xAA, 1 B 0xAB). Added by the PHY and normally absent from captures."],["Destination MAC","6 B",12,"Identifies the receiving interface on this link. Switches look it up to pick an egress port; ff:ff:ff:ff:ff:ff is broadcast."],["Source MAC","6 B",12,"Identifies the sender. Switches learn MAC-to-port mappings from it."],["VLAN tag (optional)","4 B",16,"802.1Q tag: TPID 0x8100, priority, VLAN ID. Present only on tagged links.","o"],["EtherType / Length","2 B",16,"≥ 0x0600 names the payload protocol: 0x0800 IPv4, 0x0806 ARP, 0x86DD IPv6. Smaller values are a length."],["Payload","46–1500 B",32,"Carries the IP packet. Padded to 46 B minimum."],["FCS","4 B",12,"CRC-32 over the frame. Detects bit errors in transit; bad frames are dropped, not repaired."]]],
+ip:["IPv4 header (representative, 32-bit rows)",[["Version","4 b",4,"Always 4 for IPv4."],["IHL","4 b",4,"Header length in 32-bit words (5 = 20 B, no options)."],["DSCP / ECN","8 b",8,"Traffic class for QoS plus congestion notification."],["Total Length","16 b",16,"Header plus data, up to 65,535 B."],["Identification","16 b",16,"Groups fragments of one original packet."],["Flags","3 b",3,"Reserved, Don’t Fragment, More Fragments."],["Fragment Offset","13 b",13,"Position of this fragment in 8-byte units. Routers (or the sender) fragment when a packet exceeds a link’s MTU; the destination reassembles."],["TTL","8 b",8,"Decremented by each router; at 0 the packet is dropped and ICMP Time Exceeded is sent. Stops routing loops from circulating forever."],["Protocol","8 b",8,"Next protocol: 1 ICMP, 6 TCP, 17 UDP."],["Header Checksum","16 b",16,"Covers the header only; recalculated at every hop because TTL changes."],["Source IP","32 b",32,"Original sender. Routers forward on the destination, replies use the source."],["Destination IP","32 b",32,"Final target. Routers match it against the routing table (longest prefix)."],["Options","0–40 B",32,"Rarely used extras, padded to 32 bits.","o"],["Payload","variable",32,"TCP segment, UDP datagram or ICMP message."]]],
+tcp:["TCP header (representative, 32-bit rows)",[["Source Port","16 b",16,"Sender’s port; usually ephemeral on clients."],["Destination Port","16 b",16,"Service port, e.g. 443 for HTTPS."],["Sequence Number","32 b",32,"Byte offset of the first data byte in this segment (SYN consumes one)."],["Acknowledgment Number","32 b",32,"Next byte the sender expects to receive. Valid when ACK is set."],["Data Offset","4 b",4,"Header length in 32-bit words."],["Reserved","4 b",4,"Reserved, plus ECN bits CWR/ECE in modern use."],["Flags","8 b",8,"URG, ACK, PSH, RST, SYN, FIN. SYN opens, ACK confirms, FIN closes gracefully, RST aborts, PSH asks for prompt delivery, URG marks urgent data (rarely used)."],["Window Size","16 b",16,"Receive window: bytes the receiver will accept. This is flow control."],["Checksum","16 b",16,"Covers header, data and an IP pseudo-header."],["Urgent Pointer","16 b",16,"Offset to urgent data when URG is set."],["Options","0–40 B",32,"MSS, window scale, SACK, timestamps.","o"],["Payload","variable",32,"Application bytes."]]],
+udp:["UDP header (8 bytes)",[["Source Port","16 b",16,"Optional; may be 0 if no reply is expected."],["Destination Port","16 b",16,"Target service, e.g. 53 for DNS."],["Length","16 b",16,"Header plus data in bytes (minimum 8)."],["Checksum","16 b",16,"Optional in IPv4, mandatory in IPv6."],["Payload","variable",32,"One datagram. No ordering, no retransmission: UDP is connectionless with minimal overhead, ideal for real-time or loss-tolerant traffic. Unlike TCP it never handshakes or slows down for loss. QUIC adds those features above UDP."]]],
+quic:["QUIC packet (simplified: long vs short headers differ)",[["Header Flags","1 B",8,"Header form (long or short), fixed bit, packet type. Partly protected by header protection."],["Version","4 B",24,"Long header only (handshake packets)."],["Dest Connection ID","0–20 B",16,"Routes the packet to a connection. Lets it survive an IP or port change (migration)."],["Source Connection ID","0–20 B",16,"Long header only: the sender’s chosen ID.","o"],["Packet Number","1–4 B",16,"Encrypted; used for loss detection and as AEAD nonce input."],["Frames (encrypted)","variable",32,"STREAM carries multiplexed data (e.g. HTTP/3 requests), ACK drives loss recovery, CRYPTO carries the TLS 1.3 handshake. 0-RTT data may ride in early packets on resumption."],["AEAD tag","16 B",16,"Authentication tag from TLS 1.3-derived keys."]]]};
+const PKN={eth:"ETHERNET",ip:"IPV4",tcp:"TCP",udp:"UDP",quic:"QUIC"};
+const LIFE={"Handshake":[["C→S","SYN seq=1000"],["S→C","SYN+ACK seq=5000 ack=1001"],["C→S","ACK seq=1001 ack=5001 (established)"]],
+"Data":[["C→S","PSH+ACK seq=1001 len=500"],["S→C","ACK ack=1501 win=64240 (flow control)"],["C→S","seq=1501 len=500; cwnd grows (slow start)"]],
+"Loss":[["C→S","seq=2001 len=500"],["S→C","(lost in transit)",1],["C→S","timeout or 3 dup ACKs: retransmit seq=2001",1],["S→C","ACK ack=2501; cwnd halves (congestion response)"]],
+"Teardown":[["C→S","FIN seq=3001"],["S→C","ACK ack=3002"],["S→C","FIN seq=7000"],["C→S","ACK ack=7001 (TIME_WAIT)"]]};
+// scenarios: nodes 0 client,1 switch,2 router,3 cloud,4 server
+const SC=[
+["Open a Website",[[0,4,"APPLICATION","DNS lookup","Client asks the resolver for example.com.","UDP 53, query ID, type A. Often cached."],[4,0,"APPLICATION","DNS answer","The address comes back.","A record with a TTL; the client caches it."],[0,4,"TRANSPORT","TCP SYN / QUIC Initial","Client opens a connection to port 443.","TCP needs 1 RTT; QUIC combines transport and TLS setup."],[4,0,"TRANSPORT","SYN-ACK","Server accepts.","Server picks its own initial sequence number."],[0,4,"PRESENTATION","TLS ClientHello","Encryption keys are negotiated.","TLS 1.3 needs 1 RTT; 0-RTT resumes with earlier keys."],[0,4,"APPLICATION","HTTP GET","Encrypted request is sent.","HTTP/3 carries this in a QUIC stream."],[4,0,"APPLICATION","200 OK","Page is delivered.","Response split into segments, reassembled in order."]]],
+["Send a Message",[[0,1,"APPLICATION","Message","App hands bytes to the stack.","Socket write()."],[0,1,"TRANSPORT","Segment","TCP adds ports and sequence numbers.","Large data is split to fit the MSS."],[0,1,"NETWORK","Packet","IP adds source and destination addresses.","Next hop is the default gateway."],[1,2,"DATA LINK","Frame","Ethernet frame to the router’s MAC.","Switch forwards by destination MAC."],[2,3,"NETWORK","Routed packet","Router decrements TTL and picks the next hop.","New Ethernet frame per hop; IP addresses unchanged."],[3,4,"DATA LINK","Delivered","Server decapsulates up the stack.","FCS checked, then IP, then TCP, then the app."]]],
+["Find a Device on the LAN",[[0,1,"DATA LINK","ARP request","Who has 192.168.1.1?","Broadcast to ff:ff:ff:ff:ff:ff, EtherType 0x0806."],[1,2,"DATA LINK","Flooded","Switch floods the broadcast out every other port.","It learns the client’s MAC on the ingress port."],[2,1,"DATA LINK","ARP reply","Router answers directly to the client.","Unicast reply; the switch learns the router’s MAC."],[1,0,"DATA LINK","Cache update","Client stores IP→MAC.","Entries expire after minutes."],[0,2,"NETWORK","Local delivery","IP packet now framed to the router’s MAC.","Switch forwards by its table, no flooding."]]],
+["Packet Loss and Recovery",[[0,4,"TRANSPORT","Segment seq=2001","Client sends data.","Retransmission timer starts."],[4,4,"NETWORK","Packet dropped","A congested router drops the packet.","Queue overflow is the usual cause.","loss"],[0,4,"TRANSPORT","Retransmit","Triple duplicate ACK or timeout triggers resend.","Fast retransmit avoids waiting for the full timeout."],[4,0,"TRANSPORT","ACK","Server acknowledges the data.","Cumulative ACK."],[0,0,"TRANSPORT","cwnd halves","Congestion control slows the sender.","Users see a stall, then slower throughput."]]],
+["Router vs Switch",[[0,1,"DATA LINK","Frame in","The switch reads only the destination MAC.","Learns source MAC to port; floods unknown destinations."],[1,2,"DATA LINK","L2 forward","Same LAN, no header rewrite.","Frame is unchanged."],[2,3,"NETWORK","L3 route","Router strips the frame and reads the destination IP.","Longest-prefix match in the routing table."],[3,4,"NETWORK","Next hop","New frame, new MACs, same IPs, TTL minus one.","A router separates broadcast domains; a switch does not."]]]];
+const GL=[["MTU","Largest frame payload a link carries (1500 B for Ethernet)"],["MSS","Largest TCP payload per segment"],["RTT","Round-trip time"],["NAT","Rewrites addresses at a gateway"],["Broadcast domain","Devices that receive each other’s broadcasts"]];
+let view="stack",selL=null,selP=null,selPk="eth",selF=0,encI=0,encT=null,sc=0,st=-1,tm=null,adv=false,lf="Handshake";
+const VIEWS=[["stack","OSI Stack"],["enc","Encapsulation"],["proto","Protocols"],["pkt","Packet Formats"],["scen","Scenarios"]];
+$("#nav").innerHTML=VIEWS.map(v=>`<button data-v="${v[0]}">${v[1]}</button>`).join("");
+const dm=()=>matchMedia("(prefers-reduced-motion:reduce)").matches;
+function go(v){view=v;clearInterval(encT);clearInterval(tm);$$("#nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.v==v));$("#sv").textContent=VIEWS.find(x=>x[0]==v)[1].toUpperCase();({stack:rStack,enc:rEnc,proto:rProto,pkt:rPkt,scen:rScen})[v]()}
+$("#nav").onclick=e=>{const b=e.target.closest("button");if(b)go(b.dataset.v)};
+function head(t,s){return `<div style="margin-bottom:14px"><h2>${t}</h2><div class="lab">${s}</div></div>`}
+// STACK
+function rStack(){
+$("#main").innerHTML=head("OSI REFERENCE MODEL","SELECT A LAYER TO OPEN ITS DOSSIER")+`<div class="split"><div>${L.map((l,i)=>`<button class="layer" style="--lc:${LC[i]};--i:${i}" data-l="${l[0]}" aria-pressed="${selL==l[0]}"><span class="num" aria-hidden="true">0${l[0]}</span><div class="lab mono">LAYER 0${l[0]} // RHD-L${l[0]}</div><div class="nm">${l[1]}</div><div class="rs">${l[2]}</div><div style="margin:6px 0"><span class="pdu">PDU: ${l[3]}</span></div><div>${l[5].map(p=>`<span class="chip">${p}</span>`).join("")}</div></button>`).join("")}</div><aside id="dos" class="panel" aria-live="polite"></aside></div>`;
+$(".split>div").onclick=e=>{const b=e.target.closest(".layer");if(b)pick(+b.dataset.l)};dossier()}
+function pick(n){selL=n;$("#sl").textContent="L"+n;$$(".layer").forEach(b=>b.setAttribute("aria-pressed",b.dataset.l==n));dossier()}
+function dossier(){const d=$("#dos");if(!d)return;const l=L.find(x=>x[0]==selL);
+if(!l){d.innerHTML=`<div class="bd"><div class="lab">LAYER DOSSIER</div><p>Select a layer to read its responsibility, PDU, addressing, devices, encapsulation role and failure modes.</p></div>`;return}
+const R=(a,b)=>`<dt class="lab">${a}</dt><dd>${b}</dd>`;
+d.innerHTML=`<div class="dos-in"><div class="hd"><span class="lab">LAYER DOSSIER // 0${l[0]}</span><div class="bc" aria-hidden="true"></div></div><div class="bd"><div style="font-size:26px;font-weight:800;letter-spacing:.2em;text-transform:uppercase">${l[1]}</div><dl>${R("RESPONSIBILITY",l[2])}${R("PDU",`<span class="pdu" style="font-size:14px">${l[3]}</span>`)}${R("ADDRESSING",l[4])}${R("PROTOCOLS",l[5].map(p=>`<span class="chip">${p}</span>`).join(""))}${R("DEVICES",l[6])}${R("ENCAPSULATION",l[7])}${R("EXPLANATION",l[9])}${R("RELATED",l[10])}</dl><div class="warn"><div><span class="lab" style="color:var(--y)">FAILURE / SECURITY</span><br>${l[8]}</div></div></div></div>`}
+// ENCAP
+function rEnc(){
+$("#main").innerHTML=head("ENCAPSULATION","CLICK A STAGE TO INSPECT ITS HEADER AND PAYLOAD")+`<div class="panel"><div class="bd"><div class="stg" id="stg"></div><div class="wire" id="wire" aria-label="Nested wire format"></div><div class="ctl"><button class="btn-p" id="play">▶ SEND PACKET</button><span id="eph" class="lab" aria-live="polite">IDLE</span></div><div id="ei"></div></div></div>`;
+$("#stg").onclick=e=>{const b=e.target.closest("button");if(b){encI=+b.dataset.i;drawEnc()}};$("#play").onclick=playEnc;drawEnc()}
+function drawEnc(act=-1,full=true){const E=ENC[encI];
+$("#stg").innerHTML=ENC.map((s,i)=>`<button data-i="${i}" aria-pressed="${i==encI}" class="${i==act?"act":""}"><span class="lab">STAGE ${i+1}</span><br><b>${s[0]}</b></button>`).join("");
+const w=[["ETH HDR",3],["IP HDR",2],["TCP HDR",2],["APP DATA",5],["FCS",1]];
+const lvl=act<0?encI:act;const show=[lvl>=3,lvl>=2,lvl>=1,true,lvl>=3];
+$("#wire").innerHTML=w.map((x,i)=>`<div class="${show[i]?"on":""}" style="flex-grow:${x[1]}">${x[0]}</div>`).join("");
+$("#ei").innerHTML=`<div class="lab">${E[0]} // PDU: ${E[1].toUpperCase()}</div><p><b>Payload:</b> ${E[3]}</p><p style="color:var(--m)">${E[4]}</p>`+(E[2].length?`<div class="lad">${E[2].map(f=>`<div>${f[0]} <span style="color:var(--c)">${f[1]}</span> — ${f[2]}</div>`).join("")}</div>`:"")}
+function playEnc(){clearInterval(encT);let s=0;const seq=[0,1,2,3,4,3,2,1,0];const txt=i=>i<5&&s<5?"SENDER: ENCAPSULATING":"RECEIVER: DECAPSULATING";
+const step=()=>{if(s>=seq.length){clearInterval(encT);$("#eph").textContent="DELIVERED";return}encI=seq[s];$("#eph").textContent=(s<5?"SENDER: ENCAPSULATE → ":"RECEIVER: DECAPSULATE → ")+ENC[encI][0];drawEnc(encI);s++};step();encT=setInterval(step,dm()?900:650)}
+// PROTOCOLS
+function rProto(){
+$("#main").innerHTML=head("PROTOCOL ARCHIVE","SELECT AN ENTRY")+`<div class="grid" id="pg">${P.map((p,i)=>`<button class="pc" data-i="${i}" aria-pressed="${selP===i}"><b>${p[0]}</b><span>${p[2]}</span></button>`).join("")}</div><div class="panel" id="pd" aria-live="polite"></div>`;
+$("#pg").onclick=e=>{const b=e.target.closest(".pc");if(b){selP=+b.dataset.i;$("#sp").textContent=P[selP][0];$$(".pc").forEach(x=>x.setAttribute("aria-pressed",x.dataset.i==selP));pdet()}};pdet()}
+function pdet(){const p=P[selP],d=$("#pd");if(!p){d.innerHTML=`<div class="bd lab">NO ENTRY SELECTED</div>`;return}
+const R=(a,b)=>`<dt class="lab">${a}</dt><dd>${b}</dd>`;
+d.innerHTML=`<div class="dos-in"><div class="hd"><span class="lab">ARCHIVE ENTRY // ${p[0]}</span><span class="lab">${p[2]}</span></div><div class="bd split"><dl><div style="font-size:24px;font-weight:800">${p[1]}</div>${R("PURPOSE",p[3])}${R("CONNECTION MODEL",p[4])}${R("ADDRESSING",p[5])}${R("KEY FIELDS",`<span class="mono" style="font-size:13px">${p[6]}</span>`)}</dl><dl>${R("CHARACTERISTICS",p[7])}${R("USE CASES",p[8])}${R("RELATIONSHIPS",p[9])}${R("WHEN TO USE",p[10])}${p[11].length?`<dt class="lab">EXCHANGE (SIMPLIFIED)</dt><dd class="lad">${p[11].map(f=>`<div><span style="color:var(--c)">${f[0]}</span> ${f[1]}</div>`).join("")}</dd>`:""}</dl></div></div>`}
+// PACKETS
+function rPkt(){
+$("#main").innerHTML=head("PACKET-FORMAT INSPECTORS","FIELD WIDTHS ARE DIAGRAMMATIC; REAL LAYOUTS VARY BY VERSION AND OPTIONS")+`<div class="tabs" id="pt">${Object.keys(PK).map(k=>`<button data-k="${k}">${PKN[k]}</button>`).join("")}</div><div class="split"><div class="panel"><div class="hd"><span class="lab" id="pk-t"></span></div><div class="bd"><div class="fields" id="pf"></div></div></div><aside class="panel" id="fi" aria-live="polite"></aside></div><div class="panel" style="margin-top:14px"><div class="hd"><span class="lab">TCP LIFECYCLE // REPRESENTATIVE</span></div><div class="bd"><div class="tabs" id="lt">${Object.keys(LIFE).map(k=>`<button data-k="${k}" aria-pressed="${k==lf}">${k.toUpperCase()}</button>`).join("")}</div><div class="lad" id="ll"></div></div></div>`;
+$("#pt").onclick=e=>{const b=e.target.closest("button");if(b){selPk=b.dataset.k;selF=0;drawPk()}};
+$("#pf").onclick=e=>{const b=e.target.closest(".f");if(b){selF=+b.dataset.i;drawPk()}};
+$("#lt").onclick=e=>{const b=e.target.closest("button");if(b){lf=b.dataset.k;$$("#lt button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.k==lf));drawLf()}};drawPk();drawLf()}
+function drawPk(){const k=PK[selPk];$("#pk-t").textContent=k[0].toUpperCase();
+$$("#pt button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k==selPk));
+$("#pf").innerHTML=k[1].map((f,i)=>`<button class="f ${f[4]?"opt":""}" style="grid-column:span ${f[2]}" data-i="${i}" aria-pressed="${i==selF}">${f[0]}<small class="mono">${f[1]}</small></button>`).join("");
+const f=k[1][selF];$("#fi").innerHTML=`<div class="hd"><span class="lab">FIELD INSPECTOR</span></div><div class="bd"><div style="font-size:22px;font-weight:800">${f[0]}</div><div class="mono" style="color:var(--c)">${f[1]}${f[4]?" // OPTIONAL / VARIANT-DEPENDENT":""}</div><p>${f[3]}</p></div>`}
+function drawLf(){$("#ll").innerHTML=LIFE[lf].map(s=>`<div class="${s[2]?"w":""}"><span style="color:${s[2]?"var(--o)":"var(--c)"}">${s[0]}</span> ${s[1]}</div>`).join("")}
+// SCENARIOS
+const NN=["CLIENT","SWITCH","ROUTER","INTERNET","SERVER"],X=[60,190,320,470,620];
+function rScen(){st=-1;
+$("#main").innerHTML=head("NETWORK SCENARIO","SIMPLIFIED TOPOLOGY // STEP THROUGH EACH EXCHANGE")+`<div class="tabs" id="sct">${SC.map((s,i)=>`<button data-i="${i}" aria-pressed="${i==sc}">${s[0].toUpperCase()}</button>`).join("")}</div><div class="panel"><div class="bd"><svg viewBox="0 0 700 150" width="100%" role="img" aria-label="Topology: client, switch, router, internet, server"><line x1="60" y1="70" x2="620" y2="70" stroke="#3a434b" stroke-width="2"/>${NN.map((n,i)=>`<g class="nd" id="n${i}">${i==3?`<ellipse cx="${X[i]}" cy="70" rx="48" ry="26" fill="#0F1215" stroke="#3a434b"/>`:`<rect x="${X[i]-36}" y="46" width="72" height="48"/>`}<text x="${X[i]}" y="74" text-anchor="middle">${n}</text></g>`).join("")}<g id="pk" style="transform:translateX(60px)"><rect x="-9" y="61" width="18" height="18" fill="#35D6D0"/></g><text id="pkl" x="350" y="130" text-anchor="middle" style="fill:#EDEFF2"></text></svg><div class="ctl"><span class="lab">CURRENT LAYER</span> <span class="cur" id="cl">—</span><span class="lab" id="sn"></span></div><div class="cap" id="cap">Press NEXT to begin.</div><div class="ctl"><button id="pv">◀ BACK</button><button class="btn-p" id="nx">NEXT ▶</button><button id="ap">AUTO-PLAY</button><label><input type="checkbox" id="adv"> TECHNICAL DETAIL</label></div></div></div>`;
+$("#sct").onclick=e=>{const b=e.target.closest("button");if(b){clearInterval(tm);sc=+b.dataset.i;rScen()}};
+$("#nx").onclick=()=>stp(1);$("#pv").onclick=()=>stp(-1);$("#adv").checked=adv;$("#adv").onchange=e=>{adv=e.target.checked;stp(0)};
+$("#ap").onclick=()=>{clearInterval(tm);if(st>=SC[sc][1].length-1)st=-1;stp(1);tm=setInterval(()=>{if(st>=SC[sc][1].length-1)clearInterval(tm);else stp(1)},dm()?1800:1500)}}
+function stp(d){const S=SC[sc][1];st=Math.max(0,Math.min(S.length-1,st+d));const s=S[st];
+$("#pk").style.transform=`translateX(${X[s[1]]}px)`;
+$("#pkl").textContent=(s[6]?"✕ ":"")+s[3].toUpperCase();$("#pkl").style.fill=s[6]?"#FF7A45":"#EDEFF2";
+$$(".nd").forEach((n,i)=>n.classList.toggle("on",i==s[0]||i==s[1]));
+$("#cl").textContent=s[2];$("#sn").textContent=`STEP ${st+1} / ${S.length}`;
+$("#cap").innerHTML=`<b>${s[3]}${zh?"：":"."}</b> ${s[4]}`+(adv?`<p class="mono" style="color:var(--c);font-size:13px">${s[5]}</p>`:"")}
+// SEARCH
+const mkIdx=()=>[...L.map(l=>["Layer 0"+l[0]+" "+l[1],"layer",()=>{go("stack");pick(l[0])},l.join(" ")]),...P.map((p,i)=>[p[0]+" — "+p[1],"protocol",()=>{selP=i;go("proto");$("#sp").textContent=p[0]},p.join(" ")]),...Object.keys(PK).flatMap(k=>PK[k][1].map((f,i)=>[PKN[k]+" › "+f[0],"field",()=>{selPk=k;selF=i;go("pkt")},f.join(" ")])),...GL.map(g=>[g[0]+" — "+g[1],"glossary",()=>go("stack"),g.join(" ")])];let IDX=mkIdx();
+$("#q").oninput=e=>{const q=e.target.value.trim().toLowerCase(),r=$("#res");if(!q){r.hidden=true;return}
+const m=IDX.filter(x=>x[0].toLowerCase().includes(q)||x[3].toLowerCase().includes(q)).slice(0,10);
+r.hidden=false;r.innerHTML=m.length?m.map((x,i)=>`<button data-i="${i}"><span class="lab">${x[1]}</span> ${x[0]}</button>`).join(""):`<div class="bd lab">NO MATCHES</div>`;
+r._m=m};
+$("#res").onclick=e=>{const b=e.target.closest("button");if(b){$("#res")._m[+b.dataset.i][2]();$("#res").hidden=true;$("#q").value=""}};
+addEventListener("keydown",e=>{if(e.key=="Escape"){$("#res").hidden=true;if(selL&&view=="stack"){selL=null;$("#sl").textContent="—";$$(".layer").forEach(b=>b.setAttribute("aria-pressed","false"));dossier()}}});
+const EN=JSON.parse(JSON.stringify({L,P,ENC,PK,SC,GL,LIFE}));let zh=true;
+const ZL=[["應用層","為使用者提供網路服務與 API","資料／訊息","URL、主機名稱、服務名稱","瀏覽器、伺服器、API 閘道、反向代理、L7 負載平衡器","接收使用者意圖並建立訊息，交給第 6 層（在 TCP/IP 中直接交給傳輸層）。","注入攻擊與驗證缺陷、DNS 欺騙、請求洪水式 DDoS、CORS 設定錯誤。","由協定定義兩端程式實際交換的內容。它不是應用程式本身，而是應用程式所使用的協定。","第 6、4 層；HTTP、DNS"],
+["表現層","資料表示、編碼、壓縮與加密","資料／訊息","MIME 類型、字元集","函式庫、TLS 終結點、編解碼器","接收結構化訊息並進行編碼或加密，將位元組交給第 5 層。","弱加密套件、憑證過期、降級攻擊、惡意資料造成的解析器漏洞。","確保雙方以相同方式解讀位元組。實務上 TLS、序列化與壓縮多併入應用程式堆疊，而非獨立一層。","第 7、5 層；TLS"],
+["會議層","建立、維持與結束對話","資料／訊息","工作階段 ID、權杖、RPC 控制代碼","工作階段管理器、閘道、應用程式伺服器","接收標記對話的已編碼資料，交給傳輸層。","工作階段劫持、固定攻擊、權杖遭竊、重放過期工作階段。","追蹤誰與誰在通訊、持續多久，包含檢查點與恢復。在 TCP/IP 中，這些功能位於應用程式與函式庫內。","第 6、4 層；TLS 會話恢復"],
+["傳輸層","行程對行程的傳遞、連接埠、可靠性、流量控制","區段／資料包","IP 位址之上的連接埠號（0–65535）","狀態式防火牆、NAT、L4 負載平衡器","接收位元組串流或訊息，加入連接埠與控制資訊，將區段或資料包交給 IP。","SYN 洪水、RST 注入、UDP 放大攻擊、連接埠掃描、壅塞崩潰。","把資料送到正確的應用程式，而不只是正確的主機。TCP 提供有序可靠傳遞；UDP 只加上連接埠與檢查碼；QUIC 在 UDP 之上同時實作兩者。","第 5、3 層；TCP、UDP、QUIC"],
+["網路層","邏輯定址與跨網路路由","封包","IPv4 與 IPv6 位址","路由器、L3 交換器、防火牆","接收區段，加入來源與目的 IP，將封包交給資料鏈結層送往下一跳。","IP 欺騙、路由劫持（BGP）、TTL 到期、分片攻擊、黑洞。","逐跳將封包送往目的地。每台路由器讀取目的 IP、查詢路由表並轉送。","第 4、2 層；IP、ICMP、ARP"],
+["資料鏈結層","單一鏈路或區域網路上的節點間傳遞","訊框","MAC 位址（48 位元）、VLAN ID","交換器、橋接器、網卡、無線基地台","接收封包，以含 MAC 位址與 FCS 的訊框包裝，將位元交給實體層。","MAC 洪泛、ARP 欺騙、VLAN 跳躍、廣播風暴、偽造基地台。","把訊框送到同一鏈路上的下一個裝置。交換器會學習各 MAC 位於哪個連接埠。*ARP 常被歸在第 2 與第 3 層之間。","第 3、1 層；Ethernet、ARP"],
+["實體層","以訊號傳輸原始位元","位元／符號","無；由傳輸媒介與訊號方式決定","纜線、光纖、集線器、中繼器、無線電、收發器","接收訊框位元，轉換為電、光或無線電訊號。","纜線故障、干擾、訊號衰減、竊聽、干擾壓制。","定義電壓、光脈衝、無線電調變、連接器與時序。此層沒有定址。","第 2 層；Ethernet、Wi-Fi"]];
+const ZE=[["應用資料","訊息","「GET /index.html」或任何應用程式位元組","沒有固定標頭，格式由應用程式自行決定。",[]],
+["TCP 區段／UDP 資料包","區段","應用資料","TCP 標頭至少 20 位元組；UDP 標頭為 8 位元組。",[["連接埠","選擇傳送與接收的應用程式"],["序號／確認號","TCP 專用：追蹤位元組以確保可靠"],["旗標＋視窗","連線控制與流量控制"],["檢查碼","偵測資料損毀"]]],
+["IP 封包","封包","TCP 區段或 UDP 資料包","IPv4 標頭至少 20 位元組。位址端對端維持不變（NAT 除外）。",[["版本／IHL","IPv4 與標頭長度"],["TTL","躍點上限"],["協定","6＝TCP、17＝UDP、1＝ICMP"],["來源／目的 IP","端對端位址"]]],
+["乙太網路訊框","訊框","IP 封包＋4 位元組 FCS 尾端","酬載為 46–1500 位元組（標準 MTU）。FCS 用於偵測位元錯誤。",[["目的／來源 MAC","下一跳位址；每一跳都會改寫"],["EtherType","0x0800＝IPv4、0x86DD＝IPv6"]]],
+["實體位元","位元","訊框位元","編碼依媒介而定（如 PAM-4、8b/10b、OFDM）。",[["前導碼＋SFD","同步接收端時脈"],["線路編碼","位元轉為電壓、光或無線電符號"]]]];
+const ZP=[["位址解析協定","L2／L3 交界","將 IPv4 位址對應到區域鏈路上的 MAC 位址","無連線、無狀態（含快取）","目的 IP 位於同一子網路且不知道 MAC 時使用。",["誰擁有 192.168.1.1？請告訴 192.168.1.20","192.168.1.1 位於 aa:bb:cc:00:00:01"]],
+["IPv4／IPv6","L3","在網路之間提供盡力而為的定址與路由","無連線、無狀態","凡需跨網路路由的流量都必須使用；新部署建議採用 IPv6。",[]],
+["網際網路控制訊息協定","L3（由 IP 承載）","錯誤回報與診斷","無連線、無狀態","用於測試可達性並了解封包被丟棄的原因。",["回聲請求，TTL 64","回聲回應"]],
+["傳輸控制協定","L4","可靠、有序的位元組串流傳遞","連線導向、有狀態","每個位元組都必須依序送達時使用。",["SYN seq=x","SYN+ACK seq=y ack=x+1","ACK ack=y+1"]],
+["使用者資料包協定","L4","在連接埠之間傳遞最精簡的訊息","無連線、無狀態","用於可容忍遺失的小型查詢或即時資料。",["資料包","資料包（選擇性）"]],
+["QUIC（RFC 9000）","L4＋安全性，建構於 UDP 之上","多工、加密且可靠的傳輸","連線導向、有狀態，運作於無連線的 UDP 之上","適用於高遺失率或行動網路上的網頁流量。",["Initial（ClientHello）","Initial＋Handshake","Handshake 完成＋HTTP/3 請求"]],
+["傳輸層安全性 1.3","介於 L4 與 L7 之間","提供機密性、完整性與伺服器驗證","連線上的有狀態工作階段","資料經過不受信任的網路時一律使用。",["ClientHello＋金鑰共享","ServerHello、憑證、Finished","Finished；加密資料"]],
+["HTTP／HTTPS","L7","以請求／回應方式傳輸網頁資源","無狀態（Cookie 可建立工作階段）","幾乎所有用戶端－伺服器 API 都適用。",["GET /index.html","200 OK＋內容"]],
+["網域名稱系統","L7","將名稱解析為位址與記錄","無連線（UDP 53；大型回應用 TCP）","連線至任何具名主機之前使用。",["A? example.com","93.184.216.34，TTL 300"]],
+["動態主機設定協定","L7（UDP 67/68）","自動設定 IP","無連線；租約保存狀態","大規模發放位址時使用。",["DISCOVER","OFFER","REQUEST","ACK"]],
+["乙太網路（IEEE 802.3）","L1／L2","有線區域網路的訊框與媒體存取","無連線、無狀態","預設的有線鏈路層。",[]],
+["Wi-Fi（IEEE 802.11）","L1／L2","無線區域網路存取","無連線訊框，含關聯狀態","不便佈線時使用。",[]]];
+const ZK={eth:["乙太網路 II 訊框（代表性）",[["前導碼＋SFD","同步模式（7 位元組 0xAA、1 位元組 0xAB），由 PHY 加入，擷取封包時通常看不到。"],["目的 MAC","識別此鏈路上的接收介面。交換器據此選擇輸出連接埠；ff:ff:ff:ff:ff:ff 為廣播。"],["來源 MAC","識別傳送者。交換器由它學習 MAC 與連接埠的對應。"],["VLAN 標籤（選用）","802.1Q 標籤：TPID 0x8100、優先權、VLAN ID，僅出現在有標記的鏈路。"],["EtherType／長度","≥ 0x0600 表示酬載協定：0x0800 IPv4、0x0806 ARP、0x86DD IPv6；較小值則為長度。"],["酬載","承載 IP 封包，最少填充至 46 位元組。"],["FCS","涵蓋整個訊框的 CRC-32，偵測傳輸中的位元錯誤；錯誤訊框會被丟棄而非修復。"]]],
+ip:["IPv4 標頭（代表性，32 位元一列）",[["版本","IPv4 恆為 4。"],["IHL","標頭長度，以 32 位元字組計（5＝20 位元組，無選項）。"],["DSCP／ECN","QoS 流量類別與壅塞通知。"],["總長度","標頭加資料，最大 65,535 位元組。"],["識別碼","將同一原始封包的分片歸為一組。"],["旗標","保留、不可分片（DF）、尚有分片（MF）。"],["分片位移","此分片的位置（以 8 位元組為單位）。封包超過鏈路 MTU 時由路由器（或傳送端）分片，目的端重組。"],["TTL","每經過一台路由器減 1；為 0 時封包被丟棄並回送 ICMP Time Exceeded，避免封包在路由迴圈中永遠循環。"],["協定","下一層協定：1 ICMP、6 TCP、17 UDP。"],["標頭檢查碼","只涵蓋標頭；因 TTL 改變，每一跳都要重新計算。"],["來源 IP","原始傳送者；回應封包使用此位址。"],["目的 IP","最終目標；路由器以最長前綴比對路由表。"],["選項","很少使用的額外欄位，填充至 32 位元。"],["酬載","TCP 區段、UDP 資料包或 ICMP 訊息。"]]],
+tcp:["TCP 標頭（代表性，32 位元一列）",[["來源埠","傳送端連接埠；用戶端通常為臨時埠。"],["目的埠","服務連接埠，例如 HTTPS 為 443。"],["序號","此區段第一個資料位元組的位元組位移（SYN 佔一個序號）。"],["確認號","傳送者期望收到的下一個位元組；ACK 設定時有效。"],["資料位移","標頭長度，以 32 位元字組計。"],["保留","保留位，現代用法含 ECN 位元 CWR／ECE。"],["旗標","URG、ACK、PSH、RST、SYN、FIN。SYN 建立連線、ACK 確認、FIN 正常關閉、RST 中止、PSH 要求盡快交付、URG 標示緊急資料（少用）。"],["視窗大小","接收視窗：接收端願意接受的位元組數，即流量控制。"],["檢查碼","涵蓋標頭、資料與 IP 偽標頭。"],["緊急指標","URG 設定時指向緊急資料的位移。"],["選項","MSS、視窗縮放、SACK、時間戳記。"],["酬載","應用程式位元組。"]]],
+udp:["UDP 標頭（8 位元組）",[["來源埠","選用；若不需回覆可為 0。"],["目的埠","目標服務，例如 DNS 為 53。"],["長度","標頭加資料的位元組數（最小 8）。"],["檢查碼","IPv4 中為選用，IPv6 中為必要。"],["酬載","一個資料包。無順序、無重傳：UDP 無連線且開銷極小，適合即時或可容忍遺失的流量。與 TCP 不同，它不握手，也不因遺失而降速。QUIC 在 UDP 之上補足這些功能。"]]],
+quic:["QUIC 封包（簡化：長標頭與短標頭不同）",[["標頭旗標","標頭形式（長或短）、固定位元、封包類型，部分受標頭保護。"],["版本","僅長標頭（握手封包）具有。"],["目的連線 ID","將封包導向某條連線，使其在 IP 或連接埠變更時仍能延續（連線遷移）。"],["來源連線 ID","僅長標頭：傳送者選定的 ID。"],["封包編號","已加密；用於遺失偵測，並作為 AEAD nonce 的輸入。"],["訊框（已加密）","STREAM 承載多工資料（如 HTTP/3 請求）、ACK 驅動遺失復原、CRYPTO 承載 TLS 1.3 握手。恢復連線時 0-RTT 資料可放在早期封包。"],["AEAD 標籤","由 TLS 1.3 衍生金鑰產生的驗證標籤。"]]]};
+const ZS=[["開啟網站",[["DNS 查詢","用戶端向解析器詢問 example.com。"],["DNS 回應","位址回傳。"],["TCP SYN／QUIC Initial","用戶端向 443 連接埠建立連線。"],["SYN-ACK","伺服器接受連線。"],["TLS ClientHello","協商加密金鑰。"],["HTTP GET","送出加密請求。"],["200 OK","網頁送達。"]]],
+["傳送訊息",[["訊息","應用程式把位元組交給協定堆疊。"],["區段","TCP 加入連接埠與序號。"],["封包","IP 加入來源與目的位址。"],["訊框","以路由器的 MAC 封裝乙太網路訊框。"],["已路由封包","路由器將 TTL 減 1 並選擇下一跳。"],["已送達","伺服器逐層解封裝。"]]],
+["尋找區域網路上的裝置",[["ARP 請求","誰擁有 192.168.1.1？"],["洪泛","交換器把廣播從其他所有連接埠送出。"],["ARP 回應","路由器直接回覆用戶端。"],["更新快取","用戶端記錄 IP→MAC。"],["區域傳遞","IP 封包現以路由器的 MAC 封裝。"]]],
+["封包遺失與復原",[["區段 seq=2001","用戶端送出資料。"],["封包被丟棄","壅塞的路由器丟棄封包。"],["重傳","三次重複 ACK 或逾時觸發重送。"],["ACK","伺服器確認資料。"],["cwnd 減半","壅塞控制使傳送端降速。"]]],
+["路由器與交換器",[["訊框進入","交換器只讀取目的 MAC。"],["L2 轉送","同一區域網路內，不改寫標頭。"],["L3 路由","路由器剝除訊框並讀取目的 IP。"],["下一跳","新訊框、新 MAC、相同 IP，TTL 減 1。"]]]];
+const ZG=[["MTU","鏈路可承載的最大訊框酬載（乙太網路為 1500 位元組）"],["MSS","每個 TCP 區段的最大酬載"],["RTT","往返時間"],["NAT","在閘道改寫位址"],["廣播網域","彼此接收廣播的裝置範圍"]];
+const ZF={Handshake:["SYN seq=1000","SYN+ACK seq=5000 ack=1001","ACK seq=1001 ack=5001（連線建立）"],Data:["PSH+ACK seq=1001 len=500","ACK ack=1501 win=64240（流量控制）","seq=1501 len=500；cwnd 增加（慢啟動）"],Loss:["seq=2001 len=500","（傳輸中遺失）","逾時或 3 次重複 ACK：重傳 seq=2001","ACK ack=2501；cwnd 減半（壅塞回應）"],Teardown:["FIN seq=3001","ACK ack=3002","FIN seq=7000","ACK ack=7001（TIME_WAIT）"]};
+const D={"NETWORK OPERATIONS TERMINAL":"網路作業終端機","OSI MODEL // PROTOCOL ARCHIVE // PACKET INSPECTOR":"OSI 模型 // 協定檔案庫 // 封包檢視器","Search":"搜尋","Primary":"主要導覽","OSI Stack":"OSI 堆疊","Encapsulation":"封裝","Protocols":"協定","Packet Formats":"封包格式","Scenarios":"情境","OSI STACK":"OSI 堆疊","ENCAPSULATION":"封裝","PROTOCOLS":"協定","PACKET FORMATS":"封包格式","SCENARIOS":"情境","VIEW":"檢視","LAYER":"層級","PROTOCOL":"協定","OSI REFERENCE MODEL":"OSI 參考模型","SELECT A LAYER TO OPEN ITS DOSSIER":"選擇一層以開啟其檔案","CLICK A STAGE TO INSPECT ITS HEADER AND PAYLOAD":"點選階段以檢視其標頭與酬載","PROTOCOL ARCHIVE":"協定檔案庫","SELECT AN ENTRY":"選擇一個項目","PACKET-FORMAT INSPECTORS":"封包格式檢視器","FIELD WIDTHS ARE DIAGRAMMATIC; REAL LAYOUTS VARY BY VERSION AND OPTIONS":"欄位寬度僅為示意；實際格式依版本與選項而異","NETWORK SCENARIO":"網路情境","SIMPLIFIED TOPOLOGY // STEP THROUGH EACH EXCHANGE":"簡化拓樸 // 逐步檢視每次交換","LAYER DOSSIER":"層級檔案","Select a layer to read its responsibility, PDU, addressing, devices, encapsulation role and failure modes.":"選擇一層，即可查看其職責、PDU、定址、設備、封裝角色與失效模式。","RESPONSIBILITY":"職責","ADDRESSING":"定址","DEVICES":"設備","EXPLANATION":"說明","RELATED":"相關","FAILURE / SECURITY":"失效／安全","PURPOSE":"用途","CONNECTION MODEL":"連線模型","KEY FIELDS":"關鍵欄位（英文）","CHARACTERISTICS":"特性（英文）","USE CASES":"使用情境（英文）","RELATIONSHIPS":"關聯（英文）","WHEN TO USE":"使用時機","EXCHANGE (SIMPLIFIED)":"訊息交換（簡化）","NO ENTRY SELECTED":"未選擇項目","FIELD INSPECTOR":"欄位檢視器","TCP LIFECYCLE // REPRESENTATIVE":"TCP 生命週期 // 代表性示意","HANDSHAKE":"握手","DATA":"資料傳輸","LOSS":"封包遺失","TEARDOWN":"關閉連線","▶ SEND PACKET":"▶ 傳送封包","IDLE":"閒置","DELIVERED":"已送達","ETH HDR":"乙太網標頭","IP HDR":"IP 標頭","TCP HDR":"TCP 標頭","APP DATA":"應用資料","Payload:":"酬載：","CLIENT":"用戶端","SWITCH":"交換器","ROUTER":"路由器","INTERNET":"網際網路","SERVER":"伺服器","CURRENT LAYER":"目前層級","APPLICATION":"應用層","PRESENTATION":"表現層","TRANSPORT":"傳輸層","NETWORK":"網路層","DATA LINK":"資料鏈結層","Press NEXT to begin.":"按「下一步」開始。","◀ BACK":"◀ 上一步","NEXT ▶":"下一步 ▶","AUTO-PLAY":"自動播放","TECHNICAL DETAIL":"技術細節（英文）","layer":"層級","protocol":"協定","field":"欄位","glossary":"詞彙","NO MATCHES":"無符合項目","variable":"可變","Nested wire format":"巢狀線路格式","Topology: client, switch, router, internet, server":"拓樸：用戶端、交換器、路由器、網際網路、伺服器"};
+const PRE=[["LAYER DOSSIER // ","層級檔案 // "],["LAYER ","層級 "],["Layer 0","第0"],["PDU: ","PDU："],["ARCHIVE ENTRY // ","檔案項目 // "],["STAGE ","階段 "],["STEP ","步驟 "],["DOC ","文件 "],["SENDER: ENCAPSULATE → ","傳送端：封裝 → "],["RECEIVER: DECAPSULATE → ","接收端：解封裝 → "]];
+const SUB=[[" // OPTIONAL / VARIANT-DEPENDENT"," // 選用／依變體而定"],[" // PDU: "," // PDU："]];
+function apply(z){const e=JSON.parse(JSON.stringify(EN)),put=(d,s)=>{d.length=0;s.forEach(x=>d.push(x))};
+put(L,e.L);put(P,e.P);put(ENC,e.ENC);put(SC,e.SC);put(GL,e.GL);Object.assign(PK,e.PK);Object.assign(LIFE,e.LIFE);if(!z)return;
+ZL.forEach((r,i)=>[1,2,3,4,6,7,8,9,10].forEach((k,j)=>L[i][k]=r[j]));
+ZE.forEach((r,i)=>{ENC[i][0]=r[0];ENC[i][1]=r[1];ENC[i][3]=r[2];ENC[i][4]=r[3];r[4].forEach((f,j)=>{ENC[i][2][j][0]=f[0];ENC[i][2][j][2]=f[1]})});
+ZP.forEach((r,i)=>{P[i][1]=r[0];P[i][2]=r[1];P[i][3]=r[2];P[i][4]=r[3];P[i][10]=r[4];r[5].forEach((t,j)=>P[i][11][j][1]=t)});
+for(const k in ZK){PK[k][0]=ZK[k][0];ZK[k][1].forEach((f,i)=>{PK[k][1][i][0]=f[0];PK[k][1][i][3]=f[1]})}
+ZS.forEach((s,i)=>{SC[i][0]=s[0];s[1].forEach((x,j)=>{SC[i][1][j][3]=x[0];SC[i][1][j][4]=x[1]})});
+ZG.forEach((g,i)=>{GL[i][0]=g[0];GL[i][1]=g[1]});
+for(const k in ZF)ZF[k].forEach((t,j)=>LIFE[k][j][1]=t)}
+const mo=new MutationObserver(()=>{if(zh)tx()});
+function tx(){mo.disconnect();const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),a=[];let n;while(n=w.nextNode())a.push(n);
+a.forEach(n=>{if(/^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName))return;const s=n.nodeValue,t=s.trim();if(!t)return;
+if(!zh){if(n.__o!=null){n.nodeValue=n.__o;n.__o=null}return}
+let r=D[t];if(r==null)for(const[x,y]of PRE)if(t.startsWith(x)){r=y+t.slice(x.length);break}
+if(r==null)for(const[x,y]of SUB)if(t.includes(x)){r=t.split(x).join(y);break}
+if(r!=null&&r!==t){if(n.__o==null)n.__o=s;n.nodeValue=s.replace(t,r)}});
+document.querySelectorAll("[aria-label]").forEach(e=>{const v=e.getAttribute("aria-label");if(!zh){if(e._o!=null){e.setAttribute("aria-label",e._o);e._o=null}return}if(D[v]!=null){if(e._o==null)e._o=v;e.setAttribute("aria-label",D[v])}});
+mo.observe(document.body,{childList:true,subtree:true,characterData:true})}
+function setLang(z){zh=z;try{localStorage.setItem("lang",z?"zh":"en")}catch(e){}
+apply(z);IDX=mkIdx();document.documentElement.lang=z?"zh-Hant-TW":"en";document.title=z?"網路作業終端機":"Network Operations Terminal";
+const b=$("#lang");b.textContent=z?"EN":"繁中";b.setAttribute("aria-label",z?"Switch to English":"切換為繁體中文");
+$("#q").placeholder=z?"搜尋層級、協定、欄位":"SEARCH LAYERS, PROTOCOLS, FIELDS";$("#res").hidden=true;$("#q").value="";
+tx();go(view);tx()}
+$("#lang").onclick=()=>setLang(!zh);
+let z0=true;try{z0=localStorage.getItem("lang")!="en"}catch(e){}
+setLang(z0);
+</script></body></html>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>多資產交易模擬器</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{--bg:#eef0ec;--surface:#fbfbf8;--ink:#17202a;--mute:#6b7580;--line:#d5d9d2;--up:#d6333a;--down:#0e9f5b;--accent:#1f3a5f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141a21;--surface:#1c242d;--ink:#e8ecef;--mute:#8d99a5;--line:#2c3742;--up:#ff5a5f;--down:#3fcf8a;--accent:#8fb4e8}}
+:root[data-theme="dark"]{--bg:#141a21;--surface:#1c242d;--ink:#e8ecef;--mute:#8d99a5;--line:#2c3742;--up:#ff5a5f;--down:#3fcf8a;--accent:#8fb4e8}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+.num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+main{max-width:760px;margin:0 auto;padding:14px}
+.top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.top .sp{flex:1}
+.big{font-size:38px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.mute{color:var(--mute);font-size:13px}
+.up{color:var(--up)}.down{color:var(--down)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 14px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.stat b{display:block}.stat span{font-size:12px;color:var(--mute)}
+section{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:14px;overflow:hidden}
+h2{margin:0;padding:10px 12px;font-size:15px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+button,select,input{font:inherit;color:inherit}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn,select,input[type=number]{border:1px solid var(--line);background:var(--surface);padding:7px 11px;border-radius:8px}
+.btn{cursor:pointer}.btn.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);font-weight:600}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+input[type=number]{width:120px}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tabs .btn{flex:1;border:0;border-radius:0;padding:10px}
+.row{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:10px 12px;border:0;border-bottom:1px solid var(--line);width:100%;background:none;text-align:left;cursor:pointer}
+.row.sel{background:color-mix(in srgb,var(--accent) 12%,transparent);box-shadow:inset 3px 0 0 var(--accent)}
+.row small{display:block;color:var(--mute);font-size:12px}
+.chg{min-width:70px;text-align:right}
+svg{display:block;width:100%;height:auto}
+svg .u{fill:var(--up);stroke:var(--up)}svg .d{fill:var(--down);stroke:var(--down)}
+svg text{fill:var(--mute);font-size:10px;font-family:"IBM Plex Mono",monospace}
+.trade{padding:12px;display:grid;gap:10px}
+.line{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.line input[type=range]{flex:1;min-width:140px}
+.open{padding:13px;font-size:16px;font-weight:600;color:#fff;border:0;background:var(--accent)}
+.pos{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:10px 12px;border-bottom:1px solid var(--line);font-size:14px}
+.pos:last-child{border-bottom:0}
+.empty{padding:14px 12px;color:var(--mute);font-size:14px}
+.log{max-height:150px;overflow:auto;font-size:13px}.log div{padding:6px 12px;border-bottom:1px solid var(--line)}
+.warn{color:#c77700;font-weight:600}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.stk{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;display:flex;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:0 0 10px;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.stk .sp{flex:1}.stk .big{font-size:26px}.stk #pl{font-size:15px!important}.stk .btn{padding:6px 10px}
+#posbar{position:fixed;left:0;right:0;bottom:0;width:min(100%,760px);margin:0 auto;z-index:9;max-height:34vh;overflow:auto;border-radius:10px 10px 0 0;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -2px 10px rgba(0,0,0,.15)}
+#posbar h2{position:sticky;top:0;background:var(--surface);cursor:pointer}#posbar.min #pos{display:none}
+#postg span:first-child::after{content:" ▾"}#posbar.min #postg span:first-child::after{content:" ▴"}.yc{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:0 12px 8px}.yc .btn{padding:4px 10px}
+</style>
+</head>
+<body>
+<main>
+ <div class="top">
+  <label class="mute">顯示幣別 <select id="cur"></select></label>
+  <label class="mute">起始資金 <input type="number" id="cap" min="1" step="any"></label>
+  <button class="btn" id="restart">重新開始</button>
+  <span class="sp"></span>
+  
+ </div>
+ <div class="stk"><div><div class="mute">總資產（淨值）</div>
+ <div class="big num" id="nw"></div>
+ <div class="num" id="pl" style="font-size:19px;font-weight:600"></div></div><span class="sp"></span><button class="btn" id="pause" title="暫停／繼續" aria-label="暫停／繼續">⏸</button><button class="btn" id="speed" title="切換速度" aria-label="切換速度"></button></div>
+ <div class="stats">
+  <div class="stat"><span>可用資金</span><b class="num" id="cash"></b></div>
+  <div class="stat"><span>持倉保證金</span><b class="num" id="used"></b></div>
+  <div class="stat"><span>已實現損益</span><b class="num" id="real"></b></div>
+ </div>
+
+ <section>
+  <div class="tabs" id="tabs"></div>
+  <div id="list"></div>
+ </section>
+
+ <section>
+  <h2><span id="ct"></span><span class="num" id="cp"></span></h2>
+  <div class="mute" id="minfo" style="padding:8px 12px 0"></div>
+  <div style="padding:6px 8px 4px"><svg id="chart" viewBox="0 0 640 250"></svg></div>
+  <div class="yc"><span class="mute num" id="ylab"></span><button class="btn" id="yin" title="Y軸放大" aria-label="Y軸放大">↕⊕</button><button class="btn" id="yout" title="Y軸縮小" aria-label="Y軸縮小">↕⊖</button><button class="btn" id="yup" title="往上移" aria-label="往上移">▲</button><button class="btn" id="ydn" title="往下移" aria-label="往下移">▼</button><button class="btn" id="yauto" title="Y軸自動" aria-label="Y軸自動">↕⟳</button></div>
+  <div class="yc"><span class="mute num" id="xlab"></span><button class="btn" id="xin" title="X軸放大" aria-label="X軸放大">↔⊕</button><button class="btn" id="xout" title="X軸縮小" aria-label="X軸縮小">↔⊖</button><button class="btn" id="xauto" title="X軸預設" aria-label="X軸預設">↔⟳</button><span class="mute">（滾輪＝Y軸，Shift＋滾輪＝X軸）</span></div>
+  <div class="trade">
+   <div class="line"><button class="btn on" id="long">做多（看漲）</button><button class="btn" id="short">做空（看跌）</button></div>
+   <div class="line"><span>槓桿</span><input type="range" id="lev" min="1" max="5" step="1" value="1"><b class="num" id="levv"></b></div>
+   <div class="line"><span>保證金</span><input type="number" id="mar" min="0" step="any">
+    <button class="btn" data-pct=".25">25%</button><button class="btn" data-pct=".5">50%</button><button class="btn" data-pct="1">全部</button></div>
+   <div class="mute num" id="prev"></div>
+   <button class="btn open" id="open">開倉</button>
+  </div>
+ </section>
+
+ <section><h2><span>自動買賣</span><span class="mute" id="oasset"></span></h2>
+  <div class="trade">
+   <div class="line"><select id="oact"><option value="buy">買進（開多）</option><option value="sell">賣出（開空）</option><option value="close">平倉（停利／停損）</option></select>
+    <select id="ocond"><option value="le">價格 ≤</option><option value="ge">價格 ≥</option></select>
+    <input type="number" id="otp" step="any" min="0" placeholder="觸發價"><button class="btn" id="ocur">帶入現價</button></div>
+   <div class="mute">開倉單使用上方設定的槓桿與保證金；平倉單會平掉此資產全部持倉。市價達到條件時自動執行一次。</div>
+   <button class="btn open" id="oadd">新增自動單</button>
+  </div><div id="ords"></div></section>
+ <section id="posbar"><h2 id="postg"><span>持倉 <span class="mute" id="pcnt"></span></span><span id="fxm"></span></h2><div id="pos"></div></section>
+ <section><h2>交易紀錄</h2><div class="log" id="log"><div class="empty">尚無紀錄。</div></div></section>
+</main>
+
+<script>
+/* ===== 顯示幣別設定：所有內部金額皆以 TWD 計算，rate = 1 TWD 可換多少該幣別 ===== */
+const CUR={TWD:{sym:"NT$",rate:1,dec:0},USD:{sym:"US$",rate:1/32,dec:2},JPY:{sym:"¥",rate:4.7,dec:0},EUR:{sym:"€",rate:1/35,dec:2},CNY:{sym:"CN¥",rate:.225,dec:2}};
+const DEFAULT_CAPITAL=100000, TPC=5, NC=120, MAINT=.2; /* TPC：每根K棒的tick數；MAINT：保證金剩餘20%時強制平倉 */
+const DT=1/252/TPC, SD=Math.sqrt(DT);
+const CLS={stock:"股票（低波動）",crypto:"加密貨幣",fx:"外匯",futures:"期貨"};
+const MODEL={cev:"CEV 模型",hj:"Heston 跳躍擴散",rs:"雙因子體制轉換",fut:"GARCH 標的＋期現價差"};
+const DEFS=[
+ {id:"TWT",name:"台穩電信",cls:"stock",model:"cev",p:120,mu:.05,sig:.16,gam:.5,dec:2,maxLev:5},
+ {id:"ANS",name:"安盛金控",cls:"stock",model:"cev",p:58,mu:.04,sig:.12,gam:.4,dec:2,maxLev:5},
+ {id:"BTC",name:"比特幣",cls:"crypto",model:"hj",p:2900000,mu:.2,v:.6,kap:3,th:.55,xi:1.4,rho:-.5,lam:40,pu:.45,e1:.05,e2:.07,dec:0,maxLev:10},
+ {id:"ETH",name:"以太幣",cls:"crypto",model:"hj",p:95000,mu:.2,v:.9,kap:3,th:.8,xi:1.8,rho:-.4,lam:50,pu:.45,e1:.06,e2:.08,dec:0,maxLev:10},
+ {id:"USD",name:"美元／台幣",cls:"fx",model:"rs",p:32,dec:3,maxLev:30},
+ {id:"JPY",name:"日圓／台幣",cls:"fx",model:"rs",p:.215,dec:4,maxLev:30},
+ {id:"TXF",name:"台指期（近月）",cls:"futures",model:"fut",p:22000,vol:.2,left:20,dec:0,maxLev:20},
+ {id:"OIL",name:"原油期貨",cls:"futures",model:"fut",p:2300,vol:.35,left:12,dec:1,maxLev:20}];
+const $=i=>document.getElementById(i);
+/* 修正「按鈕點了沒反應」：每個tick重繪會替換按鈕元素，導致 mousedown/mouseup 不在同一個元素而丟失 click。
+   ① 內容相同時不重寫。② 按下按鈕期間，暫不重寫含按鈕的容器。 */
+let pressing=false;
+for(const[P0,k]of[[Node.prototype,"textContent"],[Element.prototype,"innerHTML"]]){const d=Object.getOwnPropertyDescriptor(P0,k);Object.defineProperty(Element.prototype,k,{get(){return d.get.call(this)},set(v){v=String(v);if(d.get.call(this)===v)return;if(pressing&&this.querySelector("button"))return;d.set.call(this,v)},configurable:true})}
+document.addEventListener("pointerdown",()=>{pressing=true},true);
+["pointerup","pointercancel"].forEach(ev=>document.addEventListener(ev,()=>setTimeout(()=>{pressing=false},80),true));
+document.addEventListener("click",()=>{pressing=false},true);
+let xv=innerWidth<520?40:60,O=[],oid=0,yAuto=true,yOff=0,cur="TWD",A,byId,P,cash,startCap,realized,logs,pid,tab="stock",sel="TWT",side=1,lev=1,mTWD=0,paused=false,speed=1,timer;
+
+function gauss(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const fmt=(t,d)=>{const c=CUR[cur],v=t*c.rate,k=d==null?c.dec:Math.max(c.dec,d);return(v<0?"−":"")+c.sym+Math.abs(v).toLocaleString("en-US",{minimumFractionDigits:k,maximumFractionDigits:k})};
+const sg=t=>(t>=0?"+":"")+fmt(t);
+const pct=n=>(n>=0?"+":"−")+Math.abs(n*100).toFixed(2)+"%";
+const cl=n=>n>=0?"up":"down";const mc=r=>r<=.4?"warn":""; /* 台灣慣例：紅=漲／賺，綠=跌／賠 */
+const pstr=(a,p)=>a.cls==="fx"?p.toFixed(a.dec)+" TWD":fmt(p,a.dec);
+const lab=(a,p)=>{if(a.cls==="fx")return p.toFixed(a.dec);const v=p*CUR[cur].rate;return v.toLocaleString("en-US",{maximumFractionDigits:v>=1000?0:2})};
+
+/* ===== 價格模型 ===== */
+function step(a){
+ if(a.model==="cev"){ /* dS = μS dt + σ·S·(S/S0)^(γ-1) dW：γ<1 ⇒ 股價下跌時波動上升（槓桿效應） */
+  const s=a.sig*Math.pow(a.p/a.p0,a.gam-1);
+  a.p*=Math.exp((a.mu-.5*s*s)*DT+s*SD*gauss());
+ }else if(a.model==="hj"){ /* Heston 隨機波動度 + 雙指數跳躍；波動度均值回歸且 ξ 大 ⇒ 波動度聚集與厚尾 */
+  const z2=gauss(),z1=a.rho*z2+Math.sqrt(1-a.rho*a.rho)*gauss(),v=Math.min(Math.max(a.v,0),4);
+  const k=a.pu/(1-a.e1)+(1-a.pu)/(1+a.e2)-1;
+  let j=0;if(Math.random()<a.lam*DT)j=Math.random()<a.pu?-Math.log(Math.random())*a.e1:Math.log(Math.random())*a.e2;
+  a.p*=Math.exp((a.mu-.5*v-a.lam*k)*DT+Math.sqrt(v)*SD*z1+j);
+  a.v=Math.min(4,Math.max(0,a.v+a.kap*(a.th-v)*DT+a.xi*Math.sqrt(v)*SD*z2));
+ }else if(a.model==="fut"){ /* 標的指數以 GARCH(1,1) 產生波動聚集；期貨價=現貨×e^(持有成本×剩餘時間)，到期收斂、結算並換月 */
+  const t=a.vol*a.vol*DT,r=Math.sqrt(a.gv)*gauss();a.gv=t*.02+.08*r*r+.9*a.gv;
+  a.s*=Math.exp(.06*DT-.5*a.gv+r);a.left-=1/TPC;
+  if(a.left<=0){a.left=20;a.settle=true;a.p=a.s}else a.p=a.s*Math.exp(.04*a.left/252);
+}else{ /* 因子1：體制(平靜/動盪)決定均值回歸速度與波動；因子2：緩慢變動的長期錨點 z；對數匯率 x 向 shift+z 回歸 */
+  const R=a.reg?{k:8,s:.18}:{k:5,s:.06};
+  if(Math.random()<(a.reg?.02:.004)){a.reg^=1;a.shift=a.reg?(Math.random()<.5?-1:1)*(.03+Math.random()*.04):0}
+  a.z+=-.5*a.z*DT+.03*SD*gauss();
+  a.x+=R.k*(a.shift+a.z-a.x)*DT+R.s*SD*gauss();
+  a.p=a.p0*Math.exp(a.x);
+ }
+}
+function tickAsset(a){
+ step(a);const c=a.cur;
+ if(!c.n){c.o=c.h=c.l=a.p}
+ c.c=a.p;c.h=Math.max(c.h,a.p);c.l=Math.min(c.l,a.p);c.n++;
+ if(c.n>=TPC){a.cs.push({o:c.o,h:c.h,l:c.l,c:c.c});if(a.cs.length>NC)a.cs.shift();a.cur={n:0,o:a.p,h:a.p,l:a.p,c:a.p}}
+}
+
+/* ===== 帳戶 ===== */
+const eqOf=p=>p.margin+p.side*p.units*(byId[p.sym].p-p.entry);
+const liqP=p=>p.entry*(1+p.side*-(1-MAINT)/p.lev);
+function note(s){logs.unshift(s);logs.length=Math.min(logs.length,50)}
+function closePos(p,liq){
+ const e=Math.max(0,eqOf(p)),a=byId[p.sym];
+ cash+=e;realized+=e-p.margin;P=P.filter(x=>x!==p);
+ const g=e-p.margin,gs=`<b class="${cl(g)}">${sg(g)}</b>`; /* 紅=獲利、綠=虧損 */
+ note(liq?`⚠ 強制平倉：${a.name} ${p.side>0?"多":"空"} ×${p.lev}，剩餘 ${fmt(e)}，損益 ${gs}`:`平倉：${a.name} ${p.side>0?"多":"空"} ×${p.lev}，損益 ${gs}`);
+}
+function openPos(){
+ const a=byId[sel],m=Math.min(mTWD,cash);if(m<=0)return;
+ P.push({id:++pid,sym:sel,side,lev,margin:m,units:m*lev/a.p,entry:a.p});
+ cash-=m;note(`開倉：${a.name} ${side>0?"做多":"做空"} ×${lev}，保證金 ${fmt(m)}，成交價 ${pstr(a,a.p)}`);
+ mTWD=Math.min(mTWD,cash);syncMar();draw();
+}
+function game(){
+ A=DEFS.map(d=>({...d,p0:d.p,x:0,z:0,reg:0,shift:0,s:d.p,gv:(d.vol||0)**2*DT,cs:[],cur:{n:0}}));byId={};A.forEach(a=>byId[a.id]=a);
+ for(let i=0;i<NC*TPC;i++)A.forEach(tickAsset);
+ A.forEach(a=>a.base=a.p);
+ cash=startCap;P=[];O=[];oid=0;realized=0;logs=[];pid=0;mTWD=0;syncMar();draw();
+}
+function checkOrders(){O.slice().forEach(o=>{const a=byId[o.sym];if(!(o.cond==="le"?a.p<=o.tp:a.p>=o.tp))return;O=O.filter(x=>x!==o);
+ if(o.act==="close"){const ps=P.filter(p=>p.sym===o.sym);if(!ps.length){note(`自動單作廢：${a.name} 無持倉可平`);return}note(`自動單觸發：${a.name} 現價 ${pstr(a,a.p)}，平倉`);ps.forEach(p=>closePos(p,false))}
+ else{const m=Math.min(o.m,cash);if(m<=0){note(`自動單失敗：${a.name} 可用資金不足`);return}const sd=o.act==="buy"?1:-1;
+  P.push({id:++pid,sym:o.sym,side:sd,lev:o.lev,margin:m,units:m*o.lev/a.p,entry:a.p});cash-=m;note(`自動單成交：${a.name} ${sd>0?"做多":"做空"} ×${o.lev}，保證金 ${fmt(m)}，成交價 ${pstr(a,a.p)}`)}})}
+function tick(){
+ A.forEach(tickAsset);
+ A.forEach(a=>{if(a.settle){a.settle=false;P.filter(p=>p.sym===a.id).forEach(p=>{note(`期貨到期結算：${a.name}，結算價 ${pstr(a,a.p)}，合約已換月`);closePos(p,false)})}});
+ P.slice().forEach(p=>{if(eqOf(p)<=MAINT*p.margin)closePos(p,true)});checkOrders();
+ draw();
+}
+
+/* ===== 畫面 ===== */
+function ar(a){const cs=a.cs.concat(a.cur.n?[a.cur]:[]).slice(-xv);let lo=Math.min(...cs.map(c=>c.l)),hi=Math.max(...cs.map(c=>c.h));const pd=(hi-lo)*.06||hi*.01;return[lo-pd,hi+pd]}
+function candles(a){
+ const W=640,H=250,pr=64,pt=10,pb=10,cs=a.cs.concat(a.cur.n?[a.cur]:[]).slice(-xv);
+ let[lo,hi]=ar(a);
+ if(!yAuto){const h=a.p*a.ySpan,c=a.p*(1+yOff);lo=c-h;hi=c+h} /* 手動：以現價為中心，±ySpan */
+ const y=v=>pt+(hi-v)/(hi-lo)*(H-pt-pb),bw=(W-pr)/xv;let s="";
+ for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4;s+=`<line x1="0" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${W-pr+5}" y="${y(v)+3}">${lab(a,v)}</text>`}
+ s+=`<clipPath id="ycl"><rect x="0" y="0" width="${W-pr}" height="${H}"/></clipPath><g clip-path="url(#ycl)">`;
+ cs.forEach((c,i)=>{const x=i*bw+bw/2,k=c.c>=c.o?"u":"d",t=y(Math.max(c.o,c.c)),b=y(Math.min(c.o,c.c));
+  s+=`<g class="${k}"><line x1="${x}" x2="${x}" y1="${y(c.h)}" y2="${y(c.l)}" stroke-width="1.2"/><rect x="${x-bw*.32}" y="${t}" width="${bw*.64}" height="${Math.max(1,b-t)}" stroke-width="0"/></g>`});
+ P.filter(p=>p.sym===a.id).forEach(p=>{const ey=y(p.entry);if(ey>0&&ey<H)s+=`<line x1="0" x2="${W-pr}" y1="${ey}" y2="${ey}" stroke="var(--accent)" stroke-dasharray="4 3"/><text x="4" y="${ey-3}" style="fill:var(--accent)">${p.side>0?"多":"空"} 進場</text>`});
+ return s+"</g>";
+}
+function draw(){
+ const eq=P.reduce((s,p)=>s+eqOf(p),0),nw=cash+eq,pl=nw-startCap;
+ $("nw").textContent=fmt(nw);
+ $("pl").innerHTML=`<span class="${cl(pl)}">${sg(pl)}（${pct(pl/startCap)}）</span> <span class="mute" style="font-weight:400">相對起始資金</span>`;
+ $("cash").textContent=fmt(cash);$("used").textContent=fmt(P.reduce((s,p)=>s+p.margin,0));
+ $("real").innerHTML=`<span class="${cl(realized)}">${sg(realized)}</span>`;
+ $("tabs").innerHTML=Object.keys(CLS).map(k=>`<button class="btn ${k===tab?"on":""}" data-tab="${k}">${CLS[k]}</button>`).join("");
+ $("list").innerHTML=A.filter(a=>a.cls===tab).map(a=>{const c=a.p/a.base-1;
+  return `<button class="row ${a.id===sel?"sel":""}" data-sel="${a.id}"><div><b>${a.name}</b> <span class="mute">${a.id}</span><small>${MODEL[a.model]}${a.model==="rs"?" · "+(a.reg?"動盪體制":"平靜體制"):""}</small></div><div class="num">${pstr(a,a.p)}</div><div class="chg num ${cl(c)}">${pct(c)}</div></button>`}).join("");
+ const a=byId[sel];
+ $("ct").textContent=`${a.name}（${a.id}）K線`;$("cp").textContent=pstr(a,a.p);
+ $("minfo").textContent=`${MODEL[a.model]} · `+(a.model==="hj"?`目前年化波動率 ${(Math.sqrt(a.v)*100).toFixed(0)}%`:a.model==="rs"?(a.reg?"動盪體制：高波動、均值目標偏移":"平靜體制：低波動、向均值回歸"):a.model==="fut"?`距到期 ${a.left.toFixed(1)} 日 · 標的指數 ${a.s.toFixed(0)} · 期現價差 ${((a.p/a.s-1)*100).toFixed(2)}% · 年化波動率 ${(Math.sqrt(a.gv/DT)*100).toFixed(0)}%（到期自動結算換月）`:`年化波動率約 ${(a.sig*Math.pow(a.p/a.p0,a.gam-1)*100).toFixed(1)}%（股價越低波動越高）`)+` · 每根K棒＝1個交易日`;
+ $("chart").innerHTML=candles(a);
+ const m=Math.min(mTWD,cash),lq=a.p*(1+side*-(1-MAINT)/lev);
+ $("prev").textContent=`名目部位 ${fmt(m*lev)} · 約 ${(m*lev/a.p).toFixed(a.cls==="crypto"?5:2)} 單位 · 強平價 ${pstr(a,lq)}`;
+ $("open").disabled=!(m>0)||mTWD>cash+1e-9;$("open").textContent=`${side>0?"做多":"做空"} ×${lev} 開倉`;
+ $("pos").innerHTML=P.length?P.map(p=>{const q=byId[p.sym],e=eqOf(p),g=e-p.margin;
+  return `<div class="pos"><div><b>${q.name}</b> ${p.side>0?"多":"空"} ×${p.lev}<div class="mute">進場 ${pstr(q,p.entry)} · 強平 ${pstr(q,liqP(p))}</div><div class="mute">維持率 <span class="num ${mc(e/p.margin)}">${(e/p.margin*100).toFixed(1)}%</span>（強平線 ${MAINT*100}%）</div></div><div style="text-align:right"><div class="num ${cl(g)}">${sg(g)}（${pct(g/p.margin)}）</div><button class="btn" data-close="${p.id}" style="margin-top:4px;padding:4px 10px">平倉</button></div></div>`}).join(""):`<div class="empty">目前沒有持倉。選擇資產、設定槓桿與保證金後開倉。</div>`;
+ const fx=P.filter(p=>byId[p.sym].cls==="fx"),fm=fx.reduce((s,p)=>s+p.margin,0),fr=fm?fx.reduce((s,p)=>s+eqOf(p),0)/fm:0;
+ $("fxm").innerHTML=fm?`外匯保證金維持率 <b class="num ${mc(fr)}">${(fr*100).toFixed(1)}%</b> <span class="mute">（強平線 ${MAINT*100}%）</span>`:`<span class="mute">外匯保證金維持率 —</span>`;
+ $("ylab").textContent=yAuto?"Y軸：自動":`Y軸：手動 ±${(a.ySpan*100).toFixed(1)}%`;
+ $("pcnt").textContent=P.length?`(${P.length})`:"";$("xlab").textContent=`X軸：顯示 ${xv} 根K棒`;$("oasset").textContent=a.name;
+ $("ords").innerHTML=O.length?O.map(o=>{const q=byId[o.sym];return `<div class="pos"><div><b>${q.name}</b> ${o.cond==="le"?"價格 ≤":"價格 ≥"} <span class="num">${pstr(q,o.tp)}</span><div class="mute">→ ${ACT[o.act]}${o.act==="close"?"":`（保證金 ${fmt(o.m)}，×${o.lev}）`} · 現價 ${pstr(q,q.p)}</div></div><div style="text-align:right"><button class="btn" data-oc="${o.id}" style="padding:4px 10px">取消</button></div></div>`}).join(""):`<div class="empty">目前沒有自動單。</div>`;
+ if(logs.length)$("log").innerHTML=logs.map(l=>`<div>${l}</div>`).join("");else $("log").innerHTML=`<div class="empty">尚無紀錄。</div>`;
+ $("pause").textContent=paused?"▶":"⏸";$("speed").textContent="⏩ "+speed+"×";
+}
+function syncMar(){$("mar").value=mTWD?(mTWD*CUR[cur].rate).toFixed(CUR[cur].dec):""}
+function syncLev(){const a=byId[sel];$("lev").max=a.maxLev;lev=Math.min(lev,a.maxLev);$("lev").value=lev;$("levv").textContent="×"+lev+"（上限 ×"+a.maxLev+"）"}
+function syncCap(){$("cap").value=(startCap*CUR[cur].rate).toFixed(CUR[cur].dec)}
+function restart(){clearInterval(timer);if(!paused)timer=setInterval(tick,300/speed)}
+
+document.addEventListener("click",e=>{
+ const t=e.target.closest("[data-tab]"),s=e.target.closest("[data-sel]"),c=e.target.closest("[data-close]"),p=e.target.closest("[data-pct]");
+ if(t){tab=t.dataset.tab;sel=A.find(a=>a.cls===tab).id;yAuto=true;yOff=0;syncLev()}
+ else if(s){sel=s.dataset.sel;yAuto=true;yOff=0;syncLev()}
+ else if(c){const q=P.find(x=>x.id==c.dataset.close);if(q)closePos(q,false)}
+ else if(p){mTWD=cash*+p.dataset.pct;syncMar()}
+ draw();
+});
+$("long").onclick=()=>{side=1;$("long").classList.add("on");$("short").classList.remove("on");draw()};
+$("short").onclick=()=>{side=-1;$("short").classList.add("on");$("long").classList.remove("on");draw()};
+$("lev").oninput=e=>{lev=+e.target.value;syncLev();draw()};
+$("mar").oninput=e=>{mTWD=Math.max(0,(+e.target.value||0)/CUR[cur].rate);draw()};
+$("open").onclick=openPos;
+function yz(f){const a=byId[sel];if(yAuto){const[lo,hi]=ar(a);a.ySpan=(hi-lo)/2/a.p;yOff=((lo+hi)/2-a.p)/a.p;yAuto=false}a.ySpan=Math.min(.9,Math.max(.001,a.ySpan*f));draw()}
+function yp(d){const a=byId[sel];if(yAuto)yz(1);yOff+=d*a.ySpan;draw()}
+$("yin").onclick=()=>yz(.7);$("yout").onclick=()=>yz(1.43);$("yup").onclick=()=>yp(.3);$("ydn").onclick=()=>yp(-.3);
+$("yauto").onclick=()=>{yAuto=true;yOff=0;draw()};
+$("chart").addEventListener("wheel",e=>{e.preventDefault();if(e.shiftKey)xz((e.deltaX||e.deltaY)<0?.85:1.18);else yz(e.deltaY<0?.85:1.18)},{passive:false});
+function xz(f){xv=Math.min(NC,Math.max(20,Math.round(xv*f)));draw()}
+$("xin").onclick=()=>xz(.7);$("xout").onclick=()=>xz(1.43);$("xauto").onclick=()=>{xv=innerWidth<520?40:60;draw()};
+const ACT={buy:"買進開多",sell:"賣出開空",close:"平倉全部持倉"},orate=a=>a.cls==="fx"?1:CUR[cur].rate;
+$("oact").onchange=e=>{$("ocond").value=e.target.value==="buy"?"le":"ge"};
+$("ocur").onclick=()=>{const a=byId[sel];$("otp").value=(a.p*orate(a)).toFixed(a.cls==="fx"?a.dec:Math.max(CUR[cur].dec,a.dec))};
+$("oadd").onclick=()=>{const a=byId[sel],tp=(+$("otp").value||0)/orate(a),act=$("oact").value,cond=$("ocond").value;if(tp<=0)return;
+ if(act!=="close"&&!(mTWD>0)){note("請先在上方設定保證金");draw();return}
+ O.push({id:++oid,sym:sel,act,cond,tp,m:mTWD,lev});note(`新增自動單：${a.name} 價格${cond==="le"?"≤":"≥"} ${pstr(a,tp)} → ${ACT[act]}`);draw()};
+document.addEventListener("click",e=>{const x=e.target.closest("[data-oc]");if(x){O=O.filter(o=>o.id!=x.dataset.oc);draw()}});
+$("cur").innerHTML=Object.keys(CUR).map(k=>`<option>${k}</option>`).join("");
+$("cur").onchange=e=>{cur=e.target.value;syncMar();syncCap();draw()};
+$("restart").onclick=()=>{const v=(+$("cap").value||0)/CUR[cur].rate;if(v>0)startCap=v;syncCap();game()};
+$("pause").onclick=()=>{paused=!paused;restart();draw()};
+new ResizeObserver(()=>{document.querySelector("main").style.paddingBottom=($("posbar").offsetHeight+14)+"px"}).observe($("posbar"));
+$("postg").onclick=()=>$("posbar").classList.toggle("min");
+const SPD=[.5,1,2,4];$("speed").onclick=()=>{speed=SPD[(SPD.indexOf(speed)+1)%SPD.length];restart();draw()};
+startCap=DEFAULT_CAPITAL;syncCap();game();syncLev();draw();restart();
+</script>
+</body>
+</html>

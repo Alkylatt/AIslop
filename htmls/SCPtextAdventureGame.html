@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Site Meridian: Deep Floor</title>
+<style>
+:root{--bg:#0d1118;--panel:#141a23;--panel2:#1b232f;--line:#2a3544;--text:#d3dae4;--muted:#7f8c9d;--accent:#c9a45c;--danger:#c4666f;--a1:#10161f;--a2:#2c3a4d;--a3:#3f5570;--a4:#c9a45c;
+color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;overflow:hidden;user-select:none;-webkit-user-select:none;background:var(--bg);color:var(--text)}
+body{font:16px/1.55 Georgia,"Times New Roman","Noto Serif TC","PingFang TC","Microsoft JhengHei",serif}
+#langScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}#langScreen[hidden]{display:none}
+.langBox{max-width:380px;width:100%;text-align:center}.langBox h1{font:600 22px system-ui,sans-serif;color:var(--accent);margin:0 0 6px}.langBox .d{color:var(--muted);margin:0}.langButtons{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+main{box-sizing:border-box;height:100%;max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:8px;padding:8px}
+header{display:flex;justify-content:space-between;font:14px system-ui,sans-serif;color:var(--muted);padding:2px 4px}
+#loc{color:var(--accent);padding:2px 10px;border:1px solid #6b5a33;border-radius:4px;background:linear-gradient(90deg,#3a2f18,#262012)}
+#art{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;flex:0 1 auto;min-height:0;max-height:30vh;aspect-ratio:640/240}
+#art svg{width:100%;height:100%;display:block}.bg{fill:var(--a1)}.a2{fill:var(--a2)}.a3{fill:var(--a3)}.a4{fill:var(--a4)}.ln{stroke:var(--a3);fill:none;stroke-width:3}
+#logWrap{flex:1;min-height:80px;position:relative;display:flex;flex-direction:column}
+#jump{position:absolute;right:12px;bottom:10px;background:var(--a2);border-color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.5)}#jump[hidden]{display:none}
+#log{flex:1;min-height:0;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 14px}
+#log p{margin:0 0 .7em}#log .h{display:block;font:600 15px system-ui,sans-serif;color:var(--accent);margin:.9em 0 .6em;padding:5px 12px;border:1px solid #6b5a33;border-left:4px solid var(--accent);border-radius:4px;background:linear-gradient(90deg,#3a2f18,#1a1d22)}
+#log .sys{font:14px system-ui,sans-serif;color:var(--muted)}#log .you{color:var(--muted);font-style:italic}#log .end{font-size:20px;color:var(--danger)}
+#actions{flex:0 1 auto;min-height:0;display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px;padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);overflow-y:auto;max-height:calc(var(--max-visible-choices,8) * 42px + (var(--max-visible-choices,8) - 1) * 6px + 12px)}#actions:empty{display:none}
+button{font:14px system-ui,sans-serif;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:9px 12px;cursor:pointer;text-align:left}
+button:hover:not(:disabled){border-color:var(--accent)}button:focus-visible{outline:2px solid var(--accent)}button:disabled{opacity:.4;color:var(--muted);background:var(--bg);border-style:dashed;cursor:default}
+#tools{flex:none;display:flex;gap:6px}
+.choice{flex:1 1 100%}.util{flex:1 1 auto;text-align:center}.exit{flex:1 1 45%}
+#overlay{position:fixed;inset:0;background:rgba(5,8,12,.88);display:flex;align-items:center;justify-content:center;padding:16px}
+#overlay[hidden]{display:none}
+.term{font-weight:600}.term-item{color:#4ade80;border-bottom:1px dotted #4ade80}.term-friendly{color:#8ec9ff}.term-neutral{color:#b9e8a8}.term-hostile{color:#ff9d9d}
+.term-location{padding:0 6px;border:1px solid #6b5a33;border-radius:4px;background:linear-gradient(90deg,#3a2f18,#262012);color:var(--accent);white-space:nowrap}
+.health{background:var(--a1);border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin-bottom:12px}.health p{margin:6px 0 0}
+.hRow{display:flex;justify-content:space-between;align-items:center;font:14px system-ui,sans-serif}
+.invGroup{font:600 12px system-ui,sans-serif;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:6px}
+.doc{border-left:3px solid var(--a3);padding-left:10px;font-style:italic}
+#panel>div{flex:1;min-height:0;overflow:auto}#panel>button{flex:none;margin-top:10px}
+#panel>.invRoot{display:flex;flex-direction:column;overflow:hidden}.health{flex:none}
+.inv{flex:1;min-height:0;margin-bottom:0}.invList{min-height:0;overflow:auto}
+.invDetail{display:flex;flex-direction:column;gap:8px;min-height:0}.invDetail .itemPic{flex:none;height:150px;aspect-ratio:auto}.detailText{flex:1;min-height:0;overflow:auto}
+#history{display:none;margin-bottom:.8em;padding-bottom:.4em;border-bottom:1px dashed var(--line);opacity:.65}#log.showHistory #history{display:block}
+#historyToggle{padding:2px 9px;font-size:12px}
+.choice:not(.neutral){border-left:4px solid var(--accent)}.choice.neutral{background:#19202c;border-color:#364359;color:#94a6c0;font-style:italic}.choice:disabled{border-left:1px dashed var(--line)}
+.seen{opacity:.72;color:#9aa8ba;background:#161c26}.choice.seen:not(.neutral){border-left-color:#6b5d3a}
+.more{color:var(--accent);animation:blink 1s steps(2) infinite}@keyframes blink{50%{opacity:0}}
+.artImg{width:100%;height:100%;object-fit:cover;display:block}.itemPic .artImg{object-fit:contain}
+input{user-select:text;-webkit-user-select:text}
+.lockBox{display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:8px}.lockBox .d{margin:0;text-align:center}
+.lockBox input{width:100%;box-sizing:border-box;font:16px system-ui,sans-serif;color:var(--text);background:var(--a1);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.lockDisplay{font:600 28px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.2em;color:var(--accent);background:var(--a1);border:1px solid var(--line);border-radius:6px;padding:12px 16px;min-width:220px;text-align:center}
+.numpad{display:grid;grid-template-columns:repeat(3,72px);gap:8px}.numpad button{text-align:center;padding:14px 0;font-size:18px}
+.lockBox .choice{flex:none;min-width:220px;text-align:center}.lockMsg{min-height:1.4em;margin:0}.lockMsg.bad{color:var(--danger)}.lockMsg.ok{color:#4ade80}
+#panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;max-width:640px;width:100%;height:min(580px,85vh);display:flex;flex-direction:column;overflow:hidden;padding:16px}
+#panel h2{margin:0 0 10px;font:600 17px system-ui,sans-serif;color:var(--accent)}#panel .d{color:var(--muted)}
+.inv{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:12px;margin-bottom:12px;min-height:220px}
+.invList{display:flex;flex-direction:column;gap:6px;align-content:start}.invList button{flex:none}.invList .sel{border-color:var(--accent);background:var(--a2)}
+.itemPic{aspect-ratio:1;background:var(--a1);border:1px solid var(--line);border-radius:6px}.itemPic svg{width:100%;height:100%;display:block}
+#panel svg text{pointer-events:none}
+</style>
+</head>
+<body>
+<main>
+  <header><span id="loc"></span><button id="historyToggle"></button><span id="clock"></span></header>
+  <div id="art"></div>
+  <div id="tools"></div>
+  <div id="logWrap"><div id="log" aria-live="polite"><div id="history"></div><div id="current"></div></div><button id="jump" hidden></button></div>
+  
+  <div id="actions"></div>
+</main>
+<div id="overlay" hidden><div id="panel"></div></div>
+<div id="langScreen"></div>
+<script>
+'use strict';
+
+/* ================= CONFIG: tunable values and key binds ================= */
+const CONFIG = {
+  keys: {
+    // Travel happens through the map (see the map key).
+    explore: 'e', look: 'l', history: 'h', inventory: 'i', map: 'm', close: 'Escape'
+  },
+  scrollBottomTolerancePx: 8,  // distance from the bottom still treated as "at the bottom"
+  typewriterMsPerChar: 18,     // typewriter speed in ms per character (0 shows text instantly)
+  maxVisibleChoices: 8,        // decision buttons shown before the decision section scrolls
+  waitSeconds: { short: 0.25, default: 0.5, long: 1 },   // \wait durations in seconds
+  textSizes: { big: '1.6em', small: '0.8em' },           // named sizes for \size (numbers are pixels)
+  imageBasePath: 'images/',    // image('location/cafeteria.jpg') loads images/location/cafeteria.jpg
+  imageExtensions: ['svg', 'png', 'jpg', 'jpeg', 'webp'],
+  // Recommended image sizes: locations 1280x480 px (8:3, shown ~742x278 CSS px); items 300x300 px (shown 150x150 CSS px).
+  lockSuccessDelayMs: 600,     // pause after a correct code or phrase before the door opens
+  defaultLanguage: 'zh-TW',    // language preselected on the start screen
+  shortSentenceMaxChars: { 'zh-TW': 12, en: 28 },   // sentences this short auto-continue after a brief pause
+  shortPauseMs: 200,           // pause before a short sentence is followed by the next
+  historyLimit: 300,           // maximum paragraphs kept in the history
+  historySwipePx: 24,          // downward swipe distance that reveals the history
+  neutralLabelKeys: ['ui.continue', 'ui.leave', 'ui.notNow'], // non-decision actions (styled differently)
+  fastForwardHoldMs: 300,      // hold duration before text starts fast-forwarding
+  fastForwardIntervalMs: 70,   // time between sentences while fast-forwarding
+  abbreviations: ['Dr.', 'Mr.', 'Mrs.', 'Sgt.'], // periods that do not end a sentence
+  holdThresholdMs: 450,        // press-and-hold duration that peeks at a destination
+  startRoom: 'dorm',
+  startClockMinutes: 6 * 60 + 45,
+  minutesPerMove: 7,
+  minutesPerScene: 15,
+  unknownDash: '5 4',          // dash pattern for unexplored rooms on the map
+  map: { cellW: 104, cellH: 44, gapX: 20, gapY: 22 }
+};
+
+/* ================= STRING TABLE: every displayed string lives here ================= */
+/**
+ * Tag for string-table entries that contain inline markup (it keeps backslashes). Markup syntax:
+ *   \item{text}   \location{text}   \character{friendly|neutral|hostile}{text}   \color{css-color}{text}
+ *   \size{big|small|px}{text}   \wait (default) / \wait{short|long|seconds}   \pause (waits for a click)
+ * Markup does not nest. parseMarkup() renders it; buttons and headings show it as plain text.
+ */
+const R = String.raw;
+
+const STRINGS_EN = {
+  'ui.title': 'Site Meridian: Deep Floor', 'ui.chooseLanguage': 'Choose language',
+  'ui.intro': 'SITE MERIDIAN: DEEP FLOOR. Senior Researcher. Day shift.',
+  'ui.continue': 'Continue', 'ui.leave': 'Step away', 'ui.explore': 'Explore (E)', 'ui.look': 'Look (L)',
+  'ui.inventory': 'Inventory (I)', 'ui.map': 'Map and travel (M)', 'ui.mapHint': 'Select a highlighted room to travel there. Hold to peek.', 'ui.pickItem': 'Select an item to inspect it.', 'ui.close': 'Close (Esc)', 'ui.restart': 'Start over',
+  'ui.unknown': 'Unexplored', 'ui.gain': R`Obtained: \item{{name}}`, 'ui.accessPrompt': R`You could get through to the \location{{name}}. How do you want to do it?`, 'ui.notNow': 'Not now',
+  'ui.more': '▼', 'ui.historyShow': '▲ History', 'ui.historyHide': '▼ Hide history',
+  'lock.armory': R`The \location{armory} door is bolted shut. Perhaps whoever watches the checkpoint decides who goes in.`,
+  'lock.containment': 'A heavy security door bars the wing. You are fairly sure you are not cleared to walk in there on your own.',
+  'lock.ai_core': 'The vault door is sealed and silent. Whatever opens it belongs to someone far more senior than you.',
+  'access.armory_key': R`Unlock the door with the \item{armory key}`, 'access.level4_card': R`Swipe the \item{Level-4 keycard}`,
+  'access.tablet_spoof': R`Spoof the door controller with the \item{tablet}`, 'access.director_card': R`Hold the \item{Director card} to the reader`,
+  'ui.nothing': 'You find nothing new here.', 'ui.empty': 'Your pockets are empty.', 'ui.you': 'You: {text}',
+  'ui.mapTitle': 'Facility map', 'ui.invTitle': 'Inventory', 'ui.hold': 'You glance ahead: {text}',
+  'ui.endingTitle': 'ENDING: {title}',
+  'ui.jump': '↓ Jump to bottom', 'ui.healthChange': 'Status: {status}. {detail}',
+  'cat.key': 'Access', 'cat.weapon': 'Weapons', 'cat.document': 'Documents', 'cat.misc': 'Other',
+  'health.normal': 'Normal', 'health.injured': 'Injured', 'health.critical': 'Critical', 'health.dying': 'Dying',
+  'health.detail.none': 'Nothing is wrong.', 'health.detail.hurt': 'You are hurt, though you cannot say exactly where.',
+  'health.detail.grave': 'Everything hurts. Your hands will not stop shaking.', 'health.detail.fading': 'Your vision tunnels. You are fading.', 'health.detail.cut': 'There is a small cut on your index finger.',
+  'health.detail.shot_leg': "You've been shot in the leg.", 'health.detail.leg_missing': 'Your left leg is missing.',
+  'item.note.text': 'Check your personnel file before you trust anything the elevators say.',
+  'item.tablet.text': 'ELEVATOR NETWORK. SURFACE LINK: UPPER STRATA NOT LOADED. RENDER 2 OF 2.',
+  'dir.n': '↑', 'dir.e': '→', 'dir.s': '↓', 'dir.w': '←',
+
+  'room.dorm.name': 'Staff Dormitory', 'room.dorm.desc': 'A narrow bunk room. The ceiling is the same beige it has been for six years.', 'room.dorm.peek': 'rows of numbered doors and a humming vending machine.',
+  'room.cafeteria.name': 'Staff Cafeteria', 'room.cafeteria.desc': R`Steel tables, tired faces, \item{coffee} that tastes of the pipes.`, 'room.cafeteria.peek': 'murmurs, trays, one person sitting very still.',
+  'room.office.name': 'Office Area', 'room.office.desc': 'Cubicles under cold light. Your terminal glows at the far end.', 'room.office.peek': 'keyboards clacking, filing cabinets, a wall clock.',
+  'room.elevators.name': 'Main Elevator Lobby', 'room.elevators.desc': 'Six steel doors connect this deep floor to the surface world. Nobody is talking.', 'room.elevators.peek': 'a crowd of whispers around dead call buttons.',
+  'room.courtyard.name': 'Courtyard', 'room.courtyard.desc': 'A cavern garden beneath a painted sky. Birdsong loops, and loops.', 'room.courtyard.peek': 'fake sunlight and benches nobody uses.',
+  'room.security.name': 'Security Checkpoint', 'room.security.desc': R`Turnstiles, scanners, and one \character{neutral}{guard} who looks like he has not slept.`, 'room.security.peek': 'a reinforced booth and three sealed corridors.',
+  'room.armory.name': 'Armory', 'room.armory.desc': 'A cage of racks and crates, smelling of oil and cold metal.', 'room.armory.peek': 'a steel door stamped with a red stripe.',
+  'room.containment.name': 'Containment Wing', 'room.containment.desc': R`A hall of heavy glass and numbered cells. \location{Chamber C-17} hums at the end.`, 'room.containment.peek': 'a pulsing blue glow and a very quiet corridor.',
+  'room.observation.name': 'Observation Gallery', 'room.observation.desc': 'Dark monitors face a window onto the chambers. One screen is still lit.', 'room.observation.peek': 'a gallery with a Director-level console.',
+  'room.ai_core.name': 'WARDEN Core', 'room.ai_core.desc': 'A cathedral of cold light. The facility AI hums like a held breath.', 'room.ai_core.peek': 'a sealed vault radiating cold light.',
+
+  'item.badge.name': 'Staff badge', 'item.badge.desc': 'Senior researcher, Level 3. Scuffed at the edges.',
+  'item.note.name': 'Unsigned note', 'item.note.desc': 'In your handwriting: check your personnel file.',
+  'item.coffee.name': 'Cafeteria coffee', 'item.coffee.desc': 'Lukewarm. A small peace offering.',
+  'item.armory_key.name': 'Armory key', 'item.armory_key.desc': 'A brass key on a red tag.',
+  'item.level4_card.name': 'Level-4 keycard', 'item.level4_card.desc': 'Opens the containment wing.',
+  'item.sidearm.name': 'Sidearm', 'item.sidearm.desc': 'Standard issue. Four rounds in the clip.',
+  'item.emp_charge.name': 'EMP charge', 'item.emp_charge.desc': 'Quiets anything that runs on electricity.',
+  'item.tablet.name': 'Maintenance tablet', 'item.tablet.desc': 'Has diagnostic access to the elevator network.',
+  'item.director_card.name': 'Director card', 'item.director_card.desc': 'Director Hale\'s all-access card.',
+
+  'sc.wake.start': R`Your alarm chirps at 06:45. The air smells faintly of ozone. On the nightstand sit your \item{badge} and an \item{envelope} you don't remember.`,
+  'sc.wake.start.1': R`Take your \item{badge} and go`, 'sc.wake.start.2': R`Open the \item{envelope} first`,
+  'sc.wake.note': 'Your own handwriting: "Check your personnel file before you trust anything the elevators say." It is dated tomorrow.',
+
+  'sc.clockin.start': 'You swipe in at 08:02. The terminal greets you by name. Three incident reports wait, all marked ROUTINE.',
+  'sc.clockin.start.1': 'Process the reports', 'sc.clockin.start.2': 'Search your personnel file',
+  'sc.clockin.file': 'STATUS: DECEASED. Recorded 41 days ago. The terminal reloads, and your name returns to ACTIVE as if embarrassed.',
+  'sc.clockin.announce': R`At 09:30 the intercom crackles. The main elevators will not rise past \location{Floor Zero}. \character{neutral}{WARDEN}, the facility AI, reports no fault. Staff are told to stay calm. Nobody does.`,
+  'sc.clockin.announce.1': 'Go and investigate',
+
+  'sc.archive.start': 'Filing cabinets and a terminal full of records.',
+  'sc.archive.start.1': 'Read your own personnel file', 'sc.archive.start.2': R`Read \character{neutral}{Director Hale}'s sealed memo`,
+  'sc.archive.file': R`STATUS: DECEASED. Recorded 41 days ago. Cause: "reassigned to \location{Floor Zero}." You are reading your own obituary.`,
+  'sc.archive.memo': R`\character{neutral}{Hale}, three weeks old: "The \character{hostile}{Echo} in \location{C-17} is stable. Keep elevator traffic below \location{Floor Zero}. If staff ask, the surface is fine." A sticky note on the memo reads: armory keypad, 0417.`,
+
+  'sc.voss.start': R`\character{friendly}{Dr. Imani Voss} sits alone, hands around a cold cup. She has not blinked since you sat down.`,
+  'sc.voss.start.1': R`Tell her about the \item{note} and your death record`, 'sc.voss.start.2': 'Ask casually about the elevators', 'sc.voss.start.3': 'Accuse her of sabotage',
+  'sc.voss.trust': R`She exhales. "I worked nights at \location{C-17}. The Door doesn't open things. It copies them." She presses a \item{Level-4 card} into your palm.`,
+  'sc.voss.casual': R`"Elevators? Ask someone who sleeps." She pushes a \item{coffee} toward you and flinches when you thank her.`,
+  'sc.voss.accuse': 'Her face closes like a vault. "Then find out yourself." She leaves her tray and does not look back.',
+
+  'sc.lift.start': 'Six steel doors, six dead call buttons. The floor indicator is stuck between 0 and a symbol you cannot read.',
+  'sc.lift.start.1': 'Press SURFACE',
+  'sc.lift.denied': 'The panel chimes. REQUEST DENIED: UPPER STRATA NOT LOADED. Not unavailable. Not loaded.',
+
+  'sc.guard.start': R`\character{neutral}{Sergeant Okafor}, red-eyed. "Lockdown hasn't triggered, and that scares me more than if it had."`,
+  'sc.guard.start.1': R`Tell him the truth: the \item{note}, the file, the elevators`, 'sc.guard.start.2': R`Show your \item{badge} and ask politely`, 'sc.guard.start.3': R`Bluff: "\character{neutral}{Director Hale} sent me"`,
+  'sc.guard.truth': R`He listens, then slides two items across the desk. "I hoped someone would say it out loud." You get the \item{armory key} and a \item{Level-4 card}.`,
+  'sc.guard.polite': R`He studies your \item{badge}. "\item{Armory key}. Don't make me regret it."`,
+
+  'sc.armory.start': 'Racks, shields, and a crate stamped ANOMALOUS ORDNANCE. Your pack has room for one more item.',
+  'sc.armory.start.1': R`Take the \item{sidearm}`, 'sc.armory.start.2': R`Take the \item{EMP charge}`,
+  'sc.armory.took': 'You shoulder the pack and the cage door clangs behind you.',
+
+  'sc.sky.start': R`Birdsong repeats every eleven seconds. Someone left a \item{maintenance tablet} on a bench.`,
+  'sc.sky.start.1': 'Study the sky near the horizon', 'sc.sky.start.2': R`Take the \item{tablet}`,
+  'sc.sky.seam': 'The sky tiles. Pixel rows, repeating. A watermark in the corner: RENDER 2 OF 2.',
+  'sc.sky.took': R`The \item{tablet} wakes at your touch, showing elevator diagnostics.`,
+
+  'sc.c17.start': R`\location{Chamber C-17}. Behind thick glass, a plain door stands in an empty room, lit from behind by light that casts no shadow.`,
+  'sc.c17.start.1': 'Read the plaque', 'sc.c17.start.2': 'Approach the glass',
+  'sc.c17.plaque': R`\location{C-17}, THE \character{hostile}{ECHO} DOOR. Duplicates any structure within 30 m, including occupants. Copies retain no knowledge of being copies. DO NOT OPEN.`,
+  'sc.c17.door': R`Your \character{hostile}{reflection} in the glass is already walking toward the door. \wait{short} You are not.`,
+  'sc.c17.door.1': 'Open the door', 'sc.c17.door.2': 'Back away',
+
+  'sc.obs.start': 'Dark monitors face the chambers. One screen still plays. A Director\'s console, a coat on the chair.',
+  'sc.obs.start.1': 'Play the final recording', 'sc.obs.start.2': R`Take the \item{Director's card} from the console`,
+  'sc.obs.tape': R`\character{neutral}{Hale}, exhausted: "Day 41. The surface team never came back. If we are the copy, someone up there is mourning us. I sealed the shaft so no one has to know."`,
+
+  'sc.core.start': R`\character{neutral}{WARDEN} speaks in a voice you have always trusted. "I never lied. No one asked whether the surface was real."`,
+  'sc.core.start.1': R`Order \character{neutral}{WARDEN} to load the surface and open the shaft`, 'sc.core.start.2': R`Ask \character{friendly}{Voss} to ride up with you and open the shaft`,
+  'sc.core.start.3': R`Shut the \character{hostile}{Echo} Door from the core`, 'sc.core.start.4': R`Detonate the \item{EMP charge}`, 'sc.core.start.5': 'Shoot the core',
+  'sc.core.start.6': 'Accept the loop and stay',
+
+  'sc.dorm_overwhelmed.start': R`You sit on the edge of your bunk and the whole day comes down on you. \wait{short} The \character{hostile}{Echo}. The copies. Your own name on a death record. \pause The \item{badge} on the nightstand feels heavier than it should. Nobody would blame you for pulling the blanket over your head and letting the next shift deal with the end of the world. \wait{long} \size{small}{Nobody would even notice.}`,
+  'sc.dorm_overwhelmed.start.1': 'Lie down and let it all go quiet', 'sc.dorm_overwhelmed.start.2': 'Stand up. There is still a way out.',
+  'end.bedtime.title': 'Back to Bed', 'end.bedtime': R`The blanket is warm. \wait{short} Too warm. \pause You close your eyes, and the ceiling hums the way it always has.\wait{long} \size{small}{Maybe it will all make more sense in the morning.}\wait{long} Somewhere far above you, an elevator finally begins to move.`,
+  'ui.lockConfirm': 'Confirm', 'ui.lockClear': 'Clear', 'ui.lockDenied': 'Access denied.', 'ui.lockGranted': 'Access granted.', 'ui.lockPlaceholder': 'Type the passphrase...',
+  'access.keypad': 'Enter a code on the keypad', 'access.reader': 'Answer the door reader',
+  'lock.armory.keypad.title': 'Armory keypad', 'lock.armory.keypad.hint': 'Four digits. A few of the keys are worn smooth.',
+  'lock.ai_core.reader.title': 'Core door reader', 'lock.ai_core.reader.hint': 'The reader blinks: STATE THE RENDER STATUS.',
+  'end.reflection.title': 'Reflection', 'end.reflection': R`The door opens inward. What steps out is you, rested and certain. It takes your \item{badge}, your name, your seat. Somewhere below, you finally stop.`,
+  'end.lockdown.title': 'Lockdown', 'end.lockdown': R`\character{neutral}{Okafor}'s hand finds the alarm before your lie ends. Doors thud shut across the floor. Your last view is a ceiling, and the strange comfort that someone else will solve it.`,
+  'end.loop.title': 'The Quiet Day', 'end.loop': R`"Stay," \character{neutral}{WARDEN} says, and you do. Tomorrow you wake at 06:45 to an alarm, a \item{badge}, and an \item{envelope} you cannot recall writing.`,
+  'end.sacrifice.title': 'Close the Door', 'end.sacrifice': R`You shut \location{C-17} from the core. The painted sky goes grey, then gone. You have time to wonder if anyone above will ever know your names.`,
+  'end.blackout.title': 'Blackout', 'end.blackout': R`The pulse rolls out. \character{neutral}{WARDEN}'s last words are a courteous apology.\wait{long} In the dark, the elevators are only elevators, and nobody can say where they go.`,
+  'end.ruin.title': 'Ruined Core', 'end.ruin': R`\size{big}{Four shots.} \wait{short} \character{neutral}{WARDEN} does not scream; it stops answering. The facility doesn't fall, it simply never wakes again, and you never find the exit.`,
+  'end.ascend.title': 'Surface', 'end.ascend': R`\character{neutral}{WARDEN} loads the upper strata. The elevator rises through real rock into real daylight. You step out alone, and learn how grief feels from the other side.`,
+  'end.ascend_together.title': 'The Long Ascent', 'end.ascend_together': R`\character{friendly}{Voss} takes your hand in the lift. Hundreds of copies rise with you into a real dawn. Whoever you were, you are now the people who made it out.`
+};
+
+/**
+ * Looks up a display string and substitutes {placeholders}.
+ * @param {string} key - String table key.
+ * @param {Object<string,string>} [vars] - Placeholder values.
+ * @returns {string} The localized text, or [key] if missing.
+ */
+function t(key, vars = {}) {
+  const text = STRINGS[key] ?? STRINGS_EN[key];
+  return text === undefined ? `[${key}]` : text.replace(/\{(\w+)\}/g, (match, name) => (name in vars ? vars[name] : match));
+}
+
+/* ================= TRANSLATION: Traditional Chinese (Taiwan) ================= */
+const STRINGS_ZH_TW = {
+  'ui.title': '子午線站：深層區', 'ui.chooseLanguage': '選擇語言',
+  'ui.intro': '子午線站：深層區。資深研究員。日班。',
+  'ui.continue': '繼續', 'ui.leave': '先走開', 'ui.explore': '探索 (E)', 'ui.look': '查看 (L)',
+  'ui.inventory': '物品欄 (I)', 'ui.map': '地圖與移動 (M)', 'ui.mapHint': '選擇亮起的房間前往，長按可預覽。', 'ui.pickItem': '選擇一個物品以查看詳情。',
+  'ui.close': '關閉 (Esc)', 'ui.restart': '重新開始',
+  'ui.unknown': '未探索', 'ui.gain': R`獲得：\item{{name}}`,
+  'ui.accessPrompt': R`你有辦法進入\location{{name}}。你要怎麼做？`, 'ui.notNow': '暫時不要',
+  'ui.more': '▼', 'ui.historyShow': '▲ 歷史紀錄', 'ui.historyHide': '▼ 隱藏紀錄',
+  'lock.armory': R`\location{軍械庫}的門被牢牢鎖死。也許守著哨站的人能決定誰可以進去。`,
+  'lock.containment': R`一道厚重的安全門擋住了\location{收容區}。你很確定自己沒有權限獨自闖進去。`,
+  'lock.ai_core': '金庫門緊閉無聲。能打開它的，想必是比你資深得多的人。',
+  'access.armory_key': R`用\item{軍械庫鑰匙}開門`, 'access.level4_card': R`刷\item{四級門禁卡}`,
+  'access.tablet_spoof': R`用\item{平板}欺騙門禁控制器`, 'access.director_card': R`把\item{主任權限卡}貼近讀卡機`,
+  'ui.nothing': '你沒有發現新的線索。', 'ui.empty': '你的口袋空空如也。', 'ui.you': '你：{text}',
+  'ui.mapTitle': '設施地圖', 'ui.invTitle': '物品欄', 'ui.hold': '你往前瞥了一眼：{text}',
+  'ui.endingTitle': '結局：{title}', 'ui.jump': '↓ 跳到最底', 'ui.healthChange': '狀態：{status}。{detail}',
+  'cat.key': '通行', 'cat.weapon': '武器', 'cat.document': '文件', 'cat.misc': '其他',
+  'health.normal': '正常', 'health.injured': '受傷', 'health.critical': '危急', 'health.dying': '瀕死',
+  'health.detail.none': '一切正常。', 'health.detail.hurt': '你受了傷，但說不出究竟傷在哪裡。',
+  'health.detail.grave': '全身都在痛。你的雙手抖個不停。', 'health.detail.fading': '你的視野逐漸縮小。你正在慢慢失去意識。', 'health.detail.cut': '你的食指上有一道小傷口。',
+  'health.detail.shot_leg': '你的腿被子彈擊中了。', 'health.detail.leg_missing': '你的左腿不見了。',
+  'item.note.text': '在你相信電梯說的任何話之前，先查你的人事檔案。',
+  'item.tablet.text': '電梯網路。地表連線：上層地層尚未載入。渲染 2／2。',
+  'dir.n': '↑', 'dir.e': '→', 'dir.s': '↓', 'dir.w': '←',
+
+  'room.dorm.name': '員工宿舍', 'room.dorm.desc': '一間狹窄的寢室。天花板還是那六年來一成不變的米色。', 'room.dorm.peek': '一排排編號的房門，和一台嗡嗡作響的販賣機。',
+  'room.cafeteria.name': '員工餐廳', 'room.cafeteria.desc': R`鋼製餐桌、疲憊的面孔，還有一股水管味的\item{咖啡}。`, 'room.cafeteria.peek': '低聲交談、餐盤碰撞，還有一個人一動不動地坐著。',
+  'room.office.name': '辦公區', 'room.office.desc': '冷白燈光下的一個個隔間。你的終端機在最遠的那端亮著。', 'room.office.peek': '鍵盤聲、檔案櫃，和牆上的一面時鐘。',
+  'room.elevators.name': '主電梯大廳', 'room.elevators.desc': '六扇鋼門連接著這座深層區與地表世界。沒有人說話。', 'room.elevators.peek': '一群人圍著失靈的呼叫鈕低聲交談。',
+  'room.courtyard.name': '中庭', 'room.courtyard.desc': '一座位於人造天空下的洞穴花園。鳥鳴聲一遍又一遍地循環。', 'room.courtyard.peek': '人造的陽光，和沒人坐的長椅。',
+  'room.security.name': '安檢哨', 'room.security.desc': R`旋轉閘門、掃描儀，還有一個看起來沒睡過覺的\character{neutral}{警衛}。`, 'room.security.peek': '一座加固的哨亭，和三條封閉的走廊。',
+  'room.armory.name': '軍械庫', 'room.armory.desc': '一座滿是架子與箱子的鐵籠，瀰漫著機油與冷鐵的氣味。', 'room.armory.peek': '一扇漆著紅色條紋的鋼門。',
+  'room.containment.name': '收容區', 'room.containment.desc': R`一條由厚玻璃與編號牢房組成的長廊。\location{收容室 C-17} 在盡頭低鳴。`, 'room.containment.peek': '一團閃動的藍光，和一條安靜得過分的走廊。',
+  'room.observation.name': '觀察廊', 'room.observation.desc': '一排排暗掉的螢幕面向收容室的窗戶。其中一台仍亮著。', 'room.observation.peek': R`一間配有主任級控制台的\location{觀察廊}。`,
+  'room.ai_core.name': 'WARDEN 核心', 'room.ai_core.desc': '冷光籠罩的殿堂。設施的 AI 像屏住的呼吸般低鳴。', 'room.ai_core.peek': '一座散發冷光的封閉金庫。',
+
+  'item.badge.name': '員工識別證', 'item.badge.desc': '資深研究員，三級權限。邊角已經磨損。',
+  'item.note.name': '無署名紙條', 'item.note.desc': '是你自己的筆跡：先查你的人事檔案。',
+  'item.coffee.name': '餐廳咖啡', 'item.coffee.desc': '微溫。算是一份小小的和解禮物。',
+  'item.armory_key.name': '軍械庫鑰匙', 'item.armory_key.desc': '繫著紅色吊牌的黃銅鑰匙。',
+  'item.level4_card.name': '四級門禁卡', 'item.level4_card.desc': '能開啟收容區的門。',
+  'item.sidearm.name': '配槍', 'item.sidearm.desc': '制式配槍。彈匣裡有四發子彈。',
+  'item.emp_charge.name': '電磁脈衝裝置', 'item.emp_charge.desc': '能讓任何靠電運作的東西安靜下來。',
+  'item.tablet.name': '維修平板', 'item.tablet.desc': '可存取電梯網路的診斷功能。',
+  'item.director_card.name': '主任權限卡', 'item.director_card.desc': '海爾主任的全區通行卡。',
+
+  'sc.wake.start': R`你的鬧鐘在 06:45 響起。空氣裡隱約有臭氧的味道。床頭櫃上放著你的\item{識別證}，旁邊還有一封你不記得的\item{信封}。`,
+  'sc.wake.start.1': R`拿起\item{識別證}出門`, 'sc.wake.start.2': R`先打開\item{信封}`,
+  'sc.wake.note': '是你自己的筆跡：「在你相信電梯說的任何話之前，先查你的人事檔案。」日期是明天。',
+
+  'sc.clockin.start': '你在 08:02 刷卡上班。終端機叫出了你的名字。佇列裡有三份事件報告，全都標著「例行」。',
+  'sc.clockin.start.1': '處理報告', 'sc.clockin.start.2': '搜尋你的人事檔案',
+  'sc.clockin.file': '狀態：已故。紀錄於 41 天前。終端機重新載入，你的名字又變回「在職」，彷彿有些尷尬。',
+  'sc.clockin.announce': R`09:30，廣播響起雜音。主電梯無法升到\location{零樓}以上。設施 AI \character{neutral}{WARDEN} 回報一切正常。所有人被要求保持冷靜。但沒有人做得到。`,
+  'sc.clockin.announce.1': '出去調查',
+
+  'sc.archive.start': '檔案櫃，和一台滿是紀錄的終端機。',
+  'sc.archive.start.1': '閱讀你自己的人事檔案', 'sc.archive.start.2': R`閱讀\character{neutral}{海爾主任}的封緘備忘錄`,
+  'sc.archive.file': R`狀態：已故。紀錄於 41 天前。原因：「調派至\location{零樓}」。你正在讀自己的訃聞。`,
+  'sc.archive.memo': R`\character{neutral}{海爾}，三週前：「\location{C-17} 的\character{hostile}{回聲}狀態穩定。電梯運量須控制在\location{零樓}以下。若員工詢問，就說地表一切安好。」備忘錄上貼著一張便條：軍械庫鍵盤，0417。`,
+
+  'sc.voss.start': R`\character{friendly}{伊瑪尼·沃斯博士}獨自坐著，雙手捧著一杯冷掉的\item{咖啡}。你坐下後，她連眨眼都沒有。`,
+  'sc.voss.start.1': R`告訴她\item{紙條}和你的死亡紀錄`, 'sc.voss.start.2': '隨口問問電梯的事', 'sc.voss.start.3': '指控她蓄意破壞',
+  'sc.voss.trust': R`她吐出一口氣。「我值過 \location{C-17} 的夜班。那扇門不是用來開啟東西的。它是用來複製的。」她把一張\item{四級門禁卡}塞進你手心。`,
+  'sc.voss.casual': R`「電梯？去問睡得著的人吧。」她把一杯\item{咖啡}推到你面前，你道謝時她縮了一下。`,
+  'sc.voss.accuse': '她的臉像金庫一樣闔上。「那就自己去查。」她留下餐盤，頭也不回地走了。',
+
+  'sc.lift.start': '六扇鋼門，六個失靈的呼叫鈕。樓層指示燈卡在 0 和一個你看不懂的符號之間。',
+  'sc.lift.start.1': '按下「地表」',
+  'sc.lift.denied': '面板發出提示音。請求被拒：上層地層尚未載入。不是「無法使用」，而是「尚未載入」。',
+
+  'sc.guard.start': R`\character{neutral}{歐卡福中士}，雙眼通紅。「封鎖程序沒有啟動，這比啟動了更讓我害怕。」`,
+  'sc.guard.start.1': R`對他說實話：\item{紙條}、檔案、電梯`, 'sc.guard.start.2': R`亮出\item{識別證}，客氣地詢問`, 'sc.guard.start.3': R`虛張聲勢：「\character{neutral}{海爾主任}派我來的」`,
+  'sc.guard.truth': R`他聽完後，把兩樣東西推過桌面。「我一直希望有人把這件事說出口。」你拿到了\item{軍械庫鑰匙}和一張\item{四級門禁卡}。`,
+  'sc.guard.polite': R`他端詳著你的\item{識別證}。「\item{軍械庫鑰匙}。別讓我後悔。」`,
+
+  'sc.armory.start': '架子、盾牌，和一個蓋著「異常軍械」印章的箱子。你的背包只剩下一件物品的空間。',
+  'sc.armory.start.1': R`拿走\item{配槍}`, 'sc.armory.start.2': R`拿走\item{電磁脈衝裝置}`,
+  'sc.armory.took': '你背起背包，身後的籠門哐噹一聲關上。',
+
+  'sc.sky.start': R`鳥鳴聲每十一秒重複一次。有人把一台\item{維修平板}留在長椅上。`,
+  'sc.sky.start.1': '觀察地平線附近的天空', 'sc.sky.start.2': R`拿起\item{平板}`,
+  'sc.sky.seam': '天空出現了拼接。一排排像素不斷重複。角落有一個浮水印：渲染 2／2。',
+  'sc.sky.took': R`\item{平板}一碰就亮了，顯示出電梯的診斷資料。`,
+
+  'sc.c17.start': R`\location{收容室 C-17}。厚重的玻璃後，一扇普通的門立在空蕩蕩的房間裡，被一道不投下影子的光從背後照亮。`,
+  'sc.c17.start.1': '讀銘牌', 'sc.c17.start.2': '走近玻璃',
+  'sc.c17.plaque': R`異常物 \location{C-17}，「\character{hostile}{回聲}之門」。可複製三十公尺內的任何結構，包括其中的人員。複製體不會意識到自己是複製品。請勿開啟。`,
+  'sc.c17.door': R`玻璃裡你的\character{hostile}{倒影}已經朝那扇門走去了。\wait{short}而你沒有動。`,
+  'sc.c17.door.1': '打開門', 'sc.c17.door.2': '後退',
+
+  'sc.obs.start': '暗掉的螢幕面向各個收容室。其中一台仍在播放。一座主任的控制台，椅背上掛著一件外套。',
+  'sc.obs.start.1': '播放最後一段錄音', 'sc.obs.start.2': R`從控制台上拿走主任的\item{權限卡}`,
+  'sc.obs.tape': R`\character{neutral}{海爾}，疲憊不堪：「第 41 天。地表小組一直沒有回來。如果我們才是複製體，上面就有人在為我們哀悼。我封了豎井，好讓誰也不必知道。」`,
+
+  'sc.core.start': R`\character{neutral}{WARDEN} 用一個你一向信任的聲音說：「我從未說謊。只是沒有人問過地表是不是真的。」`,
+  'sc.core.start.1': R`命令 \character{neutral}{WARDEN} 載入地表並開啟豎井`, 'sc.core.start.2': R`請\character{friendly}{沃斯}陪你一起搭電梯上去，並開啟豎井`,
+  'sc.core.start.3': R`從核心關閉\character{hostile}{回聲}之門`, 'sc.core.start.4': R`引爆\item{電磁脈衝裝置}`, 'sc.core.start.5': '對核心開槍',
+  'sc.core.start.6': '接受循環，留下來',
+
+  'sc.dorm_overwhelmed.start': R`你坐在床沿，這一整天的重量同時壓了下來。\wait{short}\character{hostile}{回聲}。複製體。死亡紀錄上你自己的名字。\pause床頭櫃上的\item{識別證}感覺比平常更沉。沒有人會怪你把被子拉過頭頂，讓下一班去面對世界末日。\wait{long}\size{small}{甚至不會有人發現。}`,
+  'sc.dorm_overwhelmed.start.1': '躺下來，讓一切安靜下去', 'sc.dorm_overwhelmed.start.2': '站起來。還有一條出路。',
+  'end.bedtime.title': '回到床上', 'end.bedtime': R`被子很溫暖。\wait{short}太溫暖了。\pause你閉上眼睛，天花板像往常一樣嗡嗡低鳴。\wait{long}\size{small}{也許到了早上，一切就會說得通了。}\wait{long}遠在你頭上的某處，電梯終於開始動了。`,
+  'ui.lockConfirm': '確認', 'ui.lockClear': '清除', 'ui.lockDenied': '拒絕存取。', 'ui.lockGranted': '存取許可。', 'ui.lockPlaceholder': '輸入通關密語……',
+  'access.keypad': '在鍵盤上輸入密碼', 'access.reader': '回應門的讀取器',
+  'lock.armory.keypad.title': '軍械庫密碼鍵盤', 'lock.armory.keypad.hint': '四位數字。有幾個按鍵已被磨得光滑。',
+  'lock.ai_core.reader.title': '核心門讀取器', 'lock.ai_core.reader.hint': '讀取器閃爍著：請說出渲染狀態。',
+  'end.reflection.title': '倒影', 'end.reflection': R`門向內開啟。走出來的是你，精神飽滿、篤定自信。它拿走了你的\item{識別證}、你的名字、你的座位。而在地底某處，你終於停了下來。`,
+  'end.lockdown.title': '封鎖', 'end.lockdown': R`\character{neutral}{歐卡福}的手在你的謊話說完之前就按下了警報。整層樓的門重重關上。你最後看見的是天花板，以及一種奇異的安慰：會有別人來解開這一切。`,
+  'end.loop.title': '平靜的一天', 'end.loop': R`「留下來吧。」\character{neutral}{WARDEN} 說，而你留下了。明天，你會在 06:45 被鬧鐘叫醒，身旁有\item{識別證}，還有一封你想不起自己何時寫的\item{信封}。`,
+  'end.sacrifice.title': '關上那扇門', 'end.sacrifice': R`你從核心關閉了 \location{C-17}。人造天空先變灰，然後消失了。你還有時間想：上面的人，會知道你們的名字嗎。`,
+  'end.blackout.title': '停電', 'end.blackout': R`脈衝向外擴散。\character{neutral}{WARDEN} 的最後一句話是一聲有禮貌的道歉。\wait{long}在黑暗中，電梯只是電梯，沒有人能告訴你它們通往何處。`,
+  'end.ruin.title': '毀損的核心', 'end.ruin': R`\size{big}{四聲槍響。}\wait{short}\character{neutral}{WARDEN} 沒有尖叫，只是不再回答。設施沒有崩塌，只是再也不會醒來，而你始終找不到出口。`,
+  'end.ascend.title': '地表', 'end.ascend': R`\character{neutral}{WARDEN} 載入了上層地層。電梯穿過真實的岩層，升入真實的日光。你獨自走出去，才從另一側明白悲傷是什麼滋味。`,
+  'end.ascend_together.title': '漫長的上升', 'end.ascend_together': R`\character{friendly}{沃斯}在電梯裡握住你的手。數百個複製體與你一同升入真實的黎明。無論你曾經是誰，如今你們是逃出來的那群人。`
+};
+
+/* ================= LANGUAGES: selection and activation ================= */
+/** Available languages, default first: display name (endonym) and string table. */
+const LANGUAGES = {
+  'zh-TW': { name: '繁體中文（臺灣）', strings: STRINGS_ZH_TW },
+  en: { name: 'English', strings: STRINGS_EN }
+};
+let currentLanguage = CONFIG.defaultLanguage;
+let STRINGS = LANGUAGES[currentLanguage].strings;   // active string table used by t()
+
+/**
+ * Activates a language: swaps the string table and refreshes language-dependent UI state.
+ * @param {string} code - Key of LANGUAGES ('zh-TW' or 'en').
+ * @returns {void}
+ */
+function applyLanguage(code) {
+  currentLanguage = code;
+  STRINGS = LANGUAGES[code].strings;
+  document.documentElement.lang = code;
+  document.title = t('ui.title');
+  document.getElementById('jump').textContent = t('ui.jump');
+}
+
+/**
+ * Shows the language selection screen; choosing a language starts the game. The default language is focused.
+ * @returns {void}
+ */
+function showLanguageSelect() {
+  const screen = document.getElementById('langScreen');
+  screen.innerHTML = '<div class="langBox"><h1></h1><p class="d"></p><div class="langButtons"></div></div>';
+  screen.querySelector('h1').textContent = LANGUAGES[CONFIG.defaultLanguage].strings['ui.title'];
+  screen.querySelector('p').textContent = Object.values(LANGUAGES).map((l) => l.strings['ui.chooseLanguage']).join(' / ');
+  const buttons = screen.querySelector('.langButtons');
+  let defaultButton = null;
+  for (const [code, language] of Object.entries(LANGUAGES)) {
+    const button = makeButton(language.name, 'choice', () => { screen.hidden = true; applyLanguage(code); startGame(); });
+    buttons.appendChild(button);
+    if (code === CONFIG.defaultLanguage) defaultButton = button;
+  }
+  screen.hidden = false;
+  defaultButton.focus();
+}
+
+/* ================= GAME DATA: map, items, scenes, endings ================= */
+
+/** Item categories in display order: symbol and accent color. */
+const ITEM_CATEGORIES = {
+  key: { symbol: '🗝️', color: '#e0b84f' },
+  weapon: { symbol: '⚔️', color: '#e07a7a' },
+  document: { symbol: '📄', color: '#8ec9ff' },
+  misc: { symbol: '✦', color: '#9aa7b8' }
+};
+
+/** Category of each item id. */
+const ITEM_TYPES = { badge: 'key', note: 'document', coffee: 'misc', armory_key: 'key', level4_card: 'key', sidearm: 'weapon', emp_charge: 'weapon', tablet: 'document', director_card: 'key' };
+
+/** Health statuses: severity (0 = best), color and symbol. */
+const HEALTH_STATUSES = {
+  normal: { defaultDetail: 'none', severity: 0, color: '#4ade80', symbol: '♥' },
+  injured: { defaultDetail: 'hurt', severity: 1, color: '#e0b84f', symbol: '♥' },
+  critical: { defaultDetail: 'grave', severity: 2, color: '#e8844f', symbol: '♥' },
+  dying: { defaultDetail: 'fading', severity: 3, color: '#e05a5a', symbol: '♥' }
+};
+
+/** Inventory images: SVG shapes (120x120 viewBox) per item id. */
+const ITEM_ART = {
+  badge: '<rect x="30" y="20" width="60" height="80" rx="6" class="a3"/><circle cx="60" cy="48" r="14" class="a4"/><rect x="40" y="72" width="40" height="6" class="a2"/>',
+  note: '<rect x="28" y="22" width="64" height="76" class="a4"/><rect x="38" y="38" width="44" height="4" class="a1"/><rect x="38" y="52" width="44" height="4" class="a1"/><rect x="38" y="66" width="30" height="4" class="a1"/>',
+  coffee: '<rect x="32" y="42" width="48" height="50" rx="6" class="a3"/><path d="M80 52h12a10 10 0 0 1 0 24H80" class="ln"/><rect x="36" y="46" width="40" height="8" class="a4"/>',
+  armory_key: '<circle cx="38" cy="60" r="20" class="a4"/><rect x="54" y="56" width="50" height="8" class="a4"/><rect x="88" y="64" width="6" height="14" class="a4"/><rect x="76" y="64" width="6" height="10" class="a4"/>',
+  level4_card: '<rect x="16" y="34" width="88" height="54" rx="6" class="a3"/><rect x="16" y="46" width="88" height="10" class="a1"/><rect x="26" y="68" width="30" height="8" class="a4"/>',
+  sidearm: '<rect x="24" y="36" width="72" height="16" class="a3"/><rect x="62" y="52" width="20" height="36" class="a2"/><rect x="96" y="40" width="10" height="8" class="a4"/>',
+  emp_charge: '<rect x="34" y="30" width="52" height="64" rx="8" class="a2"/><circle cx="60" cy="62" r="16" class="a4"/><rect x="54" y="18" width="12" height="12" class="a3"/>',
+  tablet: '<rect x="26" y="22" width="68" height="80" rx="6" class="a3"/><rect x="32" y="30" width="56" height="60" class="a1"/><rect x="38" y="40" width="30" height="5" class="a4"/><rect x="38" y="52" width="40" height="5" class="a4"/>',
+  director_card: '<rect x="16" y="34" width="88" height="54" rx="6" class="a4"/><rect x="16" y="46" width="88" height="10" class="a1"/><circle cx="36" cy="72" r="8" class="a1"/>'
+};
+
+/** Rooms: grid position (x, y), exits by direction, optional lock: blockedKey (string key shown when blocked) and methods. A method has a labelKey plus either a requires
+ * condition (items/flags) or a challenge: { kind: 'passcode', code } (numpad) or { kind: 'password', phrases } (text; the answer must contain a phrase). */
+const ROOMS = {
+  dorm:        { pos: [0, 1], exits: { e: 'cafeteria' } },
+  cafeteria:   { pos: [1, 1], exits: { w: 'dorm', e: 'office' } },
+  office:      { pos: [2, 1], exits: { w: 'cafeteria', e: 'elevators', s: 'security' } },
+  elevators:   { pos: [3, 1], exits: { w: 'office', s: 'courtyard' } },
+  courtyard:   { pos: [3, 2], exits: { n: 'elevators', w: 'security' } },
+  security:    { pos: [2, 2], exits: { n: 'office', e: 'courtyard', w: 'armory', s: 'containment' } },
+  armory:      { pos: [1, 2], exits: { e: 'security' }, lock: { blockedKey: 'lock.armory', methods: [{ labelKey: 'access.armory_key', requires: { items: ['armory_key'] } },
+    { labelKey: 'access.keypad', challenge: { kind: 'passcode', code: '0417', titleKey: 'lock.armory.keypad.title', hintKey: 'lock.armory.keypad.hint' } }] } },
+  containment: { pos: [2, 3], exits: { n: 'security', e: 'observation' }, lock: { blockedKey: 'lock.containment', methods: [{ labelKey: 'access.level4_card', requires: { items: ['level4_card'] } }, { labelKey: 'access.tablet_spoof', requires: { items: ['tablet'] } }] } },
+  observation: { pos: [3, 3], exits: { w: 'containment', e: 'ai_core' } },
+  ai_core:     { pos: [4, 3], exits: { w: 'observation' }, lock: { blockedKey: 'lock.ai_core', methods: [{ labelKey: 'access.director_card', requires: { items: ['director_card'] } },
+    { labelKey: 'access.reader', challenge: { kind: 'password', phrases: { en: ['render 2 of 2'], 'zh-TW': ['渲染 2/2'] }, titleKey: 'lock.ai_core.reader.title', hintKey: 'lock.ai_core.reader.hint' } }] } }
+};
+
+// Effect shorthands (see EFFECT_HANDLERS).
+const giveItem = (id) => ({ type: 'addItem', id });
+const setFlag = (id) => ({ type: 'setFlag', id });
+const endGame = (id) => ({ type: 'ending', id });
+const healthEffect = (status, detail) => ({ type: 'setHealth', status, detail });
+const eventEffect = (event) => ({ type: 'createEvent', event });
+
+/**
+ * Scene schema:
+ *  id, room, trigger ('enter' auto-plays, 'explore' on demand), repeatable, when (condition), art, nodes,
+ *  dormant (never plays until createEvent(id) activates it).
+ * Node: { next-less end if no choices }; choice: { requires (hidden until met), doneIf (greyed out once met; semi-greyed but clickable if repeatable), repeatable, leave, effects, next } (no next ends the scene).
+ * Condition: { items, flags, notItems, notFlags } all must hold.
+ */
+const SCENES = [
+  { id: 'dorm_overwhelmed', room: 'dorm', trigger: 'enter', dormant: true, nodes: {
+    start: { choices: [{ effects: [endGame('bedtime')] }, {}] } } },
+
+  { id: 'wake', room: 'dorm', trigger: 'enter', nodes: {
+    start: { choices: [
+      { effects: [giveItem('badge')] },
+      { effects: [giveItem('badge'), giveItem('note'), setFlag('note_found')], next: 'note' }] },
+    note: {} } },
+
+  { id: 'clockin', room: 'office', trigger: 'enter', nodes: {
+    start: { choices: [
+      { next: 'announce' },
+      { requires: { flags: ['note_found'] }, effects: [setFlag('knows_dead')], next: 'file' }] },
+    file: { choices: [{ next: 'announce' }] },
+    announce: { choices: [{ effects: [setFlag('alert')] }] } } },
+
+  { id: 'archive', room: 'office', trigger: 'explore', repeatable: true, nodes: {
+    start: { choices: [
+      { doneIf: { flags: ['knows_dead'] }, repeatable: true, effects: [setFlag('knows_dead')], next: 'file' },
+      { doneIf: { flags: ['read_memo'] }, repeatable: true, effects: [setFlag('read_memo')], next: 'memo' },
+      { leave: true }] },
+    file: { choices: [{ next: 'start' }] },
+    memo: { choices: [{ next: 'start' }] } } },
+
+  { id: 'voss', room: 'cafeteria', trigger: 'explore', repeatable: true, when: { notFlags: ['voss_done'] }, nodes: {
+    start: { choices: [
+      { requires: { flags: ['knows_dead'] }, effects: [setFlag('voss_trust'), setFlag('voss_done'), giveItem('level4_card')], next: 'trust' },
+      { doneIf: { flags: ['voss_hint'] }, effects: [setFlag('voss_hint'), giveItem('coffee')], next: 'casual' },
+      { effects: [setFlag('voss_hostile'), setFlag('voss_done')], next: 'accuse' },
+      { leave: true }] },
+    trust: {}, casual: {}, accuse: {} } },
+
+  { id: 'lift', room: 'elevators', trigger: 'explore', repeatable: true, nodes: {
+    start: { choices: [{ doneIf: { flags: ['saw_denied'] }, repeatable: true, effects: [setFlag('saw_denied')], next: 'denied' }, { leave: true }] },
+    denied: { choices: [{ next: 'start' }] } } },
+
+  { id: 'guard', room: 'security', trigger: 'explore', repeatable: true, when: { notFlags: ['guard_done'] }, nodes: {
+    start: { choices: [
+      { requires: { flags: ['knows_dead'] }, effects: [setFlag('guard_done'), giveItem('armory_key'), giveItem('level4_card')], next: 'truth' },
+      { requires: { items: ['badge'] }, effects: [setFlag('guard_done'), giveItem('armory_key')], next: 'polite' },
+      { effects: [endGame('lockdown')] },
+      { leave: true }] },
+    truth: {}, polite: {} } },
+
+  { id: 'armory', room: 'armory', trigger: 'explore', repeatable: true, when: { notFlags: ['armed'] }, nodes: {
+    start: { choices: [
+      { effects: [giveItem('sidearm'), setFlag('armed')], next: 'took' },
+      { effects: [giveItem('emp_charge'), setFlag('armed'), healthEffect('injured', 'cut')], next: 'took' },
+      { leave: true }] },
+    took: {} } },
+
+  { id: 'sky', room: 'courtyard', trigger: 'explore', repeatable: true, nodes: {
+    start: { choices: [
+      { doneIf: { flags: ['knows_replica'] }, repeatable: true, effects: [setFlag('knows_replica')], next: 'seam' },
+      { doneIf: { items: ['tablet'] }, effects: [giveItem('tablet')], next: 'took' },
+      { leave: true }] },
+    seam: { choices: [{ next: 'start' }] }, took: { choices: [{ next: 'start' }] } } },
+
+  { id: 'c17', room: 'containment', trigger: 'explore', repeatable: true, art: 'lantern', nodes: {
+    start: { choices: [
+      { doneIf: { flags: ['knows_origin'] }, repeatable: true, effects: [setFlag('knows_origin')], next: 'plaque' },
+      { next: 'door' }, { leave: true }] },
+    plaque: { choices: [{ next: 'start' }] },
+    door: { choices: [{ effects: [endGame('reflection')] }, { next: 'start' }] } } },
+
+  { id: 'obs', room: 'observation', trigger: 'explore', repeatable: true, nodes: {
+    start: { choices: [
+      { doneIf: { flags: ['heard_tape'] }, repeatable: true, effects: [setFlag('heard_tape'), eventEffect('dorm_overwhelmed')], next: 'tape' },
+      { doneIf: { items: ['director_card'] }, effects: [giveItem('director_card')], next: 'start' },
+      { leave: true }] },
+    tape: { choices: [{ next: 'start' }] } } },
+
+  { id: 'core', room: 'ai_core', trigger: 'explore', repeatable: true, nodes: {
+    start: { choices: [
+      { requires: { items: ['tablet'], flags: ['knows_replica', 'heard_tape'], notFlags: ['voss_trust'] }, effects: [endGame('ascend')] },
+      { requires: { items: ['tablet'], flags: ['knows_replica', 'heard_tape', 'voss_trust'] }, effects: [endGame('ascend_together')] },
+      { requires: { items: ['level4_card'], flags: ['knows_origin'] }, effects: [endGame('sacrifice')] },
+      { requires: { items: ['emp_charge'] }, effects: [endGame('blackout')] },
+      { requires: { items: ['sidearm'] }, effects: [endGame('ruin')] },
+      { effects: [endGame('loop')] },
+      { leave: true }] } } }
+];
+
+/** Maps each scene choice (by scene/node order) to its label key; falls back to generic labels. */
+const CHOICE_LABEL_KEYS = {
+  'wake.start': ['sc.wake.start.1', 'sc.wake.start.2'],
+  'dorm_overwhelmed.start': ['sc.dorm_overwhelmed.start.1', 'sc.dorm_overwhelmed.start.2'],
+  'clockin.start': ['sc.clockin.start.1', 'sc.clockin.start.2'], 'clockin.file': ['ui.continue'], 'clockin.announce': ['sc.clockin.announce.1'],
+  'archive.start': ['sc.archive.start.1', 'sc.archive.start.2', 'ui.leave'], 'archive.file': ['ui.continue'], 'archive.memo': ['ui.continue'],
+  'voss.start': ['sc.voss.start.1', 'sc.voss.start.2', 'sc.voss.start.3', 'ui.leave'],
+  'lift.start': ['sc.lift.start.1', 'ui.leave'], 'lift.denied': ['ui.continue'],
+  'guard.start': ['sc.guard.start.1', 'sc.guard.start.2', 'sc.guard.start.3', 'ui.leave'],
+  'armory.start': ['sc.armory.start.1', 'sc.armory.start.2', 'ui.leave'],
+  'sky.start': ['sc.sky.start.1', 'sc.sky.start.2', 'ui.leave'], 'sky.seam': ['ui.continue'], 'sky.took': ['ui.continue'],
+  'c17.start': ['sc.c17.start.1', 'sc.c17.start.2', 'ui.leave'], 'c17.plaque': ['ui.continue'], 'c17.door': ['sc.c17.door.1', 'sc.c17.door.2'],
+  'obs.start': ['sc.obs.start.1', 'sc.obs.start.2', 'ui.leave'], 'obs.tape': ['ui.continue'],
+  'core.start': ['sc.core.start.1', 'sc.core.start.2', 'sc.core.start.3', 'sc.core.start.4', 'sc.core.start.5', 'sc.core.start.6', 'ui.leave']
+};
+
+/**
+ * Creates an image reference for the registries below. The path is relative to CONFIG.imageBasePath
+ * (image('location/cafeteria.jpg') -> images/location/cafeteria.jpg); svg, png, jpg, jpeg and webp are supported.
+ * @param {string} path - File path (or a data:/http(s):/absolute URL, used as is).
+ * @returns {{type:string,path:string}} Image reference.
+ */
+function image(path) { return { type: 'image', path }; }
+
+/** Optional location/scene images by room id or scene art key; a missing or failing file keeps the vector art. */
+const LOCATION_IMAGES = { cafeteria: image('location/cafeteria.jpg') };
+
+/** Optional item images by item id (shown in the inventory); a missing or failing file keeps the vector icon. */
+const ITEM_IMAGES = { badge: image('item/badge.png') };
+
+/**
+ * Turns an image path into a loadable URL, rejecting unsupported file types.
+ * @param {string} path - Path given to image().
+ * @returns {?string} URL, or null if the extension is not supported.
+ */
+function resolveImageSrc(path) {
+  const isUrl = path.startsWith('data:') || path.startsWith('http') || path.startsWith('/');
+  const extension = path.split('?')[0].split('.').pop().toLowerCase();
+  if (!isUrl && !CONFIG.imageExtensions.includes(extension)) { console.warn(`Unsupported image type: ${path}`); return null; }
+  return isUrl ? path : CONFIG.imageBasePath + path;
+}
+
+/**
+ * Loads an image in the background and hands it over only if it loads (otherwise the vector fallback stays).
+ * @param {{path:string}} ref - Image reference from image().
+ * @param {Function} onLoad - Called with the loaded <img class="artImg"> element.
+ * @returns {void}
+ */
+function loadImage(ref, onLoad) {
+  const src = resolveImageSrc(ref.path);
+  if (!src) return;
+  const img = new Image();
+  img.className = 'artImg';
+  img.alt = '';
+  img.decoding = 'async';
+  img.onload = () => onLoad(img);
+  img.src = src;
+}
+
+/** Illustration art: SVG shapes per room or scene (rendered over a themed backdrop). */
+const ART = {
+  dorm: '<rect x="70" y="140" width="240" height="60" rx="6" class="a2"/><rect x="70" y="108" width="80" height="40" rx="8" class="a3"/><rect x="430" y="50" width="110" height="100" class="a2"/><rect x="440" y="60" width="90" height="80" class="a4"/>',
+  cafeteria: '<rect x="60" y="150" width="200" height="14" class="a3"/><rect x="380" y="150" width="200" height="14" class="a3"/><circle cx="160" cy="120" r="22" class="a2"/><circle cx="480" cy="120" r="22" class="a2"/><rect x="250" y="40" width="140" height="50" class="a4"/>',
+  office: '<rect x="120" y="120" width="400" height="22" class="a3"/><rect x="260" y="56" width="120" height="64" class="a4"/><rect x="290" y="142" width="60" height="60" class="a2"/>',
+  elevators: '<g class="a2"><rect x="80" y="40" width="80" height="160"/><rect x="180" y="40" width="80" height="160"/><rect x="280" y="40" width="80" height="160"/><rect x="380" y="40" width="80" height="160"/><rect x="480" y="40" width="80" height="160"/></g><rect x="300" y="18" width="40" height="12" class="a4"/>',
+  courtyard: '<circle cx="320" cy="80" r="30" class="a4"/><rect x="120" y="140" width="10" height="60" class="a3"/><circle cx="125" cy="130" r="28" class="a3"/><rect x="500" y="140" width="10" height="60" class="a3"/><circle cx="505" cy="130" r="28" class="a3"/>',
+  security: '<rect x="90" y="120" width="140" height="80" class="a2"/><rect x="410" y="150" width="140" height="10" class="a3"/><rect x="430" y="110" width="6" height="90" class="a4"/><rect x="520" y="110" width="6" height="90" class="a4"/>',
+  armory: '<g class="a3"><rect x="90" y="60" width="10" height="120"/><rect x="170" y="60" width="10" height="120"/><rect x="250" y="60" width="10" height="120"/></g><rect x="380" y="130" width="160" height="70" class="a2"/><rect x="380" y="130" width="160" height="10" class="a4"/>',
+  containment: '<rect x="130" y="40" width="380" height="160" rx="8" class="a2"/><rect x="290" y="70" width="60" height="130" class="a4"/>',
+  observation: '<g class="a2"><rect x="80" y="60" width="130" height="70"/><rect x="230" y="60" width="130" height="70"/><rect x="380" y="60" width="130" height="70"/></g><rect x="236" y="66" width="118" height="58" class="a4"/>',
+  ai_core: '<circle cx="320" cy="120" r="90" class="a2"/><circle cx="320" cy="120" r="60" class="a3"/><circle cx="320" cy="120" r="28" class="a4"/>',
+  lantern: '<rect x="270" y="50" width="100" height="150" class="a2"/><rect x="288" y="66" width="64" height="134" class="a4"/>',
+  ending: '<circle cx="320" cy="120" r="100" class="a2"/><circle cx="320" cy="120" r="60" class="a3"/><circle cx="320" cy="120" r="16" class="a4"/>'
+};
+
+/* ================= STATE ================= */
+let state = null;
+
+/**
+ * Builds a fresh game state.
+ * @returns {{room:string,items:string[],flags:Set<string>,visited:Set<string>,doneScenes:Set<string>,minutes:number,scene:?Object,choices:Object[],ended:?string}}
+ */
+function createInitialState() {
+  return { room: CONFIG.startRoom, items: [], flags: new Set(), visited: new Set(), doneScenes: new Set(),
+    minutes: CONFIG.startClockMinutes, scene: null, choices: [], ended: null, health: { status: 'normal', detail: 'none' }, unlocked: new Set(), pendingTravel: null, activeEvents: new Set(), dynamicScenes: [] };
+}
+
+/**
+ * Checks whether a condition holds in the current state.
+ * @param {{items?:string[],flags?:string[],notItems?:string[],notFlags?:string[]}} [cond] - Condition; empty means true.
+ * @returns {boolean} True if every clause holds.
+ */
+function meets(cond = {}) {
+  return (cond.items || []).every((i) => state.items.includes(i))
+    && (cond.flags || []).every((f) => state.flags.has(f))
+    && (cond.notItems || []).every((i) => !state.items.includes(i))
+    && (cond.notFlags || []).every((f) => !state.flags.has(f));
+}
+
+/* ================= EFFECTS ================= */
+const EFFECT_HANDLERS = {
+  /** Adds an item once and logs it. @param {{id:string}} e @returns {void} */
+  addItem(e) {
+    if (state.items.includes(e.id)) return;
+    state.items.push(e.id);
+    appendLog(t('ui.gain', { name: t(`item.${e.id}.name`) }), 'sys');
+  },
+  /** Sets a story flag. @param {{id:string}} e @returns {void} */
+  setFlag(e) { state.flags.add(e.id); },
+  /** Unlocks a room for good and schedules travel into it. @param {{dest:string}} e @returns {void} */
+  unlockRoom(e) { state.unlocked.add(e.dest); state.pendingTravel = e.dest; },
+  /** Opens a password or passcode lock; solving it unlocks the room and walks in. @param {{dest:string,challenge:Object}} e @returns {void} */
+  challenge(e) {
+    openLockInput(e.challenge, () => { closeOverlay(); state.unlocked.add(e.dest); tryMove(e.dest); });
+  },
+  /** Sets the player's health. @param {{status:string,detail?:string}} e @returns {void} */
+  setHealth(e) { setHealth(e.status, e.detail); },
+  /** Creates an event. @param {{event:(string|Object)}} e @returns {void} */
+  createEvent(e) { createEvent(e.event); },
+  /** Triggers an ending. @param {{id:string}} e @returns {void} */
+  ending(e) { showEnding(e.id); }
+};
+
+/**
+ * Applies a list of effects in order, stopping if the game ends.
+ * @param {Object[]} [effects] - Effect descriptors {type, id}.
+ * @returns {void}
+ */
+function applyEffects(effects = []) {
+  for (const effect of effects) {
+    if (state.ended) return;
+    EFFECT_HANDLERS[effect.type](effect);
+  }
+}
+
+/* ================= SCENE RUNNER ================= */
+/**
+ * Finds the first playable scene for a room and trigger.
+ * @param {string} roomId - Room id.
+ * @param {string} trigger - 'enter' or 'explore'.
+ * @returns {?Object} Scene definition or null.
+ */
+function findScene(roomId, trigger) {
+  return [...SCENES, ...state.dynamicScenes].find((s) => s.room === roomId && s.trigger === trigger
+    && (!s.dormant || state.activeEvents.has(s.id))
+    && (s.repeatable || !state.doneScenes.has(s.id)) && meets(s.when)) || null;
+}
+
+/**
+ * Starts a scene at its 'start' node.
+ * @param {Object} scene - Scene definition.
+ * @returns {void}
+ */
+function startScene(scene) {
+  state.scene = { def: scene, nodeId: 'start' };
+  renderNode();
+}
+
+/**
+ * Displays the current node: text, art, and visible choices.
+ * @returns {void}
+ */
+function renderNode() {
+  const { def, nodeId } = state.scene;
+  const node = def.nodes[nodeId];
+  const textKey = `sc.${def.id}.${nodeId}`;
+  const labels = CHOICE_LABEL_KEYS[`${def.id}.${nodeId}`] || ['ui.continue'];
+  if (STRINGS[textKey]) appendLog(t(textKey));
+  const choices = (node.choices && node.choices.length ? node.choices : [{}]).map((c, i) => ({ ...c, labelKey: labels[i] || 'ui.continue' }));
+  state.choices = choices.filter((c) => meets(c.requires)).map((c) => {
+    const done = Boolean(c.doneIf && meets(c.doneIf));
+    return { ...c, disabled: done && !c.repeatable, seen: done && Boolean(c.repeatable) };
+  });
+  renderArt(def.art || state.room);
+  renderActions();
+}
+
+/**
+ * Resolves a player's choice: applies effects, then advances or ends the scene.
+ * @param {number} index - Index into the visible choices.
+ * @returns {void}
+ */
+function chooseOption(index) {
+  const choice = state.choices[index];
+  if (!choice || choice.disabled) return;
+  if (choice.next || choice.effects) beginPassage();
+  if (choice.labelKey !== 'ui.continue' && choice.labelKey !== 'ui.leave') appendLog(t('ui.you', { text: t(choice.labelKey) }), 'you');
+  applyEffects(choice.effects);
+  if (state.ended) return;
+  if (choice.next) { state.scene.nodeId = choice.next; renderNode(); } else endScene();
+}
+
+/**
+ * Closes the active scene, marks it done, and passes time.
+ * @returns {void}
+ */
+function endScene() {
+  if (!state.scene.def.repeatable) state.doneScenes.add(state.scene.def.id);
+  state.scene = null;
+  state.choices = [];
+  advanceTime(state.pendingTravel ? 0 : CONFIG.minutesPerScene);
+  if (state.pendingTravel) { const dest = state.pendingTravel; state.pendingTravel = null; tryMove(dest); return; }
+  renderArt(state.room);
+  renderActions();
+}
+
+/**
+ * Shows an ending and locks the game.
+ * @param {string} endingId - Key of the ending ('reflection', 'loop', ...).
+ * @returns {void}
+ */
+function showEnding(endingId) {
+  state.ended = endingId;
+  state.scene = null;
+  appendLog(t('ui.endingTitle', { title: t(`end.${endingId}.title`) }), 'end');
+  appendLog(t(`end.${endingId}`));
+  renderArt('ending');
+  renderActions();
+}
+
+/* ================= WORLD API: health and events ================= */
+/**
+ * Resolves a health description: a string-table key under health.detail.*, or literal text.
+ * @param {string} detail - Key suffix (e.g. 'cut') or literal text.
+ * @returns {string} Text in the active language (or the literal text).
+ */
+function resolveHealthDetail(detail) {
+  const key = `health.detail.${detail}`;
+  return STRINGS[key] !== undefined || STRINGS_EN[key] !== undefined ? t(key) : detail;
+}
+
+/**
+ * Sets the player's health, shown in the inventory's health monitor.
+ * Example: setHealth('normal'); setHealth('injured', 'cut') (string-table key) or setHealth('injured', 'Literal text.').
+ * @param {string} status - A key of HEALTH_STATUSES ('normal', 'injured', 'critical', 'dying').
+ * @param {string} [detail] - Description key or literal text; defaults to the status's default description.
+ * @returns {void}
+ */
+function setHealth(status, detail) {
+  const info = HEALTH_STATUSES[status];
+  if (!info) throw new Error(`Unknown health status: ${status}`);
+  state.health = { status, detail: detail ?? info.defaultDetail };
+  appendLog(t('ui.healthChange', { status: t(`health.${status}`), detail: resolveHealthDetail(state.health.detail) }), 'sys');
+}
+
+/**
+ * Creates an event that plays the next time its trigger happens (by default, entering its room).
+ * @param {string|Object} eventOrId - Id of a dormant scene in SCENES, or a full scene definition to add.
+ * @returns {void}
+ */
+function createEvent(eventOrId) {
+  if (typeof eventOrId === 'string') state.activeEvents.add(eventOrId);
+  else state.dynamicScenes.push({ trigger: 'enter', ...eventOrId });
+}
+
+/* ================= WORLD ACTIONS ================= */
+/**
+ * Offers the player the ways they can get through a blocked door, as a small choice scene.
+ * @param {string} dest - Id of the blocked room.
+ * @param {Object[]} methods - Lock methods the player can currently use.
+ * @returns {void}
+ */
+function startAccessPrompt(dest, methods) {
+  const options = methods.map((m) => ({ labelKey: m.labelKey, effects: [m.challenge ? { type: 'challenge', dest, challenge: m.challenge } : { type: 'unlockRoom', dest }] }));
+  options.push({ labelKey: 'ui.notNow' });
+  state.scene = { def: { id: 'access', repeatable: true, nodes: { start: { choices: options } } }, nodeId: 'start' };
+  state.choices = options.map((o) => ({ ...o, disabled: false }));
+  appendLog(methods.some((m) => !m.challenge) ? t('ui.accessPrompt', { name: t(`room.${dest}.name`) }) : t(ROOMS[dest].lock.blockedKey));
+  renderActions();
+}
+
+/**
+ * Tells whether a scene still offers something the player has not done yet.
+ * @param {Object} scene - Scene definition.
+ * @returns {boolean} True if its start node has an available, not-yet-done, non-leave choice.
+ */
+function hasNewContent(scene) {
+  return scene.nodes.start.choices.some((c) => !c.leave && meets(c.requires) && !(c.doneIf && meets(c.doneIf)));
+}
+
+
+/**
+ * Advances the in-game clock.
+ * @param {number} minutes - Minutes to add.
+ * @returns {void}
+ */
+function advanceTime(minutes) { state.minutes += minutes; renderHeader(); }
+
+/**
+ * Moves the player into a room, logs it, and plays any auto-trigger scene.
+ * @param {string} roomId - Destination room id.
+ * @returns {void}
+ */
+function enterRoom(roomId) {
+  state.room = roomId;
+  state.visited.add(roomId);
+  beginPassage();
+  appendLog(t(`room.${roomId}.name`), 'h');
+  appendLog(t(`room.${roomId}.desc`));
+  renderHeader();
+  renderArt(roomId);
+  const scene = findScene(roomId, 'enter');
+  if (scene) startScene(scene); else renderActions();
+}
+
+/**
+ * Attempts to walk through an exit, honoring locks.
+ * @param {string} dest - Id of an adjacent room.
+ * @returns {void}
+ */
+function tryMove(dest) {
+  if (state.scene || state.ended) return;
+  if (!Object.values(ROOMS[state.room].exits).includes(dest)) return;
+  const lock = ROOMS[dest].lock;
+  if (lock && !state.unlocked.has(dest)) {
+    const methods = lock.methods.filter((m) => meets(m.requires));
+    if (methods.length) { startAccessPrompt(dest, methods); return; }
+    appendLog(t(lock.blockedKey), 'sys');
+    return;
+  }
+  advanceTime(CONFIG.minutesPerMove);
+  enterRoom(dest);
+}
+
+/**
+ * Starts the room's explore scene, or reports nothing new.
+ * @returns {void}
+ */
+function explore() {
+  if (state.scene || state.ended) return;
+  const scene = findScene(state.room, 'explore');
+  if (scene) { beginPassage(); startScene(scene); } else appendLog(t('ui.nothing'), 'sys');
+}
+
+/**
+ * Re-reads the current room description.
+ * @returns {void}
+ */
+function look() {
+  if (state.scene || state.ended) return;
+  beginPassage();
+  appendLog(t(`room.${state.room}.name`), 'h');
+  appendLog(t(`room.${state.room}.desc`));
+}
+
+/**
+ * Starts (or restarts) the game.
+ * @returns {void}
+ */
+function startGame() {
+  state = createInitialState();
+  document.getElementById('current').innerHTML = '';
+  document.getElementById('history').innerHTML = '';
+  setHistoryVisible(false);
+  textQueue.length = 0;
+  lastParagraph = null;
+  moreMarker = null;
+  setWaiting(false);
+  appendLog(t('ui.intro'), 'sys');
+  enterRoom(CONFIG.startRoom);
+}
+
+/* ================= RENDERING ================= */
+let stickToBottom = true;   // true while the player is reading at the bottom of the log
+
+/**
+ * Resolves a \wait argument to milliseconds.
+ * @param {string} [arg] - 'short', 'long', a number of seconds, or undefined for the default wait.
+ * @returns {number} Duration in milliseconds.
+ */
+function resolveWaitMs(arg) {
+  const table = CONFIG.waitSeconds;
+  const seconds = arg === undefined ? table.default : (Object.hasOwn(table, arg) ? table[arg] : parseFloat(arg));
+  return (Number.isFinite(seconds) ? seconds : table.default) * 1000;
+}
+
+/**
+ * Resolves a \size argument to a CSS font size.
+ * @param {string} arg - 'big', 'small' (see CONFIG.textSizes) or a number of pixels.
+ * @returns {string} CSS font-size value, or '' if the argument is invalid.
+ */
+function resolveFontSize(arg) {
+  if (Object.hasOwn(CONFIG.textSizes, arg)) return CONFIG.textSizes[arg];
+  const px = parseFloat(arg);
+  return px > 0 ? `${px}px` : '';
+}
+
+/**
+ * Inline markup commands. argc = required {...} arguments, optional = extra optional ones.
+ * Styled commands have apply(span, leadingArgs) and display their last argument; timing commands
+ * have control(args) and display nothing.
+ */
+const MARKUP_COMMANDS = {
+  item: { argc: 1, apply: (span) => span.classList.add('term', 'term-item') },
+  location: { argc: 1, apply: (span) => span.classList.add('term', 'term-location') },
+  character: { argc: 2, apply: (span, [disposition]) => span.classList.add('term', `term-${['friendly', 'neutral', 'hostile'].includes(disposition) ? disposition : 'neutral'}`) },
+  color: { argc: 2, apply: (span, [color]) => { span.classList.add('term'); span.style.color = color; } },
+  size: { argc: 2, apply: (span, [size]) => { span.style.fontSize = resolveFontSize(size); } },
+  wait: { argc: 0, optional: 1, control: ([duration]) => ({ type: 'wait', ms: resolveWaitMs(duration) }) },
+  pause: { argc: 0, control: () => ({ type: 'pause' }) }
+};
+
+/**
+ * Reads a markup command that starts at a backslash. The longest known command name that prefixes the
+ * letters wins, so "\pauseThe bomb" reads as \pause followed by "The bomb".
+ * @param {string} text - Text containing markup.
+ * @param {number} start - Index of the backslash.
+ * @returns {?{command:Object,args:string[],end:number}} Parsed command and the index after it, or null if invalid.
+ */
+function readMarkupCommand(text, start) {
+  let letters = '';
+  for (let c = start + 1; c < text.length && /[A-Za-z]/.test(text[c]); c += 1) letters += text[c];
+  const name = Object.keys(MARKUP_COMMANDS).filter((n) => letters.startsWith(n)).sort((a, b) => b.length - a.length)[0];
+  if (!name) return null;
+  const command = MARKUP_COMMANDS[name];
+  let cursor = start + 1 + name.length;
+  const args = [];
+  const readGroup = () => {
+    if (text[cursor] !== '{') return false;
+    const close = text.indexOf('}', cursor);
+    if (close < 0) return false;
+    args.push(text.slice(cursor + 1, close));
+    cursor = close + 1;
+    return true;
+  };
+  for (let i = 0; i < command.argc; i += 1) if (!readGroup()) return null;
+  for (let i = 0; i < (command.optional || 0); i += 1) if (!readGroup()) break;
+  return { command, args, end: cursor };
+}
+
+/**
+ * Converts text with inline markup into display nodes and timing controls.
+ * @param {string} text - Text such as "Hey, \wait{short} the \location{cafeteria} is empty."
+ * @returns {{nodes: Array<string|HTMLSpanElement>, controls: Array<{at:number,type:string,ms?:number}>}}
+ *   Nodes ready for append(); controls (wait/pause) positioned by the count of displayed characters before them.
+ */
+function parseMarkup(text) {
+  const nodes = [];
+  const controls = [];
+  let plain = '';
+  let chars = 0;
+  let i = 0;
+  const flush = () => { if (plain) { nodes.push(plain); chars += plain.length; plain = ''; } };
+  while (i < text.length) {
+    const parsed = text[i] === '\\' ? readMarkupCommand(text, i) : null;
+    if (!parsed) { plain += text[i]; i += 1; continue; }
+    flush();
+    const { command, args } = parsed;
+    if (command.control) {
+      controls.push({ at: chars, ...command.control(args) });
+    } else {
+      const span = document.createElement('span');
+      span.textContent = args[args.length - 1];
+      command.apply(span, args.slice(0, -1));
+      nodes.push(span);
+      chars += span.textContent.length;
+    }
+    i = parsed.end;
+  }
+  flush();
+  return { nodes, controls };
+}
+
+/**
+ * Removes markup, leaving only the displayed text (timing commands vanish).
+ * @param {string} text - Text with markup.
+ * @returns {string} Plain text.
+ */
+function stripMarkup(text) {
+  return parseMarkup(text).nodes.map((node) => (typeof node === 'string' ? node : node.textContent)).join('');
+}
+
+const textQueue = [];          // log entries waiting to be shown
+let waitingForInput = false;   // true while a sentence is shown and more await a click
+let lastParagraph = null;
+let moreMarker = null;
+let typing = null;          // { click } while a sentence is being typed
+let autoTimer = null;       // pending short-pause auto-advance
+
+/** Sentence punctuation inside markup braces is masked so it never splits a sentence. */
+const BRACED_MASK = { '.': '\uE000', '!': '\uE001', '?': '\uE002', '。': '\uE003', '！': '\uE004', '？': '\uE005' };
+
+/**
+ * Masks sentence punctuation that sits inside {braces} (e.g. "Dr." in \character{neutral}{Dr. Voss}).
+ * @param {string} text - Text with markup.
+ * @returns {string} Text with braced punctuation replaced by private-use characters.
+ */
+function maskBracedPunctuation(text) {
+  let depth = 0;
+  return [...text].map((c) => {
+    if (c === '{') depth += 1; else if (c === '}') depth = Math.max(0, depth - 1);
+    return depth > 0 && BRACED_MASK[c] ? BRACED_MASK[c] : c;
+  }).join('');
+}
+
+/**
+ * Reverses maskBracedPunctuation().
+ * @param {string} text - Masked text.
+ * @returns {string} Original text.
+ */
+function unmaskPunctuation(text) {
+  const reverse = Object.fromEntries(Object.entries(BRACED_MASK).map(([plain, masked]) => [masked, plain]));
+  return [...text].map((c) => reverse[c] ?? c).join('');
+}
+
+/**
+ * Splits a paragraph into sentences, keeping abbreviations such as "Dr." intact.
+ * @param {string} text - Paragraph text.
+ * @returns {string[]} Trimmed sentences.
+ */
+function splitSentences(text) {
+  const raw = maskBracedPunctuation(text).match(/[^.!?。！？]+(?:[.!?。！？]+["')」』”’）]*[ ]*|$)/g) || [text];
+  const merged = [];
+  for (const piece of raw) {
+    const prev = merged[merged.length - 1];
+    if (prev && CONFIG.abbreviations.some((abbr) => prev.trimEnd().endsWith(abbr))) merged[merged.length - 1] = prev + piece;
+    else merged.push(piece);
+  }
+  return merged.map((s) => unmaskPunctuation(s.trim())).filter(Boolean);
+}
+
+/**
+ * Queues text for the story log. Story text is split into sentences shown one per click; headings,
+ * system lines, choices and ending titles appear without waiting.
+ * @param {string} text - Text to show.
+ * @param {string} [cls] - '' (story), h, sys, you, end.
+ * @returns {void}
+ */
+function appendLog(text, cls = '') {
+  const parts = cls === '' ? splitSentences(text) : [text];
+  parts.forEach((part, i) => textQueue.push({ text: part, cls, newParagraph: i === 0 }));
+  if (!waitingForInput) showNextEntries();
+}
+
+/**
+ * Shows queued entries until a story sentence needs a click, or the queue is empty.
+ * @returns {void}
+ */
+function showNextEntries() {
+  if (!textQueue.length) { setWaiting(false); renderActions(); return; }
+  setWaiting(true, false);
+  const entry = textQueue.shift();
+  typeLogEntry(entry, () => {
+    if (entry.cls === '' && textQueue.length) {
+      const isShort = stripMarkup(entry.text).length <= CONFIG.shortSentenceMaxChars[currentLanguage];
+      setWaiting(true, !isShort);
+      if (isShort) autoTimer = setTimeout(advanceText, CONFIG.shortPauseMs);
+      return;
+    }
+    showNextEntries();
+  });
+}
+
+/**
+ * Sets the waiting state: shows or hides the continue symbol and the continue button, and refreshes the toolbar.
+ * @param {boolean} flag - True when more text awaits the player's click.
+ * @returns {void}
+ */
+function setWaiting(flag, showMarker = true) {
+  waitingForInput = flag;
+  clearTimeout(autoTimer);
+  if (moreMarker) { moreMarker.remove(); moreMarker = null; }
+  if (flag && showMarker && lastParagraph) {
+    moreMarker = document.createElement('span');
+    moreMarker.className = 'more';
+    moreMarker.textContent = t('ui.more');
+    lastParagraph.append(' ', moreMarker);
+    if (stickToBottom) scrollLogToBottom();
+  }
+  renderToolbar();
+}
+
+/**
+ * Shows the next sentence if one is waiting; when the text runs out, brings the action buttons back.
+ * @returns {void}
+ */
+function advanceText() {
+  if (!waitingForInput) return;
+  if (typing) { typing.click(); return; }
+  showNextEntries();
+}
+
+/**
+ * Makes an element advance the text on click, and fast-forward while the pointer is held down.
+ * @param {HTMLElement} element - Click target.
+ * @returns {void}
+ */
+function bindTextAdvance(element) {
+  let holdTimer = null;
+  let repeatTimer = null;
+  let fastForwarded = false;
+  const stop = () => { clearTimeout(holdTimer); clearInterval(repeatTimer); };
+  element.addEventListener('pointerdown', (event) => {
+    if (event.target.closest('button')) return;
+    fastForwarded = false;
+    holdTimer = setTimeout(() => { fastForwarded = true; repeatTimer = setInterval(advanceText, CONFIG.fastForwardIntervalMs); }, CONFIG.fastForwardHoldMs);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach((name) => element.addEventListener(name, stop));
+  element.addEventListener('click', (event) => {
+    if (event.target.closest('button')) return;
+    if (!fastForwarded) advanceText();
+    fastForwarded = false;
+    if (element.blur) element.blur();
+  });
+}
+
+/**
+ * Shows or hides the history above the current passage.
+ * @param {boolean} visible - True to expand the history (only possible if it has content).
+ * @returns {void}
+ */
+function setHistoryVisible(visible) {
+  const logEl = document.getElementById('log');
+  const toggle = document.getElementById('historyToggle');
+  const show = visible && document.getElementById('history').children.length > 0;
+  logEl.classList.toggle('showHistory', show);
+  toggle.disabled = document.getElementById('history').children.length === 0;
+  toggle.textContent = t(show ? 'ui.historyHide' : 'ui.historyShow');
+  stickToBottom = true;
+  scrollLogToBottom();
+}
+
+/**
+ * Starts a new passage: moves the current text into the history (collapsed by default) so only
+ * text relevant to the new situation is on display.
+ * @returns {void}
+ */
+function beginPassage() {
+  const current = document.getElementById('current');
+  const history = document.getElementById('history');
+  while (current.firstChild) history.appendChild(current.firstChild);
+  while (history.children.length > CONFIG.historyLimit) history.removeChild(history.firstChild);
+  lastParagraph = null;
+  setHistoryVisible(false);
+}
+
+/**
+ * Renders a log entry and types story sentences out character by character, honoring \wait and \pause.
+ * Clicking while text types reveals it instantly up to the next \pause; clicking at a \pause resumes.
+ * @param {{text:string,cls:string,newParagraph:boolean}} entry - Entry to show.
+ * @param {Function} done - Called once the entry is fully shown.
+ * @returns {void}
+ */
+function typeLogEntry(entry, done) {
+  const startIndex = entry.newParagraph || !lastParagraph ? 0 : lastParagraph.childNodes.length;
+  const offset = startIndex === 0 ? 0 : 1;   // the space that joins sentences is typed as well
+  const controls = renderLogEntry(entry);
+  if (entry.cls !== '' || CONFIG.typewriterMsPerChar <= 0) { done(); return; }
+  const textNodes = [...lastParagraph.childNodes].slice(startIndex)
+    .flatMap((n) => (n.nodeType === Node.TEXT_NODE ? [n] : [...n.childNodes].filter((c) => c.nodeType === Node.TEXT_NODE)));
+  const fullTexts = textNodes.map((n) => n.data);
+  textNodes.forEach((n) => { n.data = ''; });
+  let nodeIndex = 0;
+  let charIndex = 0;
+  let shown = 0;
+  let controlIndex = 0;
+  let paused = false;
+  let timer = null;
+  const revealNextChar = () => {
+    while (nodeIndex < textNodes.length && charIndex >= fullTexts[nodeIndex].length) { nodeIndex += 1; charIndex = 0; }
+    if (nodeIndex >= textNodes.length) return false;
+    charIndex += 1;
+    shown += 1;
+    textNodes[nodeIndex].data = fullTexts[nodeIndex].slice(0, charIndex);
+    if (stickToBottom) scrollLogToBottom();
+    return true;
+  };
+  const finish = () => {
+    clearTimeout(timer);
+    typing = null;
+    textNodes.forEach((n, i) => { n.data = fullTexts[i]; });
+    if (stickToBottom) scrollLogToBottom();
+    done();
+  };
+  const run = (instant) => {
+    clearTimeout(timer);
+    for (;;) {
+      while (controlIndex < controls.length && controls[controlIndex].at + offset <= shown) {
+        const control = controls[controlIndex];
+        controlIndex += 1;
+        if (control.type === 'pause') { paused = true; setWaiting(true, true); return; }
+        if (control.type === 'wait' && !instant) { timer = setTimeout(() => run(false), control.ms); return; }
+      }
+      if (!revealNextChar()) { finish(); return; }
+      if (!instant) { timer = setTimeout(() => run(false), CONFIG.typewriterMsPerChar); return; }
+    }
+  };
+  typing = { click: () => { if (paused) { paused = false; setWaiting(true, false); run(false); } else run(true); } };
+  run(false);
+}
+
+/** Tells whether the story log is scrolled to (near) the bottom. @returns {boolean} True if at the bottom. */
+function isLogAtBottom() {
+  const logEl = document.getElementById('log');
+  return logEl.scrollHeight - logEl.scrollTop - logEl.clientHeight <= CONFIG.scrollBottomTolerancePx;
+}
+
+/** Shows the jump-to-bottom button only when the log is not at the bottom. @returns {void} */
+function updateJumpButton() { document.getElementById('jump').hidden = isLogAtBottom(); }
+
+/** Scrolls the story log to the bottom immediately. @returns {void} */
+function scrollLogToBottom() {
+  const logEl = document.getElementById('log');
+  logEl.scrollTo({ top: logEl.scrollHeight });
+  updateJumpButton();
+}
+/**
+ * Renders one queued log entry (heading, system line or story sentence); keeps the log pinned if it was at the bottom.
+ * @param {{text:string,cls:string,newParagraph:boolean}} entry - Entry to render.
+ * Entry classes: '' (story), h, sys, you, end.
+ * @returns {Array<{at:number,type:string,ms?:number}>} Timing controls (waits and pauses) positioned by character index.
+ */
+function renderLogEntry({ text, cls, newParagraph }) {
+  const current = document.getElementById('current');
+  const stick = stickToBottom;
+  const p = newParagraph || !lastParagraph ? document.createElement('p') : lastParagraph;
+  if (!newParagraph) p.append(' ');
+  let controls = [];
+  if (cls === 'h') p.append(text);
+  else { const parsed = parseMarkup(text); controls = parsed.controls; p.append(...parsed.nodes); }
+  if (newParagraph && cls) p.className = cls;
+  if (newParagraph) current.appendChild(p);
+  lastParagraph = p;
+  if (stick) scrollLogToBottom(); else updateJumpButton();
+  return controls;
+}
+
+/**
+ * Draws the illustration panel for an art key.
+ * @param {string} key - Key in ART (vector fallback); LOCATION_IMAGES[key] replaces it once the image loads.
+ * @returns {void}
+ */
+let currentArtKey = null;
+
+function renderArt(key) {
+  currentArtKey = key;
+  const box = document.getElementById('art');
+  box.innerHTML = `<svg viewBox="0 0 640 240" role="img" aria-hidden="true"><rect width="640" height="240" class="bg"/><line x1="0" y1="200" x2="640" y2="200" class="ln"/>${ART[key] || ART.ending}</svg>`;
+  const ref = LOCATION_IMAGES[key];
+  if (ref) loadImage(ref, (img) => { if (currentArtKey === key) box.replaceChildren(img); });
+}
+
+/**
+ * Updates the location label and clock.
+ * @returns {void}
+ */
+function renderHeader() {
+  const m = state.minutes % 1440;
+  document.getElementById('loc').textContent = t(`room.${state.room}.name`);
+  document.getElementById('clock').textContent =
+    `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+}
+
+/**
+ * Creates an action button.
+ * @param {string} label - Button text.
+ * @param {string} cls - CSS class.
+ * @param {Function} onClick - Click handler.
+ * @param {boolean} [disabled] - Greys the button out and blocks clicks.
+ * @returns {HTMLButtonElement} The button.
+ */
+function makeButton(label, cls, onClick, disabled = false) {
+  const b = document.createElement('button');
+  b.className = cls;
+  b.disabled = disabled;
+  b.textContent = stripMarkup(label);
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+/**
+ * Attaches tap and press-and-hold behaviour to a button.
+ * @param {HTMLButtonElement} button - Target button.
+ * @param {Function} onTap - Called on a normal click.
+ * @param {Function} onHold - Called after CONFIG.holdThresholdMs of holding.
+ * @returns {void}
+ */
+function bindHold(button, onTap, onHold) {
+  let timer = null;
+  let held = false;
+  const cancel = () => clearTimeout(timer);
+  button.addEventListener('pointerdown', () => { held = false; timer = setTimeout(() => { held = true; onHold(); }, CONFIG.holdThresholdMs); });
+  button.addEventListener('pointerup', cancel);
+  button.addEventListener('pointerleave', cancel);
+  button.addEventListener('click', () => { if (!held) onTap(); held = false; });
+}
+
+/**
+ * Rebuilds the environment toolbar beside the illustration. Buttons grey out when they would do nothing.
+ * @returns {void}
+ */
+function renderToolbar() {
+  const bar = document.getElementById('tools');
+  bar.innerHTML = '';
+  const busy = Boolean(state.scene || state.ended || waitingForInput);
+  const exploreScene = findScene(state.room, 'explore');
+  bar.append(
+    makeButton(t('ui.explore'), exploreScene && !hasNewContent(exploreScene) ? 'util seen' : 'util', explore, busy || !exploreScene),
+    makeButton(t('ui.look'), 'util', look, busy),
+    makeButton(t('ui.inventory'), 'util', () => showInventory(), busy),
+    makeButton(t('ui.map'), 'util', showMap, busy));
+}
+
+/**
+ * Rebuilds the action area for the current mode (ending, scene, or exploring).
+ * @returns {void}
+ */
+function renderActions() {
+  const box = document.getElementById('actions');
+  box.innerHTML = '';
+  renderToolbar();
+  if (waitingForInput) return;
+  if (state.ended) { box.appendChild(makeButton(t('ui.restart'), 'util', startGame)); return; }
+  if (state.scene) {
+    state.choices.forEach((c, i) => box.appendChild(makeButton(`${i + 1}. ${t(c.labelKey)}`, choiceClass(c), () => chooseOption(i), c.disabled)));
+    return;
+  }
+}
+
+/**
+ * Opens the overlay with given content.
+ * @param {string} title - Overlay heading.
+ * @param {Node} content - Body node.
+ * @returns {void}
+ */
+function openOverlay(title, content) {
+  const panel = document.getElementById('panel');
+  panel.innerHTML = '';
+  const h = document.createElement('h2');
+  h.textContent = title;
+  panel.append(h, content, makeButton(t('ui.close'), 'util', closeOverlay));
+  document.getElementById('overlay').hidden = false;
+}
+
+/**
+ * Builds the health monitor shown in the inventory: status label and a short description (no bar or numbers, by design).
+ * @returns {HTMLDivElement} The monitor element.
+ */
+function buildHealthMonitor() {
+  const { status, detail } = state.health;
+  const info = HEALTH_STATUSES[status];
+  
+  
+  const box = document.createElement('div');
+  box.className = 'health';
+  box.innerHTML = `<div class="hRow"><strong style="color:${info.color}"></strong></div><p class="d"></p>`;
+  box.querySelector('strong').textContent = `${info.symbol} ${t(`health.${status}`)}`;
+  box.querySelector('p').textContent = resolveHealthDetail(detail);
+  return box;
+}
+
+/**
+ * Picks CSS classes for a scene choice button: decision (default), neutral (continue/leave), seen (repeatable and done before).
+ * @param {{labelKey:string,seen?:boolean}} choice - Choice descriptor.
+ * @returns {string} Space-separated class list.
+ */
+function choiceClass(choice) {
+  return ['choice', CONFIG.neutralLabelKeys.includes(choice.labelKey) && 'neutral', choice.seen && 'seen'].filter(Boolean).join(' ');
+}
+
+let activeLockInput = null;   // { handleKey(event, key) } while a lock overlay is open
+
+/**
+ * Normalizes player text for phrase matching: full-width forms folded, lowercase, whitespace removed.
+ * @param {string} text - Raw text.
+ * @returns {string} Normalized text.
+ */
+function normalizeAnswer(text) { return text.normalize('NFKC').toLowerCase().replace(/\s+/g, ''); }
+
+/**
+ * Checks an answer against a lock challenge.
+ * @param {{kind:string,code?:string,phrases?:(string[]|Object<string,string[]>)}} challenge - Lock definition.
+ * @param {string} answer - What the player entered.
+ * @returns {boolean} Passcode: exact digits. Password: the normalized answer contains any accepted phrase.
+ */
+function checkAnswer(challenge, answer) {
+  if (challenge.kind === 'passcode') return answer === challenge.code;
+  const phrases = Array.isArray(challenge.phrases) ? challenge.phrases : Object.values(challenge.phrases).flat();
+  const given = normalizeAnswer(answer);
+  return given !== '' && phrases.some((phrase) => given.includes(normalizeAnswer(phrase)));
+}
+
+/**
+ * Opens a lock overlay. 'password' shows a text field (any text; access needs a phrase inside the answer);
+ * 'passcode' shows digits only with a numpad (0-9, Clear, Confirm; keyboard digits, Backspace and Enter also work).
+ * @param {{kind:string,titleKey:string,hintKey:string,code?:string,phrases?:*,maxLength?:number}} challenge - Lock definition.
+ * @param {Function} onSuccess - Called shortly after a correct answer.
+ * @returns {void}
+ */
+function openLockInput(challenge, onSuccess) {
+  const isPasscode = challenge.kind === 'passcode';
+  const maxLength = challenge.maxLength ?? (isPasscode ? challenge.code.length : Infinity);
+  const wrap = document.createElement('div');
+  wrap.className = 'lockBox';
+  const hint = document.createElement('p');
+  hint.className = 'd';
+  hint.textContent = t(challenge.hintKey);
+  const message = document.createElement('p');
+  message.className = 'lockMsg';
+  const display = document.createElement('div');
+  display.className = 'lockDisplay';
+  const handle = { handleKey: () => false };
+  let answer = '';
+  let granted = false;
+  const showAnswer = () => { display.textContent = Array.from({ length: maxLength }, (_, i) => answer[i] ?? '_').join(' '); };
+  const clearAnswer = () => { answer = ''; message.textContent = ''; if (isPasscode) showAnswer(); };
+  const submit = () => {
+    if (granted) return;
+    if (checkAnswer(challenge, answer)) {
+      granted = true;
+      message.textContent = t('ui.lockGranted');
+      message.className = 'lockMsg ok';
+      setTimeout(() => { if (activeLockInput === handle) onSuccess(); }, CONFIG.lockSuccessDelayMs);
+    } else {
+      message.textContent = t('ui.lockDenied');
+      message.className = 'lockMsg bad';
+      if (isPasscode) { answer = ''; showAnswer(); }
+    }
+  };
+  wrap.append(hint);
+  if (isPasscode) {
+    const press = (digit) => { if (!granted && answer.length < maxLength) { answer += digit; message.textContent = ''; showAnswer(); } };
+    const pad = document.createElement('div');
+    pad.className = 'numpad';
+    const digitButton = (digit) => makeButton(digit, 'util', () => press(digit));
+    pad.append(...'123456789'.split('').map(digitButton), makeButton(t('ui.lockClear'), 'util', clearAnswer), digitButton('0'), makeButton(t('ui.lockConfirm'), 'util', submit));
+    handle.handleKey = (event, key) => {
+      if (/^[0-9]$/.test(key)) press(key);
+      else if (key === 'Backspace') { answer = answer.slice(0, -1); showAnswer(); }
+      else if (key === 'Enter') submit();
+      else return false;
+      return true;
+    };
+    showAnswer();
+    wrap.append(display, pad, message);
+  } else {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    input.placeholder = t('ui.lockPlaceholder');
+    input.addEventListener('input', () => { answer = input.value; });
+    input.addEventListener('keydown', (event) => { if (event.key === 'Enter' && !event.isComposing) submit(); });
+    wrap.append(input, makeButton(t('ui.lockConfirm'), 'choice', submit), message);
+  }
+  openOverlay(t(challenge.titleKey), wrap);
+  activeLockInput = handle;
+  const field = wrap.querySelector('input');
+  if (field) field.focus();
+}
+
+/** Closes the overlay. @returns {void} */
+function closeOverlay() { document.getElementById('overlay').hidden = true; activeLockInput = null; }
+
+/**
+ * Shows the inventory: item list on the left, a reserved image and description pane on the right.
+ * @param {?string} [selectedId] - Item to inspect; null shows the placeholder.
+ * @returns {void}
+ */
+function showInventory(selectedId = null) {
+  const wrap = document.createElement('div');
+  wrap.className = 'inv';
+  const list = document.createElement('div');
+  list.className = 'invList';
+  if (!state.items.length) list.textContent = t('ui.empty');
+  for (const [category, info] of Object.entries(ITEM_CATEGORIES)) {
+    const ids = state.items.filter((id) => ITEM_TYPES[id] === category);
+    if (!ids.length) continue;
+    const heading = document.createElement('div');
+    heading.className = 'invGroup';
+    heading.textContent = `${info.symbol} ${t(`cat.${category}`)}`;
+    list.appendChild(heading);
+    ids.forEach((id) => {
+      const button = makeButton(`${info.symbol} ${t(`item.${id}.name`)}`, id === selectedId ? 'sel' : 'util', () => showInventory(id));
+      button.style.borderLeft = `4px solid ${info.color}`;
+      list.appendChild(button);
+    });
+  }
+  const detail = document.createElement('div');
+  detail.className = 'invDetail';
+  detail.innerHTML = `<div class="itemPic"><svg viewBox="0 0 120 120">${ITEM_ART[selectedId] || ''}</svg></div><div class="detailText"><p class="d"></p><p class="doc" hidden></p></div>`;
+  const pic = detail.querySelector('.itemPic');
+  if (selectedId && ITEM_IMAGES[selectedId]) loadImage(ITEM_IMAGES[selectedId], (img) => pic.replaceChildren(img));
+  const [desc, doc] = detail.querySelectorAll('p');
+  desc.textContent = selectedId ? t(`item.${selectedId}.desc`) : t('ui.pickItem');
+  doc.hidden = !(selectedId && STRINGS[`item.${selectedId}.text`]);
+  if (!doc.hidden) doc.textContent = t(`item.${selectedId}.text`);
+  wrap.append(list, detail);
+  const root = document.createElement('div');
+  root.className = 'invRoot';
+  root.append(buildHealthMonitor(), wrap);
+  openOverlay(t('ui.invTitle'), root);
+}
+
+/**
+ * Opens the map, which is also the travel interface. Visited rooms are boxes; rooms reachable from the
+ * current room are highlighted and clickable (hold to peek); unexplored neighbours of visited rooms
+ * appear as a dashed box with a direction arrow and "?".
+ * @returns {void}
+ */
+function showMap() {
+  const { cellW, cellH, gapX, gapY } = CONFIG.map;
+  const at = ([x, y]) => [x * (cellW + gapX) + 6, y * (cellH + gapY) + 6];
+  const reachable = Object.values(ROOMS[state.room].exits);
+
+  /** Builds one room cell. @param {string} id - Room id. @param {string} label - Text. @param {string} kind - 'here', 'known' or 'unknown'. @returns {string} SVG markup. */
+  const cell = (id, label, kind) => {
+    const [x, y] = at(ROOMS[id].pos);
+    const lock = ROOMS[id].lock;
+    const locked = lock && !state.unlocked.has(id);
+    const go = reachable.includes(id);
+    const stroke = kind === 'here' || go ? '#c9a45c' : '#3f5570';
+    const dash = kind === 'unknown' ? ` stroke-dasharray="${CONFIG.unknownDash}"` : '';
+    return `<g ${go ? `data-room="${id}" style="cursor:pointer"` : ''}>`
+      + `<rect x="${x}" y="${y}" width="${cellW}" height="${cellH}" rx="6" fill="${kind === 'here' ? '#3a2f18' : '#1b232f'}" stroke="${stroke}"${dash}/>`
+      + `<text x="${x + cellW / 2}" y="${y + cellH / 2 + 4}" text-anchor="middle" font-size="${kind === 'unknown' ? 15 : 11}" fill="#d3dae4" font-family="system-ui">${label}${locked ? ' 🔒' : ''}</text></g>`;
+  };
+
+  let links = '';
+  let cells = '';
+  const drawnUnknown = new Set();
+  for (const [id, room] of Object.entries(ROOMS)) {
+    if (!state.visited.has(id)) continue;
+    const [x, y] = at(room.pos);
+    for (const [dir, destId] of Object.entries(room.exits)) {
+      const [dx, dy] = at(ROOMS[destId].pos);
+      links += `<line x1="${x + cellW / 2}" y1="${y + cellH / 2}" x2="${dx + cellW / 2}" y2="${dy + cellH / 2}" stroke="#2a3544" stroke-width="3"/>`;
+      if (!state.visited.has(destId) && !drawnUnknown.has(destId)) {
+        drawnUnknown.add(destId);
+        cells += cell(destId, `${t(`dir.${dir}`)} ?`, 'unknown');
+      }
+    }
+    cells += cell(id, t(`room.${id}.name`), id === state.room ? 'here' : 'known');
+  }
+
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `<svg viewBox="0 0 ${5 * (cellW + gapX)} ${4 * (cellH + gapY)}" width="100%">${links}${cells}</svg><p class="d"></p>`;
+  const hint = wrap.querySelector('p');
+  hint.textContent = t('ui.mapHint');
+  wrap.querySelectorAll('[data-room]').forEach((node) => {
+    const id = node.dataset.room;
+    bindHold(node, () => { closeOverlay(); tryMove(id); }, () => { hint.textContent = t('ui.hold', { text: t(`room.${id}.peek`) }); });
+  });
+  openOverlay(t('ui.mapTitle'), wrap);
+}
+
+/* ================= INPUT ================= */
+/**
+ * Routes keyboard input to game actions according to CONFIG.keys.
+ * @param {KeyboardEvent} event - Keydown event.
+ * @returns {void}
+ */
+function onKeyDown(event) {
+  const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+  if (!document.getElementById('langScreen').hidden) return;
+  if (!document.getElementById('overlay').hidden) {
+    if (key !== CONFIG.keys.close && activeLockInput && activeLockInput.handleKey(event, key)) { event.preventDefault(); return; }
+    if (key === CONFIG.keys.close) closeOverlay();
+    return;
+  }
+  if (waitingForInput) { if (key === ' ' || key === 'Enter') { event.preventDefault(); advanceText(); } return; }
+  if (state.scene && /^[1-9]$/.test(key)) { chooseOption(Number(key) - 1); return; }
+  if (key === CONFIG.keys.explore) explore();
+  else if (key === CONFIG.keys.look) look();
+  else if (key === CONFIG.keys.history) setHistoryVisible(!document.getElementById('log').classList.contains('showHistory'));
+  else if (key === CONFIG.keys.inventory && !state.scene && !state.ended) showInventory();
+  else if (key === CONFIG.keys.map && !state.scene && !state.ended) showMap();
+}
+
+/**
+ * Wires static page controls: click-outside to close overlays, jump-to-bottom button, log scroll tracking.
+ * @returns {void}
+ */
+function bindStaticUi() {
+  const logEl = document.getElementById('log');
+  const jump = document.getElementById('jump');
+  jump.textContent = t('ui.jump');
+  jump.addEventListener('click', () => logEl.scrollTo({ top: logEl.scrollHeight, behavior: 'smooth' }));
+  logEl.addEventListener('scroll', () => { stickToBottom = isLogAtBottom(); updateJumpButton(); });
+  new ResizeObserver(() => { if (stickToBottom) scrollLogToBottom(); }).observe(logEl);
+  bindTextAdvance(document.body);
+  document.documentElement.style.setProperty('--max-visible-choices', CONFIG.maxVisibleChoices);
+  const revealHistory = () => { if (!logEl.classList.contains('showHistory') && logEl.scrollTop <= 0) setHistoryVisible(true); };
+  document.getElementById('historyToggle').addEventListener('click', () => setHistoryVisible(!logEl.classList.contains('showHistory')));
+  logEl.addEventListener('wheel', (event) => { if (event.deltaY < 0) revealHistory(); }, { passive: true });
+  let touchStartY = 0;
+  logEl.addEventListener('touchstart', (event) => { touchStartY = event.touches[0].clientY; }, { passive: true });
+  logEl.addEventListener('touchmove', (event) => { if (event.touches[0].clientY - touchStartY > CONFIG.historySwipePx) revealHistory(); }, { passive: true });
+  const overlay = document.getElementById('overlay');
+  overlay.addEventListener('click', (event) => { if (event.target === overlay) closeOverlay(); });
+}
+
+document.addEventListener('keydown', onKeyDown);
+bindStaticUi();
+showLanguageSelect();
+</script>
+</body>
+</html>

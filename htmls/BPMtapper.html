@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BPM TAPPER // RHYTHM ANALYZER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B0D0F; --panel:rgba(20,24,28,.82); --tx:#EDEFF2; --mut:#8A939B;
+  --cy:#28E0C8; --or:#FF7A29; --ye:#FFD400; --gr:rgba(255,255,255,.08);
+  --hd:"Barlow Condensed","Oswald","Arial Narrow",Impact,sans-serif;
+  --bd:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --pulse:0; color-scheme:dark; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--tx);font:400 14px/1.4 var(--bd);min-height:100vh;overflow-x:hidden;
+  background-image:linear-gradient(var(--gr) 1px,transparent 1px),linear-gradient(90deg,var(--gr) 1px,transparent 1px);background-size:48px 48px}
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellipse at 30% 0%,rgba(40,224,200,.07),transparent 60%);pointer-events:none}
+.wrap{position:relative;max-width:1080px;margin:0 auto;padding:16px 14px 32px;display:grid;gap:14px}
+.lab{font:600 10px/1 var(--bd);letter-spacing:.22em;text-transform:uppercase;color:var(--mut)}
+/* header */
+header{position:relative;padding:18px 4px 10px;overflow:hidden}
+.bgword{position:absolute;right:-6px;top:-18px;font:700 clamp(110px,24vw,230px)/1 var(--hd);letter-spacing:-.02em;color:rgba(255,255,255,.045);pointer-events:none;user-select:none;white-space:nowrap}
+h1{position:relative;margin:6px 0 0;font:700 clamp(40px,9vw,76px)/.95 var(--hd);letter-spacing:.02em;text-transform:uppercase}
+h1 span{color:var(--cy)}
+.status{position:relative;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.dot{display:inline-block;width:8px;height:8px;background:var(--cy);margin-right:6px;box-shadow:0 0 8px var(--cy)}
+.hazard{height:6px;margin-top:12px;max-width:220px;background:repeating-linear-gradient(-45deg,var(--ye) 0 8px,#111 8px 16px)}
+/* panels */
+.panel{position:relative;background:var(--panel);border:1px solid var(--gr);padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.4),inset 0 0 calc(46px*var(--pulse)) rgba(40,224,200,calc(.22*var(--pulse)))}
+.panel::before,.panel::after{content:"";position:absolute;width:12px;height:12px;border:2px solid var(--cy);pointer-events:none}
+.panel::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
+.panel::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+.ph{display:flex;justify-content:space-between;gap:8px;margin-bottom:12px}
+.main{display:grid;gap:18px;grid-template-columns:1fr}
+@media(min-width:820px){.main{grid-template-columns:minmax(320px,400px) 1fr;align-items:center}}
+/* tap button */
+.tapcol{display:grid;justify-items:center;gap:10px}
+.tapwrap{position:relative;width:min(78vw,340px);aspect-ratio:1}
+.tap{position:relative;z-index:1;width:100%;height:100%;display:grid;place-content:center;gap:6px;text-align:center;cursor:pointer;
+  color:var(--tx);background:linear-gradient(160deg,#1a2024,#101417);border:1px solid var(--cy);
+  box-shadow:0 0 0 6px rgba(40,224,200,.06),0 10px 30px rgba(0,0,0,.6);transition:transform .08s,background .08s;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;font-family:var(--hd)}
+.tap b{font-size:clamp(64px,18vw,104px);line-height:.9;letter-spacing:.08em}
+.tap small{font:600 11px/1 var(--bd);letter-spacing:.24em;color:var(--cy)}
+.tap.pressed{transform:scale(.955);background:linear-gradient(160deg,#1f3a38,#122120)}
+.ring{position:absolute;inset:0;border:2px solid var(--cy);pointer-events:none;animation:ring .5s ease-out forwards}
+@keyframes ring{from{transform:scale(1);opacity:.8}to{transform:scale(1.35);opacity:0}}
+:focus-visible{outline:2px solid var(--ye);outline-offset:3px}
+.hint{text-align:center}
+/* readouts */
+.bpm{font:700 clamp(56px,13vw,112px)/.95 var(--hd);letter-spacing:.01em}
+.bpm em{font-style:normal;font-size:.32em;color:var(--mut);letter-spacing:.14em;margin-left:.2em}
+.sub{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:10px}
+.sub div{min-width:120px}
+.sub .v{font:600 22px/1.2 var(--hd);letter-spacing:.06em}
+.btn{font:600 12px/1 var(--bd);letter-spacing:.2em;text-transform:uppercase;color:var(--tx);background:transparent;border:1px solid var(--mut);padding:11px 16px;cursor:pointer;min-height:40px}
+.btn:hover{border-color:var(--cy);color:var(--cy)}
+.btn[aria-pressed="true"],.btn.on{border-color:var(--cy);color:#06110f;background:var(--cy)}
+.btn.warn:hover{border-color:var(--or);color:var(--or)}
+/* deviation strip */
+.errs{display:grid;gap:8px;margin-bottom:12px;font:600 20px/1.1 var(--hd);letter-spacing:.08em;font-variant-numeric:tabular-nums}
+.er{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 22px}
+.er .lab{min-width:104px}
+.er i{font-style:normal;min-width:88px}
+.er i.warn{color:var(--or)}
+.strip{position:relative;height:64px;border:1px solid var(--gr);background:linear-gradient(90deg,rgba(255,122,41,.08),transparent 30%,transparent 70%,rgba(255,122,41,.08))}
+.tick{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.12);pointer-events:none}
+.tl{position:relative;height:14px;margin-top:6px}
+.tl span{position:absolute;transform:translateX(-50%);font:600 9px/1 var(--bd);letter-spacing:.04em;color:var(--mut);white-space:nowrap}
+.center{position:absolute;left:50%;top:-6px;bottom:-6px;width:1px;background:rgba(237,239,242,.4)}
+.mk{position:absolute;top:10px;bottom:10px;width:4px;margin-left:-2px;background:var(--cy);display:none}
+.mk.o{background:var(--or)}
+.mk.new{top:4px;bottom:4px;width:6px;margin-left:-3px}
+.axis{display:flex;justify-content:space-between;margin-top:8px;gap:6px}
+.axis .c{color:var(--tx)}
+/* metronome */
+.mrow{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end}
+.num{display:flex;align-items:stretch}
+.num input{width:96px;text-align:center;font:700 30px/1 var(--hd);letter-spacing:.06em;color:var(--tx);background:#0d1114;border:1px solid var(--mut);border-left:0;border-right:0;padding:6px 4px;-moz-appearance:textfield}
+.num input::-webkit-outer-spin-button,.num input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.num .btn{padding:0 14px;font-size:16px}
+.beats{display:flex;gap:8px}
+.beat{width:52px;height:52px;display:grid;place-content:center;border:1px solid var(--gr);font:700 22px/1 var(--hd);color:var(--mut);background:rgba(255,255,255,.02)}
+.beat.b1{border-color:rgba(40,224,200,.5);color:var(--cy)}
+.beat.act{background:var(--tx);color:#0B0D0F;border-color:var(--tx)}
+.beat.b1.act{background:var(--cy);border-color:var(--cy);box-shadow:0 0 18px rgba(40,224,200,.5);transform:scale(1.1)}
+footer{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+@media(prefers-reduced-motion:reduce){.ring{animation-duration:.01s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="bgword" aria-hidden="true">RHYTHM</div>
+    <div class="status lab"><span><i class="dot"></i>SYS // ONLINE</span><span>UNIT BT-120</span><span id="st">STANDBY</span></div>
+    <h1>BPM <span>TAPPER</span><br>Rhythm Analyzer</h1>
+    <div class="hazard" aria-hidden="true"></div>
+  </header>
+
+  <section class="panel main" aria-label="Tap input and tempo readout">
+    <div class="tapcol">
+      <div class="lab">INPUT // 01</div>
+      <div class="tapwrap" id="tw">
+        <button class="tap" id="tap" aria-label="Tap to the beat"><b>TAP</b><small>INPUT // BEAT</small></button>
+      </div>
+      <div class="lab hint">SPACE / CLICK / TOUCH TO TAP</div>
+    </div>
+    <div>
+      <div class="lab">TEMPO // ANALYSIS</div>
+      <div class="bpm" id="bpm" aria-live="off">--.-<em>BPM</em></div>
+      <div class="sub">
+        <div><div class="lab">AVG INTERVAL</div><div class="v" id="avg">--- MS</div></div>
+        <div><div class="lab">TAP COUNT</div><div class="v" id="cnt">0</div></div>
+      </div>
+      <p class="lab" id="lock" style="margin:12px 0">TAP 4 TIMES TO LOCK TEMPO</p>
+      <button class="btn warn" id="reset" aria-label="Reset tap history">RESET</button>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="Timing deviation">
+    <div class="ph"><span class="lab">DEVIATION // 02</span><span class="lab">TIMING DEVIATION</span></div>
+    <div class="errs" aria-live="off">
+      <div class="er"><span class="lab">ERROR //</span><i id="ems">+0.0 MS</i><i id="ebpm">+0.0 BPM</i></div>
+      <div class="er"><span class="lab">AVG ERROR //</span><i id="aems">+0.0 MS</i><i id="abpm">+0.0 BPM</i></div>
+    </div>
+    <div class="strip" id="strip" role="img" aria-label="Last 20 taps plotted by timing deviation"><div class="center"></div></div>
+    <div class="tl" id="tl" aria-hidden="true"></div>
+    <div class="axis lab"><span>◄ EARLY (FASTER)</span><span class="c">ON BEAT / AVG</span><span>LATE (SLOWER) ►</span></div>
+    <div class="axis lab"><span>NEWEST = BRIGHTEST (20 TAPS) // SCALE ±500 MS, NON-LINEAR</span><span id="latest">LATEST: +0.0 BPM</span></div>
+  </section>
+
+  <section class="panel" aria-label="Fixed metronome">
+    <div class="ph"><span class="lab">METRONOME // 03</span><span class="lab">FIXED TEMPO 4/4</span></div>
+    <div class="mrow">
+      <div><div class="lab" style="margin-bottom:6px">BPM 30–300</div>
+        <div class="num"><button class="btn" id="dn" aria-label="Decrease metronome BPM">−</button>
+        <input id="mb" type="number" min="30" max="300" step="1" value="120" inputmode="numeric" aria-label="Metronome BPM"><button class="btn" id="up" aria-label="Increase metronome BPM">+</button></div></div>
+      <div style="display:flex;gap:8px"><button class="btn" id="start" aria-label="Start metronome">START</button><button class="btn" id="stop" aria-label="Stop metronome">STOP</button></div>
+      <div><div class="lab" style="margin-bottom:6px">BEAT</div><div class="beats" id="beats" aria-live="off"></div></div>
+    </div>
+  </section>
+
+  <footer>
+    <span class="lab">FEEDBACK //</span>
+    <button class="btn" id="fv" aria-pressed="true" aria-label="Toggle visual effects">VISUAL FX: ON</button>
+    <button class="btn" id="fa" aria-pressed="true" aria-label="Toggle audio effects">AUDIO FX: ON</button>
+  </footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : v; } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
+};
+let fxV = store.get("bpmt.v", "1") === "1", fxA = store.get("bpmt.a", "1") === "1";
+
+/* ---------- Audio ---------- */
+let ac = null;
+function ctx(){
+  if(!ac){ try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ return null; } }
+  if(ac.state === "suspended") ac.resume();
+  return ac;
+}
+function click(t, freq, dur, gain, type){
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(gain, t + 0.002);   // fast attack = crisp click
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);   // short decay
+  o.connect(g); g.connect(ac.destination);
+  o.start(t); o.stop(t + dur + 0.02);
+}
+
+/* ---------- Tap analysis ---------- */
+const WIN = 16;          // intervals kept for the weighted average
+const DECAY = 0.82;      // weight multiplier per step back in time (newest = 1)
+const CALIB = 3;         // first 3 intervals are never rejected (calibration)
+const OUTLIER = 0.4;     // reject intervals >40% from recent median
+const STALE = 2500;      // ms of silence that starts a new tap session
+let lastT = null, intervals = [], taps = 0, rejects = 0, est = null, devs = [];
+let sumMs = 0, sumB = 0, nAvg = 0;   // running error totals over ALL taps (|error| <= 500 ms only)
+let target = 0, shown = 0, pulse = 0;
+
+const median = a => { const b = [...a].sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m-1] + b[m]) / 2; };
+// Weighted moving average of intervals: weight = DECAY^age, so recent taps count most.
+// Averaging intervals (not BPMs) then converting gives the true mean tempo.
+function estimate(arr){
+  let s = 0, w = 0;
+  for(let i = arr.length - 1, k = 0; i >= 0; i--, k++){ const wt = Math.pow(DECAY, k); s += arr[i] * wt; w += wt; }
+  return s / w;
+}
+const fmt = (n, d = 1) => (n >= 0 ? "+" : "−") + Math.abs(n).toFixed(d);
+
+function clearAll(){
+  lastT = null; intervals = []; taps = 0; rejects = 0; est = null; devs = []; target = 0;
+  sumMs = 0; sumB = 0; nAvg = 0;
+}
+
+function onTap(){
+  const t = performance.now();
+  if(lastT !== null && t - lastT > STALE) clearAll();   // long pause: start fresh
+  taps++;
+  feedback();
+  if(lastT === null){ lastT = t; render(); return; }
+  const iv = t - lastT; lastT = t;
+
+  const ref = intervals.length ? estimate(intervals) : iv;   // smoothed estimate BEFORE this tap
+  let ok = true;
+  if(intervals.length >= CALIB){
+    // Outlier rejection: compare against median of recent intervals (robust to earlier noise)
+    const med = median(intervals.slice(-8));
+    ok = Math.abs(iv - med) / med <= OUTLIER;
+    if(!ok && ++rejects >= 3){ ok = true; intervals = []; }   // 3 in a row = deliberate tempo change: re-seed
+  }
+  if(ok){
+    rejects = 0; intervals.push(iv);
+    if(intervals.length > WIN) intervals.shift();
+    est = estimate(intervals);
+  }
+  // Deviation: tap_BPM - smoothed_BPM. Negative = faster/early, positive = slower/late.
+  const refBpm = 60000 / ref;
+  const dB = 60000 / iv - refBpm, dMs = iv - ref;
+  devs.push({ bpm: dB, ms: dMs, ref: refBpm, rej: !ok });
+  if(Math.abs(dMs) <= 500){ sumMs += dMs; sumB += dB; nAvg++; }   // average ignores 500 ms+ outliers
+  if(devs.length > 20) devs.shift();
+  if(taps >= 4 && est) target = 60000 / est;
+  render();
+}
+
+function feedback(){
+  if(fxA && ctx()){
+    const acc = taps % 4 === 1;                          // every 4th tap = "beat 1"
+    click(ac.currentTime, acc ? 2600 : 1800, 0.03, acc ? 0.35 : 0.2, "sine");
+  }
+  if(fxV){
+    const b = $("tap"); b.classList.add("pressed"); setTimeout(() => b.classList.remove("pressed"), 100);
+    const r = document.createElement("span"); r.className = "ring";
+    r.addEventListener("animationend", () => r.remove()); $("tw").appendChild(r);
+    pulse = 1;
+  }
+}
+
+/* ---------- Rendering ---------- */
+const strip = $("strip"), mks = [];
+for(let i = 0; i < 20; i++){ const m = document.createElement("div"); m.className = "mk"; strip.appendChild(m); mks.push(m); }
+
+const MAXMS = 500, WARN_MS = 20;
+// Fixed axis of -500..+500 ms. A square-root scale keeps the fine range (20-100 ms) readable
+// while still fitting 500 ms; errors beyond +/-500 ms are pinned to the edge.
+const xpos = ms => Math.sign(ms) * Math.sqrt(Math.min(Math.abs(ms), MAXMS) / MAXMS);
+[-500, -300, -100, -60, -20, 20, 60, 100, 300, 500].forEach(v => {
+  const p = 50 + xpos(v) * 49;
+  const t = document.createElement("div"); t.className = "tick"; t.style.left = p + "%"; strip.appendChild(t);
+  const l = document.createElement("span"); l.textContent = (v < 0 ? "−" : "+") + Math.abs(v); l.style.left = p + "%";
+  if(v === -500){ l.style.left = "0"; l.style.transform = "none"; }
+  if(v === 500){ l.style.left = "100%"; l.style.transform = "translateX(-100%)"; }
+  $("tl").appendChild(l);
+});
+
+function render(){
+  $("cnt").textContent = taps;
+  const locked = taps >= 4 && est;
+  $("avg").textContent = locked ? est.toFixed(1) + " MS" : "--- MS";
+  $("lock").textContent = locked ? "TEMPO LOCKED" : "TAP " + Math.max(0, 4 - taps) + " MORE TO LOCK TEMPO";
+  $("st").textContent = taps ? (locked ? "LOCKED" : "CALIBRATING") : "STANDBY";
+  if(!locked){ shown = 0; $("bpm").innerHTML = "--.-<em>BPM</em>"; }
+  const last = devs[devs.length - 1];
+  for(let i = 0; i < 20; i++){
+    const d = devs[devs.length - 1 - i], m = mks[i];       // i = age (0 = newest)
+    if(!d){ m.style.display = "none"; continue; }
+    m.style.display = "block"; m.style.left = (50 + xpos(d.ms) * 49) + "%";
+    // newest = 0.8; 2nd..20th spread linearly from 0.5 down to 0.1
+    m.style.opacity = (i === 0 ? 0.8 : 0.5 - 0.4 * (i - 1) / 18).toFixed(3);
+    m.className = "mk" + (Math.abs(d.ms) > WARN_MS ? " o" : "") + (i === 0 ? " new" : "");
+  }
+  if(last){
+    const warn = Math.abs(last.ms) > WARN_MS;
+    $("ems").textContent = fmt(last.ms) + " MS"; $("ebpm").textContent = fmt(last.bpm) + " BPM";
+    $("ems").className = $("ebpm").className = warn ? "warn" : "";
+    $("latest").textContent = "LATEST: " + fmt(last.bpm) + " BPM";
+  } else {
+    $("ems").textContent = "+0.0 MS"; $("ebpm").textContent = "+0.0 BPM"; $("latest").textContent = "LATEST: +0.0 BPM";
+  }
+  // Average (signed) error over all taps so far, excluding 500 ms+ outliers
+  $("aems").textContent = fmt(nAvg ? sumMs / nAvg : 0) + " MS";
+  $("abpm").textContent = fmt(nAvg ? sumB / nAvg : 0) + " BPM";
+}
+
+/* ---------- Input ---------- */
+const tapBtn = $("tap");
+tapBtn.addEventListener("pointerdown", e => { e.preventDefault(); onTap(); });   // fires immediately, no click delay
+tapBtn.addEventListener("click", e => e.preventDefault());
+document.addEventListener("keydown", e => {
+  if((e.code === "Space" || e.key === "Enter") && (e.target === document.body || e.target === tapBtn)){
+    e.preventDefault();
+    if(!e.repeat) onTap();                                 // ignore key auto-repeat
+  }
+});
+$("reset").addEventListener("click", () => { clearAll(); render(); });
+
+/* ---------- Metronome ---------- */
+// Lookahead scheduler: a 25 ms timer wakes up and schedules every click due within the next
+// 150 ms on the Web Audio clock. nextT advances by exact beat length from the audio clock,
+// never from timer wakeups, so timer jitter cannot accumulate as drift.
+let mb = 120, mOn = false, nextT = 0, beatIdx = 0, timer = 0, queue = [];
+function sched(){
+  while(nextT < ac.currentTime + 0.15){
+    const b = beatIdx % 4;
+    click(nextT, b === 0 ? 1300 : 880, 0.05, b === 0 ? 0.35 : 0.22, "square");   // beat 1 higher + louder
+    queue.push({ t: nextT, b });
+    nextT += 60 / mb; beatIdx++;
+  }
+  timer = setTimeout(sched, 25);
+}
+function startM(){
+  if(mOn || !ctx()) return;
+  mOn = true; beatIdx = 0; nextT = ac.currentTime + 0.06; sched(); syncM();
+}
+function stopM(){
+  mOn = false; clearTimeout(timer); queue = []; actBeat(-1); syncM();
+}
+function syncM(){ $("start").classList.toggle("on", mOn); $("start").setAttribute("aria-pressed", mOn); }
+const beatsEl = $("beats"), cells = [];
+for(let i = 0; i < 4; i++){ const c = document.createElement("div"); c.className = "beat" + (i === 0 ? " b1" : ""); c.textContent = i + 1; beatsEl.appendChild(c); cells.push(c); }
+function actBeat(b){ cells.forEach((c, i) => c.classList.toggle("act", i === b)); }
+function setMb(v, commit){
+  const n = parseFloat(v);
+  if(isFinite(n)){ mb = Math.min(300, Math.max(30, n)); }
+  if(commit) $("mb").value = Math.round(mb);
+}
+$("mb").addEventListener("input", e => { const n = parseFloat(e.target.value); if(n >= 30 && n <= 300) mb = n; });
+$("mb").addEventListener("change", e => setMb(e.target.value, true));
+$("up").addEventListener("click", () => setMb(mb + 1, true));
+$("dn").addEventListener("click", () => setMb(mb - 1, true));
+$("start").addEventListener("click", startM);
+$("stop").addEventListener("click", stopM);
+
+/* ---------- Toggles ---------- */
+function syncFx(){
+  $("fv").textContent = "VISUAL FX: " + (fxV ? "ON" : "OFF"); $("fv").setAttribute("aria-pressed", fxV);
+  $("fa").textContent = "AUDIO FX: " + (fxA ? "ON" : "OFF"); $("fa").setAttribute("aria-pressed", fxA);
+}
+$("fv").addEventListener("click", () => { fxV = !fxV; store.set("bpmt.v", fxV ? "1" : "0"); syncFx(); });
+$("fa").addEventListener("click", () => { fxA = !fxA; store.set("bpmt.a", fxA ? "1" : "0"); syncFx(); });
+
+/* ---------- rAF loop: BPM easing, panel pulse decay, beat indicator ---------- */
+let prev = performance.now(), lastTxt = "";
+function frame(now){
+  const dt = Math.min(0.05, (now - prev) / 1000); prev = now;
+  if(target){
+    // Ease displayed BPM toward the smoothed estimate so tempo changes converge smoothly
+    shown = shown ? shown + (target - shown) * Math.min(1, dt * 8) : target;
+    const txt = shown.toFixed(1);
+    if(txt !== lastTxt){ lastTxt = txt; $("bpm").innerHTML = txt + "<em>BPM</em>"; }
+  } else lastTxt = "";
+  pulse = Math.max(0, pulse - dt * 4);
+  document.documentElement.style.setProperty("--pulse", pulse.toFixed(3));
+  if(mOn && ac){
+    while(queue.length && queue[0].t <= ac.currentTime){ actBeat(queue[0].b); queue.shift(); }
+  }
+  requestAnimationFrame(frame);
+}
+syncFx(); syncM(); render();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

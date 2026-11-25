@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mechanism Playground</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&family=Barlow:wght@400;500&display=swap">
+<style>
+:root{--bg:#0f3a5f;--pn:#0b2d4a;--ln:#cfe6f7;--mt:#8fb4d1;--ac:#ffd24a;--ok:#7fe3b0;--er:#ff7a6b;--fill:#16507f;--brass:#e0b23a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root:not([data-theme="light"]):not([data-theme="dark"]){--bg:#e6f0f8;--pn:#d3e3f1;--ln:#14395b;--mt:#4a6d8c;--ac:#a86500;--ok:#17744c;--er:#c0302a;--fill:#c4d9ec;--brass:#b8860b}}
+:root[data-theme="dark"]{--bg:#0f3a5f}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ln);font:15px/1.45 Barlow,system-ui,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 16px;background:var(--pn)}
+h1{font:600 24px 'Barlow Condensed',system-ui,sans-serif;margin:0 12px 0 0;letter-spacing:.02em}
+button{font:inherit;color:var(--ln);background:transparent;border:1.5px solid var(--ln);border-radius:3px;padding:5px 10px;cursor:pointer}
+button:hover,button.on{background:var(--ln);color:var(--bg)}
+button:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+main{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;padding:14px 16px;max-width:1280px;margin:auto}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.stage{position:relative;border:1.5px solid var(--ln);background:var(--bg);background-image:linear-gradient(var(--pn) 1px,transparent 1px),linear-gradient(90deg,var(--pn) 1px,transparent 1px);background-size:24px 24px}
+svg{display:block;width:100%;height:auto;touch-action:manipulation}
+svg *{stroke:var(--ln);stroke-width:2;fill:none;stroke-linejoin:round}
+.body{fill:var(--fill)}.xr .body{fill-opacity:.15;stroke-opacity:.5}
+.win{fill:var(--pn)}.mag{fill:var(--pn)}
+.brass{fill:var(--brass)}.spent{fill:var(--mt)}.on{fill:var(--ac)}
+text{fill:var(--mt);stroke:none;font:12px Barlow,sans-serif}
+.part{cursor:pointer}.part:hover *{stroke:var(--ac);stroke-width:3}
+#tray{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+#msg{min-height:44px;padding:8px 12px;border-left:4px solid var(--ok)}#msg.bad{border-color:var(--er);color:var(--er)}
+#hint{color:var(--ac);min-height:22px}
+aside section{background:var(--pn);padding:10px 12px;margin-bottom:12px}
+h2{font:600 18px 'Barlow Condensed',system-ui,sans-serif;margin:0 0 6px}
+ol{margin:0;padding-left:20px}li{margin:3px 0}
+pre{margin:0;white-space:pre-wrap;font:12px/1.4 ui-monospace,Menlo,monospace;color:var(--mt)}
+#tip{position:fixed;pointer-events:none;background:var(--ac);color:#111;padding:2px 8px;font-size:13px;display:none;z-index:9}
+.score{font:600 28px 'Barlow Condensed',system-ui,sans-serif}
+.fxl{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}.fxl *{stroke:none}dialog{background:var(--pn);color:var(--ln);border:1.5px solid var(--ln);width:min(760px,calc(100% - 24px));max-height:85vh;overflow:auto;padding:16px 20px;line-height:1.5}dialog::backdrop{background:#000a}dialog h3{font:600 20px 'Barlow Condensed',system-ui,sans-serif;margin:16px 0 4px}dialog pre{background:var(--bg);padding:8px 10px;overflow-x:auto;white-space:pre;color:var(--ln)}dialog code{font:13px ui-monospace,Menlo,monospace;color:var(--ac)}dialog pre code{color:var(--ln)}dialog li{margin:3px 0}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body>
+<header><h1>Mechanism Playground</h1><span id="tabs"></span>
+<button id="bx" title="X">X-ray</button><button id="bh" class="on" title="H">Hints</button><button id="bs">Slow-mo</button><button id="bm">Sound</button><button id="bd">Docs: add a gun</button></header>
+<main><div>
+<div class='stage'><div id='stage'></div><svg class='fxl' id='fx' viewBox='0 0 800 330'></svg></div>
+<div id="tray"></div>
+<div id="hint"></div><div id="msg">Click any highlighted part. Strict mode: invalid actions are blocked and explained.</div>
+</div><aside>
+<section><h2>Challenge</h2><div class="score" id="score">100</div>
+<button id="chal">Start “make safe” challenge</button> <button id="decl">Declare cleared</button>
+<p style="margin:6px 0 0;color:var(--mt);font-size:13px">Simulation only: loading, clearing and handling practice. Fictional generic mechanisms, not any real model.</p></section>
+<section id="stepsec"><h2>Procedure (R)</h2><ol id="steps"></ol></section>
+<section><h2>Debug state</h2><pre id="dbg"></pre></section>
+</aside></main><dialog id='docs'><h2>Extending the playground</h2>
+<p>Everything lives in this one file. A firearm is three things: a JSON entry, a class and one line of registration. Search for <code>class Revolver</code> to see a complete example.</p>
+<h3>1. Describe it in JSON (the <code>#cfg</code> script block)</h3>
+<pre><code>"breaker":{"name":"Break-action","cap":1,
+  "steps":["Press the lever","Insert a shell","Close the action","Fire"]}</code></pre>
+<ul><li><code>name</code>: tab label. Key order sets tab order and the 1 to 9 hotkeys.</li>
+<li><code>steps</code>: the correct procedure, in order, shown in the side panel.</li>
+<li><code>stub</code>: optional. Set to 1 for a placeholder that has no logic yet. It also needs <code>state</code>, an object of initial state variables shown in the debug panel.</li>
+<li>Any tuning number (capacity, round count) can live here. Read it in the class as <code>this.c.cap</code>.</li></ul>
+<h3>2. Write the class</h3>
+<p>Extend <code>Firearm</code>. The constructor stores the JSON as <code>this.c</code> and calls <code>reset()</code>. Define the class above the <code>const CLS</code> line. Required members:</p>
+<ul><li><code>reset()</code>: set <code>this.s</code> (every mechanical state variable: safety, action, chamber, magazine, hammer, slide or bolt position) and <code>this.tray</code>, the buttons under the stage, as <code>[label,'action']</code> or <code>[label,'action:7']</code> (the argument arrives as a number).</li>
+<li><code>scen()</code>: set a loaded, ready state for the challenge.</li>
+<li><code>cleared()</code>: true when the gun counts as safe: chamber and magazine, cylinder or tube empty, action open.</li>
+<li><code>hint()</code>: return the next correct step as text, based on the current state.</li>
+<li><code>render()</code>: return an SVG string with <code>viewBox="0 0 800 330"</code>. Add <code>class="xr"</code> when <code>G.xray</code> is on.</li>
+<li><code>do_name(arg)</code>: one handler per action. May be <code>async</code>.</li></ul>
+<h3>3. Handlers and the state machine</h3>
+<ul><li>Check every precondition first. To block an invalid action, <code>throw</code> a plain-language string such as <code>throw 'The action is open.'</code>. It shows in red and costs 5 points.</li>
+<li>Then change state and call <code>snd()</code>, <code>say()</code> and <code>fx</code> for feedback.</li>
+<li>For a multi-phase move, set the first state, call <code>draw();await wait(300);</code>, then set the next state. <code>wait</code> stretches in slow-mo.</li>
+<li>Input is locked while a handler runs, and <code>draw()</code> runs automatically afterwards.</li></ul>
+<h3>4. Draw the parts</h3>
+<ul><li><code>P(action,label,description,svgInner)</code> makes a clickable part with a tooltip and right-click description. An action of <code>'chamber:3'</code> calls <code>do_chamber(3)</code>.</li>
+<li><code>R(class,x,y,w,h,extra)</code> makes a rectangle. Classes: <code>body</code> (outline, turns translucent in X-ray), <code>win</code> (dark cutout), <code>mag</code>, <code>brass</code> (live round), <code>spent</code> (fired case), <code>on</code> (highlight for an engaged part).</li>
+<li>Draw order is back to front. Put internals (rounds, hammer, bolt) before the shell parts that cover them.</li></ul>
+<h3>5. Effects and sound</h3>
+<ul><li><code>fx.fire(x,y,{size})</code>: muzzle flash, smoke, recoil and the gunshot sound. Pass the muzzle position. Use <code>size</code> 0.9 for a handgun, 1.7 for a shotgun.</li>
+<li><code>fx.eject(x,y,'live'|'spent',{len,h,vx,vy,g,spin,delay,floor})</code>: a case or round that arcs out, spins, lands with a clink and fades. Everything except the first three arguments is optional. Coordinates are SVG units (800 by 330, y points down).</li>
+<li><code>snd(id)</code> ids: <code>click clack thunk metal load err tick ok</code>.</li></ul>
+<h3>6. Register</h3>
+<p>Add the class to the <code>CLS</code> map with the same key as the JSON entry: <code>CLS={...,breaker:BreakAction}</code>. To promote a stub, write its class, register it and remove <code>"stub":1</code>.</p>
+<h3>7. Checklist before you ship a gun</h3>
+<ul><li>Every state variable is in <code>this.s</code> (it appears in the debug panel).</li>
+<li>Every impossible transition throws an explanation: closed action, absent or unseated magazine, full tube, firing with the safety on or the action open.</li>
+<li><code>cleared()</code>, <code>scen()</code> and <code>hint()</code> agree with each other. Test the challenge start to finish.</li>
+<li>Every part has a label and a description. Every meaningful action has a sound, and ejection or firing uses <code>fx</code>.</li>
+<li>The <code>steps</code> in JSON match the real correct order.</li>
+<li>Try the full valid sequence, then each invalid action once, in both normal and slow-mo.</li></ul>
+<h3>Worked example: single-shot break-action</h3>
+<pre><code>class BreakAction extends Firearm{
+ reset(){this.s={open:0,ch:null};this.tray=[['Insert shell','load']]}
+ scen(){this.s={open:0,ch:'live'}}
+ cleared(){return this.s.open&amp;&amp;!this.s.ch}
+ hint(){const s=this.s;return s.ch?(s.open?'Take the shell out.':'Press the lever to open it.'):s.open?'Open and empty: clear.':'Press the lever.'}
+ do_lever(){const s=this.s;s.open^=1;snd('clack');
+  if(s.open&amp;&amp;s.ch==='spent'){fx.eject(330,150,'spent',{len:26,h:11});s.ch=null}
+  say(s.open?'Action broken open.':'Action closed.')}
+ do_load(){const s=this.s;if(!s.open)throw 'Break the action open first.';
+  if(s.ch)throw 'The chamber is occupied.';s.ch='live';snd('load');say('Shell inserted.')}
+ do_take(){const s=this.s;if(!s.open)throw 'The action is closed.';
+  if(!s.ch)throw 'Nothing to remove.';s.ch=null;snd('load');say('Shell removed.')}
+ do_trigger(){const s=this.s;if(s.open)throw 'The action is open.';
+  if(s.ch==='live'){s.ch='spent';snd('click');fx.fire(700,140,{size:1.5});say('Primer struck: shell spent.')}
+  else{snd('click');say('Click. Nothing to fire.')}}
+ render(){const s=this.s;return '&lt;svg viewBox="0 0 800 330" class="'+(G.xray?'xr':'')+'"&gt;'
+  +R('body',200,120,360,24)
+  +P('lever','Break lever','Opens the action',R(s.open?'on':'body',300,150,40,8))
+  +P('trigger','Trigger','Releases the striker',R('body',320,170,10,30))
+  +P('take','Chamber','Click to remove the shell',s.ch?R(s.ch==='live'?'brass':'spent',340,124,40,14):R('win',340,124,40,14))
+  +'&lt;/svg&gt;'}
+}
+const CLS={revolver:Revolver,pump:PumpShotgun,pistol:SemiAutoPistol,breaker:BreakAction};</code></pre>
+<form method='dialog'><button id='dx'>Close</button></form></dialog>
+<div id="tip"></div>
+<script type="application/json" id="cfg">
+{"revolver":{"name":"Revolver","steps":["Press the cylinder latch: the cylinder swings out","Push the ejector rod to empty every chamber","Click chambers to load one round at a time","Press the latch to close the cylinder","Cock the hammer (single-action) or pull through (double-action)"]},
+"pump":{"name":"Pump shotgun","steps":["Engage the safety","Pump the fore-end back: the action opens and any chambered shell is ejected","Load shells one at a time through the loading port","Pump forward to chamber a shell","Check the chamber, then disengage the safety"]},
+"pistol":{"name":"Semi-auto pistol","steps":["Engage the safety","Press the magazine release","Rack the slide: it ejects the chambered round and stays open","Insert a loaded magazine and push it home","Press the slide release to chamber a round"]},
+"rifle":{"name":"Carbine (stub)","stub":1,"steps":["Stub: bolt carrier, charging handle, bolt catch and selector are defined in the state schema, ready for a subclass"],"state":{"safety":"safe","selector":"semi","bolt":"forward","bcg":"locked","charging":"rest","bolt_catch":0,"mag":null,"chamber":null,"seated":0}},
+"smg":{"name":"SMG (stub)","stub":1,"steps":["Stub: open-bolt cycle, selector and folding stock go here"],"state":{"selector":"safe","bolt":"rear","stock":"folded","mag":null,"chamber":null}},
+"bolt":{"name":"Bolt-action (stub)","stub":1,"steps":["Stub: lift, pull, push and close the bolt; extractor and ejector go here"],"state":{"bolt":"closed","handle":"down","safety":"on","mag":0,"chamber":null}}}
+</script>
+<script>
+const $=s=>document.querySelector(s),CFG=JSON.parse($('#cfg').textContent);
+const G={gun:null,key:'',score:100,t0:0,hints:true,xray:false,slow:false,mute:false,busy:false,chal:false},K=Object.keys(CFG);
+let AC;
+function snd(k){if(G.mute)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const[f,d,t]={click:[1900,.04,'square'],clack:[260,.12,'sawtooth'],thunk:[110,.15,'sine'],metal:[880,.08,'triangle'],load:[600,.06,'square'],err:[85,.25,'sawtooth'],tick:[2600,.025,'square'],ok:[1200,.15,'sine']}[k],o=AC.createOscillator(),g=AC.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(.12,AC.currentTime);g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+const wait=ms=>new Promise(r=>setTimeout(r,ms*(G.slow?4:1)));
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function bang(z=1){if(G.mute)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const r=AC.sampleRate,n=Math.floor(r*.35*z),b=AC.createBuffer(1,n,r),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,3);const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain(),o=AC.createOscillator(),og=AC.createGain(),t=AC.currentTime;s.buffer=b;f.type='lowpass';f.frequency.setValueAtTime(5000/Math.sqrt(z),t);f.frequency.exponentialRampToValueAtTime(300/z,t+.3*z);g.gain.value=.5;s.connect(f);f.connect(g);g.connect(AC.destination);s.start();o.frequency.setValueAtTime(150/z,t);o.frequency.exponentialRampToValueAtTime(40,t+.2*z);og.gain.setValueAtTime(.4,t);og.gain.exponentialRampToValueAtTime(.001,t+.25*z);o.connect(og);og.connect(AC.destination);o.start();o.stop(t+.3*z)}catch(e){}}
+const fx={
+ add(h){const t=document.createElementNS('http://www.w3.org/2000/svg','g');t.innerHTML=h;const n=t.firstElementChild;$('#fx').appendChild(n);return n},
+ fire(x,y,o={}){const z=o.size||1,k=G.slow?3:1,C="transform-box:fill-box;transform-origin:center";bang(z);
+  const pts=[...Array(16)].map((_,i)=>{const a=i*Math.PI/8,r=(i%2?12:i%4?26:40)*z;return(x+r*Math.cos(a)).toFixed(1)+','+(y+r*Math.sin(a)).toFixed(1)}).join(' ');
+  const f=this.add(`<g style='${C}'><polygon style='fill:var(--ac)' points='${pts}'/><polygon style='fill:var(--ac)' points='${x},${y-9*z} ${x+80*z},${y} ${x},${y+9*z}'/><circle cx='${x}' cy='${y}' r='${9*z}' style='fill:#fff'/></g>`);
+  f.animate([{opacity:1,transform:'scale(.5)'},{opacity:1,transform:'scale(1)',offset:.35},{opacity:0,transform:'scale(1.3)'}],{duration:130*k}).onfinish=()=>f.remove();
+  for(let i=0;i<3;i++){const c=this.add(`<circle cx='${x+10}' cy='${y}' r='${7*z}' style='fill:var(--mt);${C}'/>`);c.animate([{opacity:.5,transform:'translate(0,0) scale(1)'},{opacity:0,transform:`translate(${30+i*22}px,${-18-i*14}px) scale(2.4)`}],{duration:(700+i*150)*k}).onfinish=()=>c.remove()}
+  if(!RM)$('#stage').animate([{transform:'translate(0,0)'},{transform:`translate(${-3*z}px,${2*z}px)`},{transform:'translate(0,0)'}],{duration:140*k})},
+ eject(x,y,kind,o={}){const L=o.len||18,H=o.h||8,k=G.slow?4:1,vx=o.vx??110+Math.random()*60,vy=o.vy??-230-Math.random()*40,g=o.g||620,fl=o.floor||316,sp=(o.spin||600)*(Math.random()<.5?-1:1),t0=performance.now()+(o.delay||0)*k;
+  const n=this.add(`<g style='opacity:0'><rect x='${-L/2}' y='${-H/2}' width='${L}' height='${H}' rx='2' style='fill:${kind==='live'?'var(--brass)':'var(--mt)'}'/></g>`);
+  const st=now=>{if(now<t0)return requestAnimationFrame(st);const s=(now-t0)/1000/k,py=y+vy*s+.5*g*s*s,px=x+vx*s;
+   if(py>=fl||s>2){n.setAttribute('transform',`translate(${px} ${Math.min(py,fl)}) rotate(${sp*s})`);snd('metal');n.animate([{opacity:1},{opacity:0}],{duration:500*k,fill:'forwards'}).onfinish=()=>n.remove();return}
+   n.style.opacity=1;n.setAttribute('transform',`translate(${px} ${py}) rotate(${sp*s})`);requestAnimationFrame(st)};requestAnimationFrame(st)}
+};
+function say(m,bad){const e=$('#msg');e.textContent=m;e.className=bad?'bad':''}
+const P=(a,l,d,x)=>`<g class="part" data-a="${a}" data-l="${l}" data-d="${d}">${x}</g>`;
+const R=(c,x,y,w,h,e='')=>`<rect class="${c}" x="${x}" y="${y}" width="${w}" height="${h}" ${e}/>`;
+class Firearm{
+ constructor(c){this.c=c;this.reset()}
+ async act(a,x){if(G.busy)throw'The mechanism is still moving.';if(!this['do_'+a])throw'Nothing happens.';G.busy=1;try{await this['do_'+a](x)}finally{G.busy=0;draw()}}
+}
+class Revolver extends Firearm{
+ reset(){this.s={open:0,h:0,rot:0,ch:Array(6).fill(null),rod:0};this.tray=[['Load next empty chamber','loadnext']]}
+ scen(){this.s={open:0,h:0,rot:0,ch:['live','spent','live',null,'live','spent'],rod:0}}
+ cleared(){return this.s.open&&this.s.ch.every(x=>!x)}
+ hint(){const s=this.s,f=s.ch.some(x=>x);return !s.open&&f?'Press the cylinder latch to swing the cylinder out.':s.open&&f?'Push the ejector rod to empty all chambers.':s.open?'Open and empty: the revolver is clear.':'Press the latch to open it.'}
+ do_latch(){const s=this.s;if(s.open){s.open=0;snd('clack');say('Cylinder closed and locked.')}else{s.open=1;s.h=0;snd('metal');say('Cylinder swung out. The hammer drops with the latch.')}}
+ do_chamber(i){const s=this.s;if(!s.open)throw'Cylinder is closed. Swing it out before loading or unloading a chamber.';s.ch[i]=s.ch[i]?null:'live';snd('load');say(s.ch[i]?`Round loaded in chamber ${i+1}.`:`Chamber ${i+1} emptied by hand.`)}
+ do_loadnext(){const s=this.s;if(!s.open)throw'Cylinder is closed. Swing it out first.';const i=s.ch.indexOf(null);if(i<0)throw'All six chambers are already full.';s.ch[i]='live';snd('load');say(`Round loaded in chamber ${i+1}.`)}
+ async do_rod(){const s=this.s;if(!s.open)throw'The ejector rod is blocked while the cylinder is closed.';s.rod=1;draw();snd('metal');await wait(350);const L=s.ch.filter(x=>x),n=L.length;s.ch.fill(null);s.rod=0;L.forEach((c,i)=>fx.eject(235,240,c,{vx:-30+Math.random()*60,vy:-40,delay:i*70}));say(`Ejector rod pushed: ${n} cartridge(s) or case(s) removed.`)}
+ do_spin(){const s=this.s;if(!s.open)throw'The bolt locks the cylinder while closed. Cock the hammer to index it.';s.rot=(s.rot+1)%6;snd('tick');say('Cylinder turned one chamber by hand.')}
+ do_hammer(){const s=this.s;if(s.open)throw'The hammer cannot be cocked while the cylinder is open.';if(s.h){s.h=0;say('Hammer lowered under thumb control.')}else{s.rot=(s.rot+1)%6;s.h=1;snd('tick');say('Single-action: hammer cocked and cylinder indexed.')}}
+ do_trigger(){const s=this.s;if(s.open)throw'The cylinder is open, so the trigger group is disconnected.';const da=!s.h;if(da){s.rot=(s.rot+1)%6}s.h=0;const c=s.ch[s.rot];if(c==='live'){s.ch[s.rot]='spent';snd('click');fx.fire(560,127,{size:.9});say(`${da?'Double':'Single'}-action function test: primer struck on chamber ${s.rot+1}; case now spent.`)}else{snd('click');say(c==='spent'?'Click. That case is already spent.':'Click. Chamber empty.')}}
+ render(){const s=this.s,o=s.open;let x=`<g transform="${o?'translate(-40 95) rotate(-22 280 140)':''}">${P('spin','Cylinder (hand-turn when open)','Six-chamber cylinder; the bolt locks it when closed',R('body',235,105,90,70,'rx="6"')+[0,1,2,3,4].map(i=>`<line x1="${250+i*17}" y1="108" x2="${250+i*17}" y2="172"/>`).join(''))}</g>`;
+ x+=`<polygon class="body" points="118,175 190,170 205,300 130,292"/>`+R('body',120,108,115,72,'rx="4"')+R('body',325,118,235,18)+R('body',325,142,70,10);
+ x+=P('rod','Ejector rod','Pushes all cases out of the cylinder together',R('body',330+(s.rod?0:0),152,s.rod?150:110,7));
+ x+=P('latch','Cylinder latch','Releases the cylinder to swing out',R(o?'on':'body',185,116,40,10));
+ x+=P('hammer','Hammer','Click to cock or lower',`<polygon class="${s.h?'on':'body'}" points="122,108 140,70 150,74 140,108" transform="rotate(${s.h?-32:0} 140 108)"/>`);
+ x+=P('trigger','Trigger','Single- or double-action',R('body',215,182,10,36,'rx="3"')+`<path d="M200 182 H245 V222 H200"/>`);
+ const cx=640,cy=190;x+=`<circle cx="${cx}" cy="${cy}" r="100"/><polygon points="${cx-9},${cy-112} ${cx+9},${cy-112} ${cx},${cy-100}" class="on"/><text x="${cx-34}" y="${cy-118}">barrel line</text>`;
+ x+=s.ch.map((c,i)=>{const a=((i-s.rot)*60-90)*Math.PI/180,px=cx+60*Math.cos(a),py=cy+60*Math.sin(a);return P('chamber:'+i,`Chamber ${i+1}`,'Empty chambers are dark; brass is live; grey is a spent case',`<circle class="${c==='live'?'brass':c==='spent'?'spent':'win'}" cx="${px}" cy="${py}" r="25"/><circle cx="${px}" cy="${py}" r="${c==='live'?7:3}"/>`)}).join('');
+ x+=P('spin','Cylinder hub','Turn by hand when open',`<circle class="body" cx="${cx}" cy="${cy}" r="16"/>`);
+ if(!o)x+=`<circle cx="${cx}" cy="${cy}" r="98" style="fill:var(--bg);fill-opacity:.35;pointer-events:none"/><text x="${cx-40}" y="${cy+4}">locked in frame</text>`;
+ return`<svg viewBox="0 0 800 330" class="${G.xray?'xr':''}">${x}</svg>`}
+}
+class PumpShotgun extends Firearm{
+ reset(){this.s={act:'closed',n:0,ch:null,h:0,safe:0};this.tray=[['Release one shell from tube','unload']]}
+ scen(){this.s={act:'closed',n:3,ch:'live',h:1,safe:0}}
+ cleared(){const s=this.s;return s.act==='open'&&!s.ch&&!s.n}
+ hint(){const s=this.s;return !s.safe&&(s.ch||s.n)?'Engage the safety first.':s.act==='closed'?'Pump the fore-end back to open the action and eject the chambered shell.':s.ch||s.n?'Action open. Release tube shells one at a time to empty it.':'Open and empty: the shotgun is clear.'}
+ do_safe(){this.s.safe^=1;snd('click');say(this.s.safe?'Safety on: trigger blocked.':'Safety off.')}
+ do_load(){const s=this.s;if(s.n>=4)throw'The tube is full (4 shells).';s.n++;snd('load');say('Shell pushed into the tube. It is not chambered yet. Work the pump.')}
+ do_unload(){const s=this.s;if(s.act!=='open')throw'Open the action first so released shells can drop out of the port.';if(!s.n)throw'The tube is empty.';s.n--;snd('load');fx.eject(294,198,'live',{len:26,h:11,vx:10,vy:-30});say('Shell released from the tube.')}
+ async do_pump(){const s=this.s;if(s.act==='closed'){s.act='open';s.h=1;draw();snd('clack');await wait(300);if(s.ch)fx.eject(285,118,s.ch,{len:26,h:11,vx:90,vy:-260});say(s.ch?`Action opened: the chambered ${s.ch} shell was ejected.`:'Action opened. Hammer cocked.');s.ch=null}else{s.act='closed';draw();snd('clack');await wait(300);if(s.n&&!s.ch){s.n--;s.ch='live';say('Action closed: the lifter fed a shell and it is chambered.')}else say('Action closed on an empty chamber.')}}
+ do_trigger(){const s=this.s;if(s.safe)throw'The safety is on. The trigger is blocked.';if(s.act==='open')throw'The action is open, so the trigger will not release the hammer.';if(!s.h)throw'The hammer is down. Work the pump to recock.';s.h=0;if(s.ch==='live'){s.ch='spent';snd('click');fx.fire(720,137,{size:1.7});say('Function test: primer struck. Shell is now spent. Pump to eject it.')}else{snd('click');say(s.n?'Click. Chamber empty, but shells wait in the tube. Pump to chamber one.':'Click. Chamber empty.')}}
+ render(){const s=this.s,o=s.act==='open',f=o?100:0;let x=`<polygon class="body" points="40,150 190,120 190,185 60,235"/>`+R('body',190,112,200,76,'rx="5"')+R('body',390,128,330,18)+R('body',390,163,330,14,'rx="7"');
+ x+=[...Array(s.n)].map((_,k)=>R('brass',692-k*34,165,30,10,'rx="3"')).join('');
+ x+=R('on',o?205:305,126,70,24,'rx="3"')+`<line x1="${370-f}" y1="190" x2="290" y2="150"/><line x1="${370-f}" y1="205" x2="300" y2="165"/>`;
+ x+=R('win',250,116,70,8)+R('body',270,s.act==='open'?150:172,44,8);
+ if(s.ch)x+=R(s.ch==='live'?'brass':'spent',345,131,44,12,'rx="3"');
+ x+=P('load','Loading port','Click to push a shell into the tube',R('body',262,188,64,12,'rx="3"'));
+ x+=P('pump','Fore-end (click to pump)','Action bars link the fore-end to the bolt',R('body',370-f,186,150,40,'rx="12"'));
+ x+=P('trigger','Trigger','Releases the hammer',R('body',236,192,10,30,'rx="3"')+`<path d="M222 192 H270 V230 H222"/>`);
+ x+=P('safe','Cross-bolt safety','Red = on, blocks the trigger',`<circle class="${s.safe?'on':'body'}" cx="292" cy="210" r="9" style="${s.safe?'fill:var(--er)':''}"/>`);
+ x+=`<polygon class="${s.h?'on':'body'}" points="200,114 214,96 224,100 218,114"/>`;
+ return`<svg viewBox="0 0 800 330" class="${G.xray?'xr':''}">${x}<text x="30" y="300">action: ${s.act} · hammer: ${s.h?'cocked':'down'}</text></svg>`}
+}
+class SemiAutoPistol extends Firearm{
+ reset(){this.s={slide:'forward',mag:null,ch:null,h:0,safe:0};this.tray=[['Insert loaded magazine (7)','insert:7'],['Insert empty magazine','insert:0']]}
+ scen(){this.s={slide:'forward',mag:{r:5,seated:1},ch:'live',h:1,safe:0}}
+ cleared(){const s=this.s;return !s.mag&&!s.ch&&s.slide==='locked'}
+ hint(){const s=this.s;return s.mag?'Press the magazine release.':s.ch||s.slide==='forward'?'Rack the slide: it ejects the chambered round and stays open.':s.slide==='locked'?'Open, empty, magazine out: the pistol is clear.':''}
+ fe(){const s=this.s,m=s.mag;if(m&&m.seated&&m.r>0){m.r--;s.ch='live';s.slide='forward'}else s.slide='locked';s.h=1}
+ do_safe(){this.s.safe^=1;snd('click');say(this.s.safe?'Safety on: trigger blocked.':'Safety off.')}
+ do_magrel(){const s=this.s;if(!s.mag)throw'No magazine in the well to release.';s.mag=null;snd('thunk');say(s.ch?'Magazine out. A round is still chambered!':'Magazine released.')}
+ do_insert(n){const s=this.s;if(s.mag)throw'The magazine well is occupied. Release the magazine first.';s.mag={r:+n,seated:0};snd('load');say('Magazine inserted but not seated. Click it to push it home.')}
+ do_seat(){const s=this.s;if(!s.mag)throw'There is no magazine to seat.';if(s.mag.seated)throw'The magazine is already seated.';s.mag.seated=1;snd('thunk');say('Magazine seated with a click.')}
+ async do_rack(){const s=this.s;s.slide='back';draw();snd('clack');await wait(300);const e=s.ch;if(e)fx.eject(470,118,e);s.ch=null;this.fe();draw();snd('metal');say((e?`Slide racked: the ${e} round was ejected. `:'Slide racked. ')+(s.slide==='locked'?(s.mag&&s.mag.seated?'Magazine empty: slide locked back.':'No seated magazine: slide held open, nothing chambered.'):'A fresh round is chambered.'))}
+ async do_lever(){const s=this.s;if(s.slide!=='locked')throw'The slide is not locked back, so the lever does nothing.';this.fe();snd('clack');say(s.ch?'Slide released: a round is chambered.':'Slide released on an empty chamber.')}
+ async do_trigger(){const s=this.s;if(s.slide!=='forward')throw'The slide is not in battery, so the trigger is disconnected.';if(s.safe)throw'The manual safety is on. The trigger is blocked.';if(!s.ch){s.h=0;snd('click');say('Click. Chamber empty.');return}s.ch='spent';s.h=0;fx.fire(560,129);draw();await wait(250);s.slide='back';draw();fx.eject(470,118,'spent');await wait(250);s.ch=null;this.fe();say('Function test: primer struck, slide cycled, case ejected.'+(s.slide==='locked'?' Magazine empty: slide locked back.':''))}
+ render(){const s=this.s,m=s.mag,o=s.slide==='forward'?0:70;let x=R('body',200,150,360,26,'rx="4"')+`<polygon class="body" points="228,176 332,176 346,300 252,308"/>`;
+ if(m)x+=P('seat','Magazine (click to seat)','Spring and follower push rounds up',R('mag',262,m.seated?190:206,56,125,'rx="3"'))+[...Array(m.r)].map((_,k)=>`<circle class="brass" cx="290" cy="${(m.seated?300:316)-k*15}" r="6"/>`).join('');
+ x+=P('rack','Slide (click to rack)','Strips a round, chambers it, ejects the case',R('body',210-o,108,350,42,'rx="5"')+R('win',420-o,114,80,28)+[0,1,2].map(i=>`<line x1="${240-o+i*9}" y1="116" x2="${240-o+i*9}" y2="142"/>`).join('')+`<polygon points="${528-o},108 ${528-o},98 ${540-o},108"/>`);
+ if(s.ch)x+=R(s.ch==='live'?'brass':'spent',435,121,44,13,'rx="3"');
+ x+=`<polygon class="${s.h?'on':'body'}" points="196,112 186,96 200,96 208,112" transform="rotate(${s.h?-20:0} 200 112)"/>`;
+ x+=P('safe','Manual safety','Red = on, blocks the trigger',R('body',222,158,30,9,'rx="3" style="'+(s.safe?'fill:var(--er)':'')+'"'));
+ x+=P('lever','Slide release lever','Releases a locked-back slide',R(s.slide==='locked'?'on':'body',300,164,40,7));
+ x+=P('magrel','Magazine release','Drops the magazine',`<circle class="body" cx="340" cy="200" r="8"/>`);
+ x+=P('trigger','Trigger','Releases the hammer',R('body',350,178,12,34,'rx="3"')+`<path d="M338 176 V220 H378"/>`);
+ return`<svg viewBox="0 0 800 330" class="${G.xray?'xr':''}">${x}<text x="30" y="310">slide: ${s.slide} · hammer: ${s.h?'cocked':'down'}</text></svg>`}
+}
+class Stub extends Firearm{
+ reset(){this.s={...this.c.state};this.tray=[]}
+ cleared(){return false}hint(){return'This firearm is a stub: add a subclass and move its logic here.'}
+ render(){return`<svg viewBox="0 0 800 330"><rect x="80" y="110" width="640" height="110" stroke-dasharray="10 8"/><text x="330" y="170" style="font-size:20px">Stub: ${this.c.name}</text><text x="250" y="195">State schema is loaded from JSON (see Debug state)</text></svg>`}
+ scen(){}
+}
+const CLS={revolver:Revolver,pump:PumpShotgun,pistol:SemiAutoPistol};
+function pick(k){G.key=k;G.gun=new(CLS[k]||Stub)(CFG[k]);G.chal=false;G.score=100;$('#steps').innerHTML=CFG[k].steps.map(t=>`<li>${t}</li>`).join('');
+ $('#tabs').innerHTML=K.map((q,i)=>`<button class="${q===k?'on':''}" data-k="${q}">${i+1} ${CFG[q].name}</button>`).join(' ');
+ $('#tray').innerHTML=G.gun.tray.map(t=>`<button data-a="${t[1]}">${t[0]}</button>`).join('');draw();say(`${CFG[k].name} on the bench. Hover parts for names; right-click to inspect.`)}
+function draw(){$('#stage').innerHTML=G.gun.render();$('#dbg').textContent=JSON.stringify(G.gun.s,null,1);$('#hint').textContent=G.hints?G.gun.hint():'';$('#score').textContent=G.score+(G.chal?'  (challenge)':'')}
+async function run(a){try{const[n,x]=a.split(':');await G.gun.act(n,x===undefined?undefined:+x)}catch(e){if(typeof e!=='string')throw e;G.score=Math.max(0,G.score-5);snd('err');say(e+' (−5)',1);draw()}}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-k]');if(t)return pick(t.dataset.k);const p=e.target.closest('[data-a]');if(p)run(p.dataset.a)});
+document.addEventListener('contextmenu',e=>{const p=e.target.closest('.part');if(p){e.preventDefault();say(`${p.dataset.l}: ${p.dataset.d}.`)}});
+document.addEventListener('pointermove',e=>{const p=e.target.closest&&e.target.closest('.part'),t=$('#tip');if(p){t.style.display='block';t.textContent=p.dataset.l;t.style.left=e.clientX+12+'px';t.style.top=e.clientY+14+'px'}else t.style.display='none'});
+const tog=(id,k,f)=>{G[k]=!G[k];$(id).classList.toggle('on',G[k]);f&&f()};
+$('#bx').onclick=()=>tog('#bx','xray',draw);$('#bh').onclick=()=>tog('#bh','hints',draw);$('#bs').onclick=()=>tog('#bs','slow');$('#bm').onclick=()=>tog('#bm','mute');
+$('#chal').onclick=()=>{if(CFG[G.key].stub)return say('Stubs have no challenge yet.',1);G.gun.scen();G.chal=true;G.score=100;G.t0=Date.now();draw();say('Challenge: the firearm is loaded. Make it safe, then press “Declare cleared”.')};
+$('#decl').onclick=()=>{if(G.gun.cleared()){const t=G.chal?Math.floor((Date.now()-G.t0)/10000):0;G.score=Math.max(0,G.score-t);snd('ok');say(`Cleared and verified. Final score ${G.score}${t?` (−${t} for time)`:''}.`);G.chal=false}else{G.score=Math.max(0,G.score-15);snd('err');say('Not clear: a round, magazine or closed action remains. Storing it like this is a failure to clear. (−15)',1)}draw()};
+document.addEventListener('keydown',e=>{if($('#docs').open)return;const k=e.key.toLowerCase(),i=+k-1;if(i>=0&&i<K.length)pick(K[i]);else if(k==='x')$('#bx').click();else if(k==='h')$('#bh').click();else if(k==='r')$('#stepsec').hidden=!$('#stepsec').hidden;else if(k==='escape')$('#bs').click()});
+$('#bd').onclick=()=>$('#docs').showModal();$('#dx').onclick=()=>$('#docs').close();
+pick('revolver');
+</script></body></html>
