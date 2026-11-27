@@ -11,60 +11,80 @@
 			background-color: black;
 			font-family: 'Share Tech', sans-serif;
 			user-select: none;
-			
+		}
+		div.container {
+			position: absolute;
 			display: flex;
 			flex-direction: column;
 			justify-content: center;
 			align-items: center;
+			
+			top: 0;
+			left: 0;
+				
+			height: 100%;
+			width: 100%;
+			overflow: hidden;
 		}
-
-		/* menu text style */
-		a { /* game name */
-			color: white;
-			text-decoration: none;
-			min-width: 200px;
-			line-height: 64px;
-			font-size: 26px;
-		}
-		p { /* TAGS tag */
-			font-size: 24px;
-			margin-top: 20px;
-			border-left: 2px solid #333;
-			padding-left: 1em;
-		}
-
 
 		/* menu container div */
 		div#menu {
-			position: relative;
 			display: flex;
 			flex-direction: column;
 			
 			width: 50%;
-			min-width: 800px;
-			max-width: 1200px;
+			min-width: 400px;
+			max-width: 800px;
+				
+			height: 80%;
+			max-height: 750px;
 			
 			margin-top: 1em;
 			margin-bottom: 1em;
-			overflow-y: auto;
+			
+			border: white 1px solid;
+			
+			overflow-y: scroll;
+			scrollbar-color: white transparent;
 		}
-		/* row div */
-		div#menu > div {
+		div#menu::-webkit-scrollbar-thumb { background-color: white; }
+		div#menu::-webkit-scrollbar-track { background: transparent; }
+		@media(max-width: 1100px) {
+			div#menu {
+				width: 95%;
+			}
+		}
+		/* row anchor */
+		div#menu > a {
 			display: flex;
 			justify-content: space-between;
 			flex-direction: row;
 			
+			text-decoration: none;
+			
 			padding: 0.25em 2.5em;
-			height: 64px;
+			min-height: 64px;
 			text-align: left;
-			overflow-x: hidden;
+			overflow: hidden;
 		}
-		div#menu > div:hover {
+		div#menu > a:hover {
 			background-color: #333;
 		}
 
+		/* menu text style */
+		div#menu span { /* game name */
+			color: white;
+			line-height: 64px;
+			font-size: 26px;
+		}
+
 		/* label style */
-		p.TAG { /* General Tag Style */
+		div#menu span.TAG { /* General Tag Style */
+			font-size: 24px;
+			margin-top: 20px;
+			border-left: 2px solid #333;
+			padding-left: 1em;
+			
 			border: 1px white solid;
 			border-radius: 5px;
 			line-height: 1em;
@@ -73,26 +93,33 @@
 			margin: auto 1em;
 			text-align: center;
 		}
-		p.TAGS0 { /* game */
+		div#menu span.TAGS0 { /* game */
 			color: rgb(102, 255, 97);
+			border-color: rgb(102, 255, 97);
 		}
-		p.TAGS1 { /* tool */
+		div#menu span.TAGS1 { /* tool */
 			color: rgb(97, 255, 234);
+			border-color: rgb(97, 255, 234);
 		}
-		p.TAGS2 { /* other */
+		div#menu span.TAGS2 { /* other */
 			color: rgb(100, 100, 100);
+			border-color: rgb(100, 100, 100);
 		}
-		p.TAGS3 {
+		div#menu span.TAGS3 {
 			color: rgb(47, 253, 47);
+			border-color: rgb(47, 253, 47);
 		}
 
-		div.hide {
+		a.hide {
 			display: none !important;
 		}
 
 		/* filter */
 		#filter_list {
-			margin: 2em;
+			border-bottom: white solid 1px;
+			padding: 1em 2.5em;
+			margin: 1em 2.5em;
+			background-color: rgba(0,0,0,0.8);
 		
 			color: white;
 			display: flex;
@@ -100,6 +127,8 @@
 		}
 		#filter_list > div {
 			border: 1px solid white;
+			border-radius: 5px;
+			
 			font-size: 28px;
 			padding: 8px 16px;
 			margin: 0 8px;
@@ -108,7 +137,7 @@
 			background-color: white;
 			color: black;
 		}
-		#filter_list > div.hover {
+		#filter_list > div:hover {
 			background-color: rgba(255,255,255,0.5);
 			color: black;
 		}
@@ -154,10 +183,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="filter_list"></div>
-    <div id="menu">
-        <!-- games links will be added here by script -->
-    </div>
+	<div class="container">
+		<div id="filter_list"></div>
+		<div id="menu">
+			<!-- games links will be added here by script -->
+		</div>
+	</div>
 </body>
 </html>
 
@@ -176,20 +207,20 @@ const TAG_OTHER = 2;
 const GAMES = [
     // Display name, Folder name, TAGS_Code, Description
     ["Sprite Animation Viewer", "RabbitAnimationSpriteViewer.html", TAG_TOOL, ""],
-	["SCP Text Adventure", "SCPtextAdventureGame.html", TAG_GAME, ""],
 	["Tetris 3D", "Tetris3D.html", TAG_GAME, ""],
 	["ARG website", "ARGwebsite.html", TAG_GAME, ""],
 	["Mania Rhythm Game", "RhythmGameMania.html", TAG_GAME, ""],
 	["FPS Range", "FPSshootingRange.html", TAG_GAME, ""],
-	["SCP Keycard Generator", "SCPkeycardGenerator.html", TAG_GAME, ""],
 	["Trader Game", "TraderGame.html", TAG_GAME, ""],
 	["Typesetter Tool", "TypesetterTool.html", TAG_TOOL, ""],
 	["SCP Terminal", "SCPterminal.html", TAG_OTHER, ""],
 	["SCP Explorer 3D", "SCPexplorer3D.html", TAG_OTHER, ""],
+	["SCP Paper Please", "PaperPleaseClone.html", TAG_GAME, ""],
+	["SCP Keycard Generator", "SCPkeycardGenerator.html", TAG_OTHER, ""],
+	["SCP Text Adventure", "SCPtextAdventureGame.html", TAG_GAME, ""],
 	["Air Hockey", "AirHockey.html", TAG_GAME, ""],
 	["Chess 3D", "Chess3D.html", TAG_GAME, ""],
 	["Tea Shop", "TeaShopGame.html", TAG_GAME, ""],
-	["SCP Paper Please", "PaperPleaseClone.html", TAG_GAME, ""],
 	["Alchemy", "AlchemyGame.html", TAG_GAME, ""],
 	["Caravan", "CaravanGame.html", TAG_GAME, ""],
 	["Bullet Hell", "TouhouClone.html", TAG_GAME, ""],
@@ -215,11 +246,11 @@ let FilterBtns = [];
 FilterBtns.push(document.getElementById("filter_0"));
 FilterBtns.push(document.getElementById("filter_1"));
 FilterBtns.push(document.getElementById("filter_2"));
-FilterBtns.push(document.getElementById("filter_3"));
+//FilterBtns.push(document.getElementById("filter_3"));
 // listeners
-for(let TAGS=0;TAGS < TAGS.length;TAGS++) {
-    FilterBtns[TAGS].addEventListener('click', function() {
-        filter(TAGS[TAGS]);
+for(let tag=0;tag < TAGS.length;tag++) {
+    FilterBtns[tag].addEventListener('click', function() {
+        filter(TAGS[tag]);
     });
 }
 
@@ -227,33 +258,33 @@ let current_filter = null; // current filtering tag
 
 
 GAMES.forEach(game => {
-    let div = document.createElement("div");
-    let anchor = document.createElement("a");
-    let p = document.createElement("p");
-    MENU.appendChild(div);
-    div.appendChild(anchor);
-    div.appendChild(p);
+    let row = document.createElement("a");
+    let row_name = document.createElement("span");
+    let row_tag = document.createElement("span");
+    MENU.appendChild(row);
+    row.appendChild(row_name);
+    row.appendChild(row_tag);
 
-    anchor.innerHTML = game[0];
-    anchor.href = "htmls/" + game[1];
+    row_name.innerHTML = game[0];
+    row.href = "htmls/" + game[1];
 
-	p.classList.add("TAG");
+	row_tag.classList.add("TAG");
     switch(game[2]) {
         case 0:
-            p.innerHTML = TAGS[0];
-            p.classList.add("TAGS0");
+            row_tag.innerHTML = TAGS[0];
+            row_tag.classList.add("TAGS0");
             break;
         case 1:
-            p.innerHTML = TAGS[1];
-            p.classList.add("TAGS1");
+            row_tag.innerHTML = TAGS[1];
+            row_tag.classList.add("TAGS1");
             break;
         case 2:
-            p.innerHTML = TAGS[2];
-            p.classList.add("TAGS2");
+            row_tag.innerHTML = TAGS[2];
+            row_tag.classList.add("TAGS2");
             break;
         case 3:
-            p.innerHTML = TAGS[3];
-            p.classList.add("TAGS3");
+            row_tag.innerHTML = TAGS[3];
+            row_tag.classList.add("TAGS3");
             break;
     }
 });
@@ -261,7 +292,7 @@ GAMES.forEach(game => {
 
 function filter(allow_TAGS) {
     updateFilter(allow_TAGS);
-    let childDivs = MENU.getElementsByTagName("div");
+    let childDivs = MENU.getElementsByTagName("a");
 
     // no filter, show all
     if(current_filter == null) {
@@ -273,7 +304,7 @@ function filter(allow_TAGS) {
 
     // show only if tag == allow_TAGS
     for (let i = 0; i < childDivs.length; i++) {
-        let tag = childDivs[i].getElementsByTagName("p")[0].innerHTML;
+        let tag = childDivs[i].getElementsByClassName("TAG")[0].innerHTML;
 
         if(tag == current_filter)
             childDivs[i].classList = "";
